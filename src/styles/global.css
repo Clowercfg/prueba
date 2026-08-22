@@ -1,0 +1,76 @@
+:root {
+  color-scheme: light;
+  --hud-bg: rgba(20, 40, 24, 0.55);
+  --hud-fg: #f4fff4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background: #79b356;
+}
+
+.app-root {
+  position: fixed;
+  inset: 0;
+  /* Respeta notch/safe areas en móvil */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+}
+
+.hud {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 8px);
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  color: var(--hud-fg);
+  background: var(--hud-bg);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.hud-title {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.hud-meta {
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
