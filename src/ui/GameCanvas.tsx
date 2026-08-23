@@ -11,6 +11,7 @@ import { SpriteAssetManager } from '../game/assets/SpriteAssetManager'
 import { createFarmEntities } from '../game/entities/farmEntities'
 import { PLOT_KEYS, READY_AT, useGameStore, type PlotId } from '../game/stores/gameStore'
 import { startCropSystem } from '../game/systems/cropSystem'
+import { tickAnimalAI } from '../game/systems/animalAI'
 import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 
 const FPS_SAMPLE_MS = 500
@@ -155,6 +156,7 @@ export function GameCanvas() {
     const loop = new GameLoop(
       (frame) => {
         useGameStore.getState().tickCrops(frame.delta)
+        tickAnimalAI(frame.delta) // IA de animales migrada (dt en segundos)
         camera.update(frame.delta)
 
         if (debug.firstFrame === null) debug.firstFrame = performance.now()
