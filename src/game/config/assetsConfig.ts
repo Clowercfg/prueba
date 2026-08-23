@@ -24,6 +24,7 @@ export const ASSETS_CONFIG = {
    * Terreno base + los 5 objetos de la granja portrait.
    */
   critical: [
+    'terrain/ground_hd.png',
     'terrain/grass_01.png',
     'terrain/grass_02.png',
     'terrain/grass_03.png',

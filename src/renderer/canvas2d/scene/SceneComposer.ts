@@ -112,8 +112,9 @@ export class SceneComposer {
   private cache: HTMLCanvasElement | null = null
   private cacheKey = ''
   private lastBuildMs = 0
-  /** ¿El último horneado de la banda incluyó el arte real de huertos? */
+  /** ¿El último horneado incluyó el arte real (huertos / fondo)? */
   private plotArtInCache = false
+  private bgArtInCache = false
 
   /** Gradientes del acabado, cacheados por tamaño de viewport (#16). */
   private gradeKey = ''
@@ -133,7 +134,7 @@ export class SceneComposer {
   ) {
     this.camera = camera
     this.entities = entities
-    this.ground = new GroundLayer(tiles)
+    this.ground = new GroundLayer(tiles, assets ?? null)
     this.decor = generateForestDecor(tiles)
     this.tileStats = this.ground.stats
     this.assets = assets ?? null
@@ -343,9 +344,13 @@ export class SceneComposer {
     const growths = this.hooks.getGrowths?.() ?? null
     const gKey = growths ? `|g${growths.map((v) => Math.round(v * 20)).join('.')}` : ''
     const key = `${viewW}x${viewH}@${dpr}|${cam.x.toFixed(2)},${cam.y.toFixed(2)},${zoomBucket(this.camera.zoom).toFixed(3)}|${this.camera.isFixed}${gKey}`
-    // El arte de huertos llega tras el primer render (precarga diferida):
-    // si su presencia cambió desde el último horneado, fuerza rebuild una vez.
-    if (this.cache && !!this.assets?.get('terrain/farm_plot_hd.png') !== this.plotArtInCache) {
+    // El arte diferido (huertos / fondo) llega tras el primer render: si su
+    // presencia cambió desde el último horneado, fuerza rebuild una vez.
+    if (
+      this.cache &&
+      (!!this.assets?.get('terrain/farm_plot_hd.png') !== this.plotArtInCache ||
+        !!this.assets?.get('terrain/ground_hd.png') !== this.bgArtInCache)
+    ) {
       this.cacheKey = ''
     }
     if (this.cache && this.cacheKey === key) return
@@ -360,6 +365,7 @@ export class SceneComposer {
 
     // 1-2) Terreno continuo + agua estática.
     this.ground.paintBackground(g, this.camera, viewW, viewH)
+    this.bgArtInCache = !!this.assets?.get('terrain/ground_hd.png')
     this.ground.paintWaterStatic(g, this.camera)
 
     // 3) Detalle nítido (con culling) + decoración plana.
