@@ -37,6 +37,7 @@ export const ASSETS_CONFIG = {
     'terrain/pond.png',
     'decoration/animal_pen.png',
     'terrain/farm_plot.png',
+    'terrain/farm_plot_hd.png',
   ],
 
   /** Assets secundarios: cargar bajo demanda con loadWhenIdle(). */
