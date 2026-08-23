@@ -342,31 +342,12 @@ function framesOf(st: AnimalState): number {
   return st === 'walk' ? 4 : 3
 }
 
-const COW_SPEED = 0.35 // unidades de mundo por segundo
 const CHICKEN_SPEED = 0.55
 
 export class AnimalLayer {
   private animals: AmbientAnimal[] = []
 
   constructor() {
-    // Vaca dentro del corral (presentation-only).
-    const pen = PADS.pen
-    const penCx = (pen.x0 + pen.x1 + 1) / 2
-    const penCy = (pen.y0 + pen.y1 + 1) / 2
-    const penR = Math.min(pen.x1 + 1 - pen.x0, pen.y1 + 1 - pen.y0) / 2 - 0.75
-    this.animals.push({
-      view: { id: 'amb-cow', species: 'cow', x: penCx, y: penCy, facing: 1, state: 'idle' },
-      homeX: penCx,
-      homeY: penCy,
-      radius: penR,
-      speed: COW_SPEED,
-      step: 1,
-      targetX: penCx,
-      targetY: penCy,
-      waitT: 2,
-      animT: 0,
-    })
-
     // Gallinas en el patio del granero.
     const barnPad = PADS.barn
     const spots: Array<[number, number]> = [
