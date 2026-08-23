@@ -13,6 +13,7 @@ import { PLOT_KEYS, READY_AT, useGameStore, type PlotId } from '../game/stores/g
 import { startCropSystem } from '../game/systems/cropSystem'
 import { startProcessingSystem } from '../game/systems/processingSystem'
 import { startEconomySystem } from '../game/systems/economySystem'
+import { startVetSystem } from '../game/systems/vetSystem'
 import { tickAnimalAI } from '../game/systems/animalAI'
 import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 
@@ -194,6 +195,8 @@ export function GameCanvas() {
     const stopProcessingSystem = startProcessingSystem()
     // Sistema económico migrado: recolección de producción animal cada 4 s.
     const stopEconomySystem = startEconomySystem()
+    // Sistema veterinario migrado: altas médicas + rollo de enfermedad (config).
+    const stopVetSystem = startVetSystem()
 
     // Precarga de críticos en background: cuando termina quedan marcados para
     // verificar en tests que el primer frame fue ANTES de la carga completa.
@@ -219,6 +222,7 @@ export function GameCanvas() {
       stopCropSystem()
       stopProcessingSystem()
       stopEconomySystem()
+      stopVetSystem()
       resize.detach()
       interaction.detach()
       unsubStore()
