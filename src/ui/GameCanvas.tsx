@@ -10,6 +10,7 @@ import { TileSystem } from '../game/systems/TileSystem'
 import { SpriteAssetManager } from '../game/assets/SpriteAssetManager'
 import { createFarmEntities } from '../game/entities/farmEntities'
 import { PLOT_KEYS, READY_AT, useGameStore, type PlotId } from '../game/stores/gameStore'
+import { startCropSystem } from '../game/systems/cropSystem'
 import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 
 const FPS_SAMPLE_MS = 500
@@ -183,6 +184,9 @@ export function GameCanvas() {
     interaction.attach() // entrada disponible inmediatamente (#20)
     loop.start() // PRIMERO el juego; los assets van detrás, nunca bloquean
 
+    // Sistema de cultivos migrado: tick de 1 s sobre cropStore (crecimiento por horas reales).
+    const stopCropSystem = startCropSystem()
+
     // Precarga de críticos en background: cuando termina quedan marcados para
     // verificar en tests que el primer frame fue ANTES de la carga completa.
     void sprites.preload(ASSETS_CONFIG.critical).then(() => {
@@ -204,6 +208,7 @@ export function GameCanvas() {
 
     return () => {
       loop.stop()
+      stopCropSystem()
       resize.detach()
       interaction.detach()
       unsubStore()
