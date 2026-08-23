@@ -134,7 +134,7 @@ export class SceneComposer {
   ) {
     this.camera = camera
     this.entities = entities
-    this.ground = new GroundLayer(tiles, assets ?? null)
+    this.ground = new GroundLayer(tiles)
     this.decor = generateForestDecor(tiles)
     this.tileStats = this.ground.stats
     this.assets = assets ?? null
@@ -363,9 +363,16 @@ export class SceneComposer {
     if (!g) return
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    // 1-2) Terreno continuo + agua estática.
-    this.ground.paintBackground(g, this.camera, viewW, viewH)
-    this.bgArtInCache = !!this.assets?.get('terrain/ground_hd.png')
+    // 1-2) Pradera + piso real recortado al rombo + agua estática.
+    this.ground.setGroundArt(!!this.assets?.get('terrain/ground_hd.png'))
+    this.ground.paintBackground(
+      g,
+      this.camera,
+      viewW,
+      viewH,
+      this.assets?.get('terrain/ground_hd.png') ?? null,
+    )
+    this.bgArtInCache = this.ground.artActive
     this.ground.paintWaterStatic(g, this.camera)
 
     // 3) Detalle nítido (con culling) + decoración plana.

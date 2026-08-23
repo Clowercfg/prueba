@@ -10,6 +10,7 @@
 import { TerrainType, type TileData } from '../../../game/types'
 import type { TileSystem } from '../../../game/systems/TileSystem'
 import type { Camera2D } from '../../../game/systems/Camera2D'
+import { BAND_CONFIG } from '../../../game/config/layoutConfig'
 import { PAL, withAlpha } from './palette'
 import { fbm, hash2, unit } from './rng'
 import { createPaintCtx, groundEllipseAxes, type PaintCtx, type Vec2S } from './shapes'
@@ -22,20 +23,27 @@ const K = 12
 
 export class GroundLayer {
   private readonly tiles: TileSystem
-  private readonly groundBuf: HTMLCanvasElement
-  /** Puente al SpriteSystem; si trae el arte de fondo se usa como pradera. */
-  private readonly assets: { get(key: string): HTMLImageElement | null } | null
+  private groundBuf: HTMLCanvasElement
 
   private considered = 0
   private drawn = 0
 
-  constructor(
-    tiles: TileSystem,
-    assets?: { get(key: string): HTMLImageElement | null } | null,
-  ) {
+  /** Arte real activo: las tiles de pasto quedan transparentes (foto debajo). */
+  artActive = false
+
+  constructor(tiles: TileSystem) {
     this.tiles = tiles
     this.groundBuf = this.buildGroundBuffer()
-    this.assets = assets ?? null
+  }
+
+  /**
+   * Activa/desactiva el arte real del piso. Si cambia, rehorna el buffer:
+   * con arte, pasto/bosque son transparentes y paths/tierra/agua siguen.
+   */
+  setGroundArt(on: boolean): void {
+    if (on === this.artActive) return
+    this.artActive = on
+    this.groundBuf = this.buildGroundBuffer()
   }
 
   get stats(): { drawn: number; considered: number; total: number } {
@@ -81,10 +89,15 @@ export class GroundLayer {
     let considered = 0
 
     // 1) Relleno por tile (colores vecinos casi idénticos → transición suave).
+    //    Con arte real activo, pasto/bosque quedan transparentes: debajo se
+    //    pinta terreno.png recortado al rombo; paths/tierra/agua siguen aquí.
     this.forEachTile((t) => {
       considered++
       drawn++
       const col = this.colorFor(t)
+      const isFloor =
+        t.type === TerrainType.GRASS || t.type === TerrainType.FOREST
+      if (this.artActive && isFloor) return
       if (!col) return
       g.fillStyle = col
       g.fillRect(t.i * K, t.j * K, K + 0.5, K + 0.5)
@@ -133,7 +146,9 @@ export class GroundLayer {
       g.fillRect(t.i * K, t.j * K, K + 0.5, K + 0.5)
       // Núcleo interior del color original para dejar sólo una franja arena.
       const inner = this.colorFor(t)
-      if (inner) {
+      const innerIsFloor =
+        t.type === TerrainType.GRASS || t.type === TerrainType.FOREST
+      if (inner && !(this.artActive && innerIsFloor)) {
         g.fillStyle = inner
         g.fillRect((t.i + 0.16) * K, (t.j + 0.16) * K, K * 0.68, K * 0.68)
       }
@@ -167,7 +182,7 @@ export class GroundLayer {
         }
       }
       // Hierba secándose hacia la playa.
-      if (t.type === TerrainType.GRASS && nSand > 0) {
+      if (t.type === TerrainType.GRASS && nSand > 0 && !this.artActive) {
         g.fillStyle = PAL.coast.sandDeep
         g.fillRect(
           (t.i + unit(t.i, t.j, 66) * 0.7) * K,
@@ -286,36 +301,64 @@ export class GroundLayer {
    * el terreno hasta los cuatro bordes del viewport; la granja se apoya sobre
    * ella y un anillo de vegetación (flora.drawMeadowRing) funde el borde.
    */
-  paintBackground(g: CanvasRenderingContext2D, cam: Camera2D, viewW: number, viewH: number): void {
-    const art = this.assets?.get('terrain/ground_hd.png') ?? null
+  paintBackground(
+    g: CanvasRenderingContext2D,
+    cam: Camera2D,
+    viewW: number,
+    viewH: number,
+    art?: HTMLImageElement | null,
+  ): void {
+    // Pradera procedural SIEMPRE (gradiente + manchas macro). El arte real
+    // del piso entra recortado al rombo vía blitWorld (buffer con pasto alpha).
+    const sky = g.createLinearGradient(0, 0, 0, viewH)
+    sky.addColorStop(0, PAL.meadow.hi)
+    sky.addColorStop(1, PAL.meadow.lo)
+    g.fillStyle = sky
+    g.fillRect(0, 0, viewW, viewH)
 
+    const seedBase = hash2(viewW | 0, viewH | 0, 1234)
+    const diag = Math.hypot(viewW, viewH)
+    for (let n = 0; n < 80; n++) {
+      const h1 = hash2(seedBase, n, 17)
+      const h2 = hash2(n, seedBase, 29)
+      const x = ((h1 % 1000) / 1000) * viewW
+      const y = ((h2 % 1000) / 1000) * viewH
+      const r = (10 + ((h1 >>> 7) % 30)) * (diag / 900)
+      g.fillStyle = n % 2 === 0 ? PAL.grass.meadowLight : PAL.grass.meadowDark
+      g.beginPath()
+      g.ellipse(x, y, r, r * 0.55, 0, 0, Math.PI * 2)
+      g.fill()
+    }
+
+    // Piso real de la granja: terreno.png recortado al paralelogramo de la
+    // banda (u∈[-(halfU+1),halfU+1] × v∈[vMin,vMax+2], inflado 0.4 tiles).
     if (art && art.naturalWidth > 0 && art.naturalHeight > 0) {
-      // Arte real de fondo: cover-fit sobre TODO el viewport (cámara fija).
-      const s = Math.max(viewW / art.naturalWidth, viewH / art.naturalHeight)
+      const uE = BAND_CONFIG.halfU + 1 + 0.4
+      const v0 = BAND_CONFIG.vMin - 0.4
+      const v1 = BAND_CONFIG.vMax + 2 + 0.4
+      const corner = (u: number, v: number) => cam.worldToScreen((v + u) / 2, (v - u) / 2)
+      const q = [corner(-uE, v0), corner(uE, v0), corner(uE, v1), corner(-uE, v1)]
+      let bx0 = Infinity
+      let by0 = Infinity
+      let bx1 = -Infinity
+      let by1 = -Infinity
+      for (const p of q) {
+        if (p.x < bx0) bx0 = p.x
+        if (p.y < by0) by0 = p.y
+        if (p.x > bx1) bx1 = p.x
+        if (p.y > by1) by1 = p.y
+      }
+      g.save()
+      g.beginPath()
+      g.moveTo(q[0].x, q[0].y)
+      for (let k = 1; k < 4; k++) g.lineTo(q[k].x, q[k].y)
+      g.closePath()
+      g.clip()
+      const s = Math.max((bx1 - bx0) / art.naturalWidth, (by1 - by0) / art.naturalHeight)
       const dw = art.naturalWidth * s
       const dh = art.naturalHeight * s
-      g.drawImage(art, (viewW - dw) / 2, (viewH - dh) / 2, dw, dh)
-    } else {
-      // Fallback procedural: gradiente vertical sutil + manchas macro.
-      const sky = g.createLinearGradient(0, 0, 0, viewH)
-      sky.addColorStop(0, PAL.meadow.hi)
-      sky.addColorStop(1, PAL.meadow.lo)
-      g.fillStyle = sky
-      g.fillRect(0, 0, viewW, viewH)
-
-      const seedBase = hash2(viewW | 0, viewH | 0, 1234)
-      const diag = Math.hypot(viewW, viewH)
-      for (let n = 0; n < 80; n++) {
-        const h1 = hash2(seedBase, n, 17)
-        const h2 = hash2(n, seedBase, 29)
-        const x = ((h1 % 1000) / 1000) * viewW
-        const y = ((h2 % 1000) / 1000) * viewH
-        const r = (10 + ((h1 >>> 7) % 30)) * (diag / 900)
-        g.fillStyle = n % 2 === 0 ? PAL.grass.meadowLight : PAL.grass.meadowDark
-        g.beginPath()
-        g.ellipse(x, y, r, r * 0.55, 0, 0, Math.PI * 2)
-        g.fill()
-      }
+      g.drawImage(art, (bx0 + bx1 - dw) / 2, (by0 + by1 - dh) / 2, dw, dh)
+      g.restore()
     }
 
     // Terreno de la granja encima de la pradera continua.
