@@ -87,7 +87,7 @@ body {
   right: 0;
   bottom: 0;
   z-index: 20;
-  padding: 5px 4px calc(env(safe-area-inset-bottom) + 5px);
+  padding: 5px 4px calc(env(safe-area-inset-bottom) + 14px);
   background: rgba(14, 30, 18, 0.78);
   backdrop-filter: blur(8px);
   border-radius: 16px 16px 0 0;
@@ -185,7 +185,7 @@ body {
   padding:
     calc(env(safe-area-inset-top) + 52px)
     16px
-    calc(env(safe-area-inset-bottom) + 76px);
+    calc(env(safe-area-inset-bottom) + 85px);
 }
 
 .panel-card {
