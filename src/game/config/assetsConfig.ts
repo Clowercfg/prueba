@@ -36,6 +36,7 @@ export const ASSETS_CONFIG = {
     'buildings/barn_hd.png',
     'terrain/pond.png',
     'decoration/animal_pen.png',
+    'decoration/animal_pen_hd.png',
     'terrain/farm_plot.png',
     'terrain/farm_plot_hd.png',
   ],

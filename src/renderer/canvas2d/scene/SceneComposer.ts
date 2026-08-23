@@ -196,11 +196,13 @@ export class SceneComposer {
           ['back', 'penBack'],
           ['front', 'penFront'],
         ]
-        // sortY: mitad trasera bajo cualquier animal del corral; frontal encima.
+        // sortY con asset plano: back BAJO la imagen, imagen BAJO animales.
+        // Sin asset cargado, la valla procedural conserva su sándwich original.
         const sortYs: Record<PenPart, number> = {
-          back: PADS.pen.y0 + 0.45,
+          back: PADS.pen.y0 - 0.02,
           front: PADS.pen.y1 + 1.05,
         }
+        const IMG_SY = PADS.pen.y0 - 0.01
         for (const [part, bk] of parts) {
           out.push({
             sy: sortYs[part],
@@ -209,10 +211,16 @@ export class SceneComposer {
             ck: `pen:${part}`,
             bk,
             paint: (c) => void drawPen(c, PADS.pen, part),
-            // El asset real del corral es una sola imagen: sólo la mitad
-            // 'front' lo usa (contiene todo); 'back' cae a procedural.
+            // El asset real del corral es una sola imagen plana: se dibuja
+            // BAJO cualquier animal (los sprites la tapan al pasar).
             ...(part === 'front'
-              ? { assetKey: hdKey(e.key), scale: e.scale, anchorX: e.anchorX, anchorY: e.anchorY }
+              ? {
+                  assetKey: hdKey(e.key),
+                  scale: e.scale,
+                  anchorX: e.anchorX,
+                  anchorY: e.anchorY,
+                  sy: IMG_SY,
+                }
               : {}),
           })
         }
