@@ -45,7 +45,7 @@ export function capacityFor(kind: AnimalKind): { building: string; capacity: num
   return { building, capacity, used };
 }
 
-function noCapacity(building: string, capacity: number, needed: number): BuildingCheckResult {
+export function noCapacity(building: string, capacity: number, needed: number): BuildingCheckResult {
   return {
     ok: false,
     message: tr("shop.capacity"),
