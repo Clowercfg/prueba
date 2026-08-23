@@ -1,19 +1,19 @@
-/**
+﻿/**
  * SceneComposer: compone la escena en BANDAS (#12) con depth-sort real 2.5D.
  *
- *   BANDA DE TIERRA (cache estático, se rebuilda sólo si cambia cámara):
+ *   BANDA DE TIERRA (cache estÃ¡tico, se rebuilda sÃ³lo si cambia cÃ¡mara):
  *     1. Lago + olas + isla + playa + acantilado + terreno continuo
- *     2. Agua estática del estanque (nenúfares)
- *     3. Detalle nítido del suelo (con culling de viewport #17)
- *     3b. Decoración plana pequeña (ramas, hojas, piedras)
+ *     2. Agua estÃ¡tica del estanque (nenÃºfares)
+ *     3. Detalle nÃ­tido del suelo (con culling de viewport #17)
+ *     3b. DecoraciÃ³n plana pequeÃ±a (ramas, hojas, piedras)
  *     3c. Parcelas excavadas (cultivos incluidos)
  *
  *   BANDA DE OBJETOS (por frame, y-sort por worldY + animales intercalados):
- *     árboles/setos/arbustos/juncos/rocas/troncos · granero · corral en dos
- *     mitades · ANIMALES. Un objeto detrás queda detrás; el de delante tapa.
+ *     Ã¡rboles/setos/arbustos/juncos/rocas/troncos Â· granero Â· corral en dos
+ *     mitades Â· ANIMALES. Un objeto detrÃ¡s queda detrÃ¡s; el de delante tapa.
  *
- *   ACABADO: luz cálida + viñeta como OVERLAY por frame (gradientes
- *   cacheados #16) para que también afecte a animales y objetos dinámicos.
+ *   ACABADO: luz cÃ¡lida + viÃ±eta como OVERLAY por frame (gradientes
+ *   cacheados #16) para que tambiÃ©n afecte a animales y objetos dinÃ¡micos.
  */
 import type { Camera2D } from '../../../game/systems/Camera2D'
 import type { TileSystem } from '../../../game/systems/TileSystem'
@@ -53,7 +53,7 @@ interface SortEntry {
   paint: ObjPaintFn
   /**
    * SEAM #14: si hay un asset real cargado en SpriteAssetManager para esta
-   * clave, se dibuja ÉL en lugar del pintor procedural (mismo ancla/escala).
+   * clave, se dibuja Ã‰L en lugar del pintor procedural (mismo ancla/escala).
    */
   assetKey?: string
   scale?: number
@@ -66,7 +66,7 @@ interface SortEntry {
 const TINY_KINDS = new Set(['twig', 'leaves', 'stone', 'shoreStone'])
 
 /**
- * Selección estructural que el composer puede pintar (desacoplado del store).
+ * SelecciÃ³n estructural que el composer puede pintar (desacoplado del store).
  */
 export type Highlight =
   | { kind: 'plot'; id: string }
@@ -78,13 +78,15 @@ export type Highlight =
 export interface ComposerHooks {
   /** Crecimiento visible por parcela (índice = plotA..plotD). */
   getGrowths?: () => number[]
+  /** Vistas visuales de los animales REALES (registry), una por frame. */
+  getAnimals?: () => readonly AnimalView[]
 }
 
 /**
  * Clave de asset FINAL para una entidad (#14). Los sprites procedurales son
  * el placeholder de calidad; cuando exista p.ej. buildings/barn_hd.png en
- * /public/assets/2d/ (añadiendo su clave a ASSETS_CONFIG.critical), se
- * adopta automáticamente SIN tocar este renderer.
+ * /public/assets/2d/ (aÃ±adiendo su clave a ASSETS_CONFIG.critical), se
+ * adopta automÃ¡ticamente SIN tocar este renderer.
  */
 function hdKey(entityKey: string): string {
   return entityKey.replace(/\.png$/, '_hd.png')
@@ -97,27 +99,27 @@ export class SceneComposer {
   private readonly ambient = new AmbientLayer()
   private readonly animals = new AnimalLayer()
   private readonly sprites = new ObjectSpriteCache()
-  /** Puente al SpriteSystem existente; null = sólo procedural (#14). */
+  /** Puente al SpriteSystem existente; null = sÃ³lo procedural (#14). */
   private readonly assets: {
     get(key: string): HTMLImageElement | null
   } | null
   private readonly decor: DecorItem[]
 
-  /** Entradas estáticas preconstruidas (nunca cambian por frame). */
+  /** Entradas estÃ¡ticas preconstruidas (nunca cambian por frame). */
   private readonly staticEntries: SortEntry[] = []
-  /** Array reutilizado cada frame: estáticas + animales. */
+  /** Array reutilizado cada frame: estÃ¡ticas + animales. */
   private readonly frameEntries: SortEntry[] = []
-  private readonly animalWrappers = new Map<string, { e: SortEntry; v: AnimalView }>()
+  private readonly animalWrappers = new Map<string, { e: SortEntry; v: AnimalView; seen?: boolean }>()
 
   private cache: HTMLCanvasElement | null = null
   private cacheKey = ''
   private lastBuildMs = 0
-  /** ¿El último horneado incluyó el arte real (huertos / fondo / anillo)? */
+  /** Â¿El Ãºltimo horneado incluyÃ³ el arte real (huertos / fondo / anillo)? */
   private plotArtInCache = false
   private bgArtInCache = false
   private ringArtInCache = false
 
-  /** Gradientes del acabado, cacheados por tamaño de viewport (#16). */
+  /** Gradientes del acabado, cacheados por tamaÃ±o de viewport (#16). */
   private gradeKey = ''
   private warmGrad: CanvasGradient | null = null
   private vigGrad: CanvasGradient | null = null
@@ -143,15 +145,15 @@ export class SceneComposer {
   }
 
   /* ------------------------------------------------------------ */
-  /* Registro de objetos estáticos ordenables                      */
+  /* Registro de objetos estÃ¡ticos ordenables                      */
   /* ------------------------------------------------------------ */
 
   private buildStaticEntries(): void {
     const out = this.staticEntries
 
     for (const e of this.entities) {
-      if (e.key.endsWith('pond.png')) continue // agua → banda de tierra
-      if (e.key.endsWith('farm_plot.png')) continue // parcela → banda de tierra
+      if (e.key.endsWith('pond.png')) continue // agua â†’ banda de tierra
+      if (e.key.endsWith('farm_plot.png')) continue // parcela â†’ banda de tierra
 
       if (e.key.endsWith('barn.png')) {
         // Base visual del granero = pie de la pared frontal.
@@ -199,7 +201,7 @@ export class SceneComposer {
           ['front', 'penFront'],
         ]
         // sortY con asset plano: back BAJO la imagen, imagen BAJO animales.
-        // Sin asset cargado, la valla procedural conserva su sándwich original.
+        // Sin asset cargado, la valla procedural conserva su sÃ¡ndwich original.
         const sortYs: Record<PenPart, number> = {
           back: PADS.pen.y0 - 0.02,
           front: PADS.pen.y1 + 1.05,
@@ -235,20 +237,20 @@ export class SceneComposer {
       }
     }
 
-    // Decoración generada: grande → ordenable; plana → banda de tierra.
+    // DecoraciÃ³n generada: grande â†’ ordenable; plana â†’ banda de tierra.
     for (const it of this.decor) {
       if (TINY_KINDS.has(it.kind)) continue
       out.push(this.decorEntry(it))
     }
   }
 
-  /** Árbol/seto de entidad, deduplicado por variante+tamaño+seed cuantizada. */
+  /** Ãrbol/seto de entidad, deduplicado por variante+tamaÃ±o+seed cuantizada. */
   private treeEntry(e: FarmEntity): SortEntry {
     const seedRaw = unit(Math.round(e.x * 10), Math.round(e.y * 10), 501)
     const isPine = seedRaw < 0.28 && e.scale >= 0.08
     const tier = e.scale < 0.08 ? -1 : e.scale >= 0.115 ? 0 : e.scale >= 0.104 ? 1 : 2
-    // Cuantización gruesa: 2 buckets de semilla → ~12 árboles únicos en vez
-    // de ~30 (menos hornado en el primer frame, diferencia visual mínima).
+    // CuantizaciÃ³n gruesa: 2 buckets de semilla â†’ ~12 Ã¡rboles Ãºnicos en vez
+    // de ~30 (menos hornado en el primer frame, diferencia visual mÃ­nima).
     const qSeed = Math.round(seedRaw * 2) / 2
     const H = e.scale * 1000
 
@@ -284,10 +286,10 @@ export class SceneComposer {
     }
   }
 
-  /** Item de decoración grande: seed y escala CUANTIZADOS para dedupe. */
+  /** Item de decoraciÃ³n grande: seed y escala CUANTIZADOS para dedupe. */
   private decorEntry(it: DecorItem): SortEntry {
     const qSeed = Math.round(it.seed * 2) / 2
-    const qs = Math.round(it.s * 4) / 4 // bucket de tamaño ±12%: imperceptible
+    const qs = Math.round(it.s * 4) / 4 // bucket de tamaÃ±o Â±12%: imperceptible
     const kindMap: Record<string, { bk: string; paint: ObjPaintFn }> = {
       oak: {
         bk: 'tree:oak:0',
@@ -303,7 +305,7 @@ export class SceneComposer {
       log: { bk: 'log', paint: (c) => drawLog(c, c.at(it.x, it.y), 46 * qs, qSeed) },
     }
     const m = kindMap[it.kind] ?? kindMap.bush
-    // TODA la decoración es garnish diferible (#15): sin bake listo se omite
+    // TODA la decoraciÃ³n es garnish diferible (#15): sin bake listo se omite
     // ese frame y aparece en los siguientes (~50 ms), nunca pinta directo.
     return {
       sy: it.depth,
@@ -337,7 +339,7 @@ export class SceneComposer {
   }
 
   /* ------------------------------------------------------------ */
-  /* Banda de tierra (cache estático)                              */
+  /* Banda de tierra (cache estÃ¡tico)                              */
   /* ------------------------------------------------------------ */
 
   ensureCache(viewW: number, viewH: number, dpr: number): void {
@@ -346,7 +348,7 @@ export class SceneComposer {
     const gKey = growths ? `|g${growths.map((v) => Math.round(v * 20)).join('.')}` : ''
     const key = `${viewW}x${viewH}@${dpr}|${cam.x.toFixed(2)},${cam.y.toFixed(2)},${zoomBucket(this.camera.zoom).toFixed(3)}|${this.camera.isFixed}${gKey}`
     // El arte diferido (huertos / fondo) llega tras el primer render: si su
-    // presencia cambió desde el último horneado, fuerza rebuild una vez.
+    // presencia cambiÃ³ desde el Ãºltimo horneado, fuerza rebuild una vez.
     if (
       this.cache &&
       (!!this.assets?.get('terrain/farm_plot_hd.png') !== this.plotArtInCache ||
@@ -365,7 +367,7 @@ export class SceneComposer {
     if (!g) return
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    // 1-2) Pradera + piso real recortado al rombo + agua estática.
+    // 1-2) Pradera + piso real recortado al rombo + agua estÃ¡tica.
     this.ground.setGroundArt(!!this.assets?.get('terrain/ground_hd.png'))
     this.ground.paintBackground(
       g,
@@ -377,7 +379,7 @@ export class SceneComposer {
     this.bgArtInCache = this.ground.artActive
     this.ground.paintWaterStatic(g, this.camera)
 
-    // 3) Detalle nítido (con culling) + decoración plana.
+    // 3) Detalle nÃ­tido (con culling) + decoraciÃ³n plana.
     this.ground.paintDetails(g, this.camera, viewW, viewH)
     const cg = createPaintCtx(g, this.camera)
     for (const it of this.decor) {
@@ -385,13 +387,13 @@ export class SceneComposer {
       drawDecor(cg, it)
     }
 
-    // 3c) Parcelas excavadas: último de la banda de tierra, bajo todo objeto.
+    // 3c) Parcelas excavadas: Ãºltimo de la banda de tierra, bajo todo objeto.
     const plotArt = this.assets?.get('terrain/farm_plot_hd.png') ?? null
     drawPlotsGround(cg, growths ?? undefined, plotArt)
     this.plotArtInCache = !!plotArt
-    // Suelo pisado del corral también pertenece a esta banda.
+    // Suelo pisado del corral tambiÃ©n pertenece a esta banda.
     drawPenFloor(cg, PADS.pen)
-    // #25: anillo de vegetación que extiende el terreno hasta los bordes.
+    // #25: anillo de vegetaciÃ³n que extiende el terreno hasta los bordes.
     drawMeadowRing(cg, this.assets?.get('vegetation/ring_tree_hd.png') ?? null)
     this.ringArtInCache = !!this.assets?.get('vegetation/ring_tree_hd.png')
 
@@ -409,16 +411,19 @@ export class SceneComposer {
   /* Banda de objetos: y-sort 2.5D con animales (#12)              */
   /* ------------------------------------------------------------ */
 
-  update(dt: number): void {
-    this.animals.update(dt)
+  update(): void {
+    // La IA de animales vive en el juego (tickAnimalAI); la capa visual se
+    // limita a reflejar el estado real que llega por hooks cada frame.
+    const views = this.hooks.getAnimals?.()
+    if (views) this.animals.sync(views)
   }
 
-  /** Selección a pintar (halo bajo objetos). No invalida caches. */
+  /** SelecciÃ³n a pintar (halo bajo objetos). No invalida caches. */
   setHighlight(h: Highlight): void {
     this.highlight = h
   }
 
-  /** Hit-test de animales delegado en la capa (targets táctiles generosos). */
+  /** Hit-test de animales delegado en la capa (targets tÃ¡ctiles generosos). */
   pickAnimal(wx: number, wy: number): string | null {
     return this.animals.hit(wx, wy)?.id ?? null
   }
@@ -437,11 +442,12 @@ export class SceneComposer {
       entries.push(e)
     }
 
-    // Highlight de selección: halo a nivel de suelo, BAJO los objetos.
+    // Highlight de selecciÃ³n: halo a nivel de suelo, BAJO los objetos.
     if (this.highlight) this.drawHighlight(g, elapsed)
 
     // Animales como entradas ordenables (wrappers reutilizados por id).
-    for (const v of this.animals.allViews()) {
+    const views = this.animals.allViews()
+    for (const v of views) {
       let w = this.animalWrappers.get(v.id)
       if (!w) {
         const entry: SortEntry = {
@@ -452,9 +458,10 @@ export class SceneComposer {
           bk: 'bush',
           paint: () => {},
         }
-        w = { e: entry, v }
+        w = { e: entry, v, seen: false }
         this.animalWrappers.set(v.id, w)
       }
+      w.seen = true
       w.v = v
       w.e.sy = v.y + 0.01 // desempate: el animal queda delante en empate exacto
       w.e.wx = v.x
@@ -462,24 +469,29 @@ export class SceneComposer {
       w.e.paint = (c) => this.animals.drawView(c, w!.v, elapsed)
       entries.push(w.e)
     }
+    // Purga de wrappers huérfanos (animal eliminado del registry).
+    for (const [id, w] of this.animalWrappers) {
+      if (!w.seen) this.animalWrappers.delete(id)
+      else w.seen = false
+    }
 
-    // Orden 2.5D: atrás→delante por worldY; desempate estable por clave.
+    // Orden 2.5D: atrÃ¡sâ†’delante por worldY; desempate estable por clave.
     entries.sort((a, b) => a.sy - b.sy || (a.ck < b.ck ? -1 : 1))
 
     let drawn = 0
-    // Presupuesto de horneado por frame (#15): bajo a propósito — cada bake
-    // aloja un canvas nuevo y la ráfaga dispara GC en frames tempranos.
-    // El resto se pinta directo (idéntico visualmente) mientras tanto.
+    // Presupuesto de horneado por frame (#15): bajo a propÃ³sito â€” cada bake
+    // aloja un canvas nuevo y la rÃ¡faga dispara GC en frames tempranos.
+    // El resto se pinta directo (idÃ©ntico visualmente) mientras tanto.
     let bakeBudget = 6
     for (const e of entries) {
-      // #14: asset real si está cargado; procedural si no.
+      // #14: asset real si estÃ¡ cargado; procedural si no.
       const img = e.assetKey ? (this.assets?.get(e.assetKey) ?? null) : null
       if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
         if (blitAsset(g, img, this.camera, e, viewW, viewH)) drawn++
         continue
       }
       if (!this.sprites.has(e.ck, this.camera)) {
-        if (e.lazy) continue // aparecerá cuando su bake toque (frames 1-4)
+        if (e.lazy) continue // aparecerÃ¡ cuando su bake toque (frames 1-4)
         if (bakeBudget <= 0) {
           paintObjectDirect(g, this.camera, e.wx, e.wy, e.paint)
           drawn++
@@ -501,7 +513,7 @@ export class SceneComposer {
   }
 
   /* ------------------------------------------------------------ */
-  /* Highlight de selección (#20)                                  */
+  /* Highlight de selecciÃ³n (#20)                                  */
   /* ------------------------------------------------------------ */
 
   private drawHighlight(g: CanvasRenderingContext2D, elapsedMs: number): void {
@@ -575,8 +587,8 @@ export class SceneComposer {
 
 /**
  * Dibuja un asset PNG/WebP real con el ancla/escala de su FarmEntity.
- * Altura objetivo: scale·1000 px (misma convención que los pintores
- * procedurales) → reemplazo 1:1 sin tocar lógica (#14/#18).
+ * Altura objetivo: scaleÂ·1000 px (misma convenciÃ³n que los pintores
+ * procedurales) â†’ reemplazo 1:1 sin tocar lÃ³gica (#14/#18).
  */
 function blitAsset(
   g: CanvasRenderingContext2D,

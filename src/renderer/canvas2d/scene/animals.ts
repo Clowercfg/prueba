@@ -1,29 +1,23 @@
-/**
- * ANIMALES: representacion 100% visual, desconectada de la logica.
+﻿/**
+ * ANIMALES: representaciÃ³n 100% visual, desconectada de la lÃ³gica.
  *
  * - Los sprites son procedurales y se cachean en canvases offscreen por
  *   (especie x estado x frame): nada complejo se redibuja por frame.
  * - Solo se dibujan mirando a la derecha; el espejo se aplica al blitear.
- * - La capa ambiente mueve animales decorativos (1 vaca en el corral,
- *   3 gallinas en el patio del granero) con rutas deterministas.
- *
- * SEAM para datos reales: cuando existan animales en el store basta con
- * construir AnimalView[] desde el estado del juego y llamar drawViews()
- * sin tocar sprites ni cache.
+ * - La posiciÃ³n/estado vienen del juego real vÃ­a sync() (ComposerHooks);
+ *   aquÃ­ NO hay IA: ni rutas, ni waypoints, ni movimiento paralelo.
  */
 
-import { PADS } from '../../../game/config/layoutConfig'
-import { unit } from './rng'
 import type { PaintCtx } from './shapes'
 
-export type Species = 'cow' | 'chicken'
+export type Species = 'cow' | 'chicken' | 'pig'
 export type AnimalState = 'walk' | 'idle' | 'graze' | 'peck'
 
-/** Vista minima de un animal; el futuro store del juego alimenta esto. */
+/** Vista mÃ­nima de un animal; alimentada desde el estado real del juego. */
 export interface AnimalView {
   id: string
   species: Species
-  /** Posicion en unidades de mundo (tiles). */
+  /** PosiciÃ³n en unidades de mundo (tiles). */
   x: number
   y: number
   /** 1 = mira a iso-derecha, -1 = espejado. */
@@ -42,8 +36,8 @@ const FRAME_MS: Record<AnimalState, number> = {
 /* Cache de sprites                                                    */
 /* ------------------------------------------------------------------ */
 
-const SPR_W: Record<Species, number> = { cow: 62, chicken: 30 }
-const SPR_H: Record<Species, number> = { cow: 48, chicken: 30 }
+const SPR_W: Record<Species, number> = { cow: 62, chicken: 30, pig: 46 }
+const SPR_H: Record<Species, number> = { cow: 48, chicken: 30, pig: 36 }
 
 const spriteCache = new Map<string, HTMLCanvasElement>()
 
@@ -70,6 +64,7 @@ export function getAnimalSprite(
     const h = SPR_H[sp]
     const g = makeCanvas(w, h)
     if (sp === 'cow') drawCowFrame(g, w, h, st, fr)
+    else if (sp === 'pig') drawPigFrame(g, w, h, st, fr)
     else drawChickenFrame(g, w, h, st, fr)
     cv = g.canvas
     spriteCache.set(key, cv)
@@ -320,106 +315,122 @@ function drawChickenFrame(
   g.arc(hx + 1.2, hy - 0.8, 0.95, 0, Math.PI * 2)
   g.fill()
 }
-
 /* ------------------------------------------------------------------ */
-/* Capa ambiente: animales decorativos con rutas deterministas          */
+/* CERDO (vista lateral, mirando a la derecha)                         */
 /* ------------------------------------------------------------------ */
 
-interface AmbientAnimal {
-  view: AnimalView
-  homeX: number
-  homeY: number
-  radius: number
-  speed: number
-  step: number // contador de waypoints (determinista)
-  targetX: number
-  targetY: number
-  waitT: number
-  animT: number
+function drawPigFrame(
+  g: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  st: AnimalState,
+  fr: number,
+): void {
+  const cx = w / 2
+  const groundY = h - 3
+  const walking = st === 'walk'
+  const grazing = st === 'graze'
+
+  const legPhase = walking ? [0, 1, 0, -1][fr % 4] : 0
+  const legPhaseB = walking ? [0, -1, 0, 1][fr % 4] : 0
+  const bob = walking && fr % 2 === 1 ? -0.9 : 0
+  const bodyY = groundY - 12 + bob
+
+  // Patas traseras y delanteras.
+  g.lineCap = 'round'
+  g.strokeStyle = '#d98a92'
+  for (const lx of [-10, -6]) {
+    g.beginPath()
+    g.moveTo(cx + lx, bodyY + 4)
+    g.lineTo(cx + lx + legPhaseB * 2.2, groundY - 1)
+    g.stroke()
+  }
+  g.strokeStyle = '#f0b7bd'
+  for (const lx of [7, 11]) {
+    g.beginPath()
+    g.moveTo(cx + lx, bodyY + 4)
+    g.lineTo(cx + lx + legPhase * 2.2, groundY - 1)
+    g.stroke()
+  }
+  // Rabo rizado.
+  g.strokeStyle = '#d98a92'
+  g.lineWidth = 1.8
+  g.beginPath()
+  g.moveTo(cx - 13, bodyY - 2)
+  g.quadraticCurveTo(cx - 18, bodyY - 5, cx - 16, bodyY - 9)
+  g.stroke()
+  // Cuerpo.
+  g.fillStyle = '#eda6ad'
+  g.beginPath()
+  g.ellipse(cx - 1, bodyY - 2, 13, 7.5, 0, 0, Math.PI * 2)
+  g.fill()
+  // Mancha dorsal.
+  g.fillStyle = 'rgba(160,84,92,0.55)'
+  g.beginPath()
+  g.ellipse(cx - 4, bodyY - 6, 5, 2.4, -0.15, 0, Math.PI * 2)
+  g.fill()
+  // Cabeza: baja si pasta.
+  const headX = cx + 11
+  const headY = grazing ? bodyY + 4 : bodyY - 4
+  g.fillStyle = '#f0b7bd'
+  g.beginPath()
+  g.ellipse(headX, headY, 6, 5, grazing ? 0.5 : 0, 0, Math.PI * 2)
+  g.fill()
+  // Oreja.
+  g.fillStyle = '#d98a92'
+  g.beginPath()
+  g.moveTo(headX - 3, headY - 4)
+  g.lineTo(headX - 6.5, headY - 9)
+  g.lineTo(headX - 0.5, headY - 7)
+  g.closePath()
+  g.fill()
+  // Hocico.
+  g.fillStyle = '#e08e96'
+  g.beginPath()
+  g.ellipse(headX + 5, headY + (grazing ? 1.5 : 0.5), 3, 2.3, 0, 0, Math.PI * 2)
+  g.fill()
+  g.fillStyle = '#b96a72'
+  for (const nx of [-1, 1]) {
+    g.beginPath()
+    g.arc(headX + 5 + nx, headY + (grazing ? 1.5 : 0.5), 0.55, 0, Math.PI * 2)
+    g.fill()
+  }
+  // Ojo.
+  g.fillStyle = '#33261c'
+  g.beginPath()
+  g.arc(headX + 0.5, headY - 1.6, 0.95, 0, Math.PI * 2)
+  g.fill()
 }
+
+/* ------------------------------------------------------------------ */
+/* Capa visual: espejo del estado real (sin IA)                        */
+/* ------------------------------------------------------------------ */
 
 function framesOf(st: AnimalState): number {
   return st === 'walk' ? 4 : 3
 }
 
-const CHICKEN_SPEED = 0.55
-
 export class AnimalLayer {
-  private animals: AmbientAnimal[] = []
+  private views: AnimalView[] = []
 
-  constructor() {
-    // Gallinas en el patio del granero.
-    const barnPad = PADS.barn
-    const spots: Array<[number, number]> = [
-      [barnPad.x1 + 2.4, barnPad.y0 + 3.2],
-      [barnPad.x1 + 3.6, barnPad.y0 + 5.4],
-      [barnPad.x1 + 2.0, barnPad.y0 + 6.6],
-    ]
-    spots.forEach(([sx, sy], idx) => {
-      this.animals.push({
-        view: { id: 'amb-ch' + idx, species: 'chicken', x: sx, y: sy, facing: 1, state: 'idle' },
-        homeX: sx,
-        homeY: sy,
-        radius: 1.6,
-        speed: CHICKEN_SPEED,
-        step: idx * 7 + 3,
-        targetX: sx,
-        targetY: sy,
-        waitT: 1 + idx,
-        animT: idx * 0.37,
-      })
-    })
-  }
-
-  /** Avanza la simulación decorativa (dt en segundos). */
-  update(dt: number): void {
-    if (!(dt > 0)) return
-    for (const a of this.animals) {
-      a.animT += dt
-
-      if (a.view.state === 'walk') {
-        const dx = a.targetX - a.view.x
-        const dy = a.targetY - a.view.y
-        const dist = Math.hypot(dx, dy)
-        if (dist <= Math.max(0.06, a.speed * dt)) {
-          a.view.x = a.targetX
-          a.view.y = a.targetY
-          a.step++
-          // Descanso: la vaca pasta, las gallinas picotean o miran.
-          a.waitT = 2 + unit(a.step, Math.round(a.homeX * 10), 77) * 4
-          a.view.state =
-            a.view.species === 'cow'
-              ? 'graze'
-              : unit(a.step, 5, 78) > 0.45
-                ? 'peck'
-                : 'idle'
-        } else {
-          a.view.x += (dx / dist) * a.speed * dt
-          a.view.y += (dy / dist) * a.speed * dt
-          if (Math.abs(dx) > 0.02) a.view.facing = dx > 0 ? 1 : -1
-        }
-      } else {
-        a.waitT -= dt
-        if (a.waitT <= 0) {
-          // Nuevo waypoint determinista alrededor del hogar.
-          const ang = unit(a.step, 11, 79) * Math.PI * 2
-          const rad = (0.35 + unit(a.step, 13, 80) * 0.65) * a.radius
-          a.targetX = a.homeX + Math.cos(ang) * rad
-          a.targetY = a.homeY + Math.sin(ang) * rad * 0.7
-          a.view.state = 'walk'
-        }
-      }
-    }
+  /**
+   * Reemplaza las vistas por las del estado real del juego (una vez por
+   * frame desde SceneComposer). Altas/bajas se reflejan solas porque el
+   * array siempre ES la verdad recibida; los sprites ya están cacheados.
+   */
+  sync(next: readonly AnimalView[]): void {
+    this.views.length = 0
+    for (const v of next) this.views.push(v)
   }
 
   /** Vistas actuales (para intercalar en el depth-sort del composer). */
   allViews(): AnimalView[] {
-    return this.animals.map((a) => a.view)
+    return this.views
   }
 
   /** Vista por id (para pintar el highlight de selección). */
   viewById(id: string): AnimalView | null {
-    return this.animals.find((a) => a.view.id === id)?.view ?? null
+    return this.views.find((v) => v.id === id) ?? null
   }
 
   /**
@@ -429,39 +440,23 @@ export class AnimalLayer {
   hit(wx: number, wy: number): AnimalView | null {
     let best: AnimalView | null = null
     let bestD = Infinity
-    for (const a of this.animals) {
-      const r = a.view.species === 'cow' ? 0.9 : 0.55
-      const d = Math.hypot(a.view.x - wx, (a.view.y - wy) * 1.6)
+    for (const v of this.views) {
+      const r = v.species === 'cow' ? 0.9 : v.species === 'pig' ? 0.7 : 0.55
+      const d = Math.hypot(v.x - wx, (v.y - wy) * 1.6)
       if (d <= r && d < bestD) {
-        best = a.view
+        best = v
         bestD = d
       }
     }
     return best
   }
 
-  /** Dibuja todos los animales ordenados por profundidad (y de mundo). */
-  draw(c: PaintCtx, nowMs: number): void {
-    const sorted = [...this.animals].sort((p, q) => p.view.y - q.view.y)
-    for (const a of sorted) this.drawView(c, a.view, nowMs)
-  }
-
-  /**
-   * SEAM futuro: dibuja vistas provistas por el store real del juego
-   * (mismo pipeline de sprites cacheados).
-   */
-  drawViews(c: PaintCtx, views: readonly AnimalView[], nowMs: number): void {
-    const sorted = [...views].sort((p, q) => p.y - q.y)
-    for (const v of sorted) this.drawView(c, v, nowMs)
-  }
-
   drawView(c: PaintCtx, v: AnimalView, nowMs: number): void {
     const g = c.g
     const scr = c.at(v.x, v.y)
     const z = c.z
-    const isCow = v.species === 'cow'
-    const sw = (isCow ? SPR_W.cow : SPR_W.chicken) * z * (isCow ? 1 : 0.95)
-    const sh = (isCow ? SPR_H.cow : SPR_H.chicken) * z * (isCow ? 1 : 0.95)
+    const sw = SPR_W[v.species] * z * (v.species === 'chicken' ? 0.95 : 1)
+    const sh = SPR_H[v.species] * z * (v.species === 'chicken' ? 0.95 : 1)
 
     // Sombra suave bajo los pies.
     g.save()

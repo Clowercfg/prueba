@@ -1,4 +1,4 @@
-import type { ViewportInfo } from '../../game/types'
+﻿import type { ViewportInfo } from '../../game/types'
 import type { Camera2D } from '../../game/systems/Camera2D'
 import type { TileSystem } from '../../game/systems/TileSystem'
 import type { SpriteAssetManager } from '../../game/assets/SpriteAssetManager'
@@ -10,9 +10,9 @@ import { PAL } from './scene/palette'
 /**
  * Renderer Canvas 2D de Harvest Valley.
  *
- * Bandas: cache estático de tierra → blit → objetos y-sorteados (sprites
- * horneados en ObjectSpriteCache) intercalados con animales → ambiente →
- * grado de luz. Sin WebGL ni motores 3D: sólo Canvas2D (#15).
+ * Bandas: cache estÃ¡tico de tierra â†’ blit â†’ objetos y-sorteados (sprites
+ * horneados en ObjectSpriteCache) intercalados con animales â†’ ambiente â†’
+ * grado de luz. Sin WebGL ni motores 3D: sÃ³lo Canvas2D (#15).
  */
 export class Canvas2DRenderer implements Renderer {
   private readonly ctx: CanvasRenderingContext2D
@@ -25,7 +25,7 @@ export class Canvas2DRenderer implements Renderer {
   private lastPhysW = -1
   private lastPhysH = -1
 
-  // Métricas (#15): primer draw y media móvil de frame.
+  // MÃ©tricas (#15): primer draw y media mÃ³vil de frame.
   private readonly t0 = performance.now()
   private firstDrawMs = -1
   private frameEma = 0
@@ -49,19 +49,19 @@ export class Canvas2DRenderer implements Renderer {
     this.composer = new SceneComposer(camera, _tiles, entities ?? [], sprites ?? null, hooks)
   }
 
-  /** Selección actual (halo pintado bajo objetos; no invalida caches). */
+  /** SelecciÃ³n actual (halo pintado bajo objetos; no invalida caches). */
   setHighlight(h: Highlight): void {
     this.composer.setHighlight(h)
   }
 
-  /** Hit-test de animales para la capa de interacción (#20). */
+  /** Hit-test de animales para la capa de interacciÃ³n (#20). */
   pickAnimal(wx: number, wy: number): string | null {
     return this.composer.pickAnimal(wx, wy)
   }
 
   resize(viewport: ViewportInfo): void {
     this.ctx.setTransform(viewport.dpr, 0, 0, viewport.dpr, 0, 0)
-    // Suavizado de calidad media: nítido sin coste excesivo en móvil (#19).
+    // Suavizado de calidad media: nÃ­tido sin coste excesivo en mÃ³vil (#19).
     this.ctx.imageSmoothingEnabled = true
     this.ctx.imageSmoothingQuality = 'medium'
     this.viewW = Math.max(1, viewport.width)
@@ -89,15 +89,17 @@ export class Canvas2DRenderer implements Renderer {
     const { ctx } = this
     const tStart = performance.now()
 
-    // dt interno (segundos) para las capas animadas, acotado a 100 ms.
-    let dt = 0
+    // dt interno (segundos) para capas animadas, acotado a 100 ms. Se sigue
+    // registrando lastElapsed para futuras capas que necesiten dt.
     if (this.lastElapsed >= 0) {
-      dt = Math.min(0.1, Math.max(0, (elapsed - this.lastElapsed) / 1000))
+      const dt = Math.min(0.1, Math.max(0, (elapsed - this.lastElapsed) / 1000))
+      void dt
     }
     this.lastElapsed = elapsed
-    this.composer.update(dt)
+    // dt ya no se consume en el composer: la capa animal es espejo del estado real.
+    this.composer.update()
 
-    // Clear físico solo cuando cambia el tamaño/DPR (#15): la banda de
+    // Clear fÃ­sico solo cuando cambia el tamaÃ±o/DPR (#15): la banda de
     // suelo cacheada cubre siempre el viewport, pintar encima es opaco.
     const physW = ctx.canvas.width
     const physH = ctx.canvas.height
@@ -117,7 +119,7 @@ export class Canvas2DRenderer implements Renderer {
     this.composer.blit(ctx, this.viewW, this.viewH)
     this.composer.drawDynamic(ctx, elapsed, this.viewW, this.viewH)
 
-    // Métricas.
+    // MÃ©tricas.
     const frameDt = performance.now() - tStart
     if (this.firstDrawMs < 0) this.firstDrawMs = performance.now() - this.t0
     this.frameEma = this.frameEma === 0 ? frameDt : this.frameEma * 0.9 + frameDt * 0.1
@@ -125,7 +127,7 @@ export class Canvas2DRenderer implements Renderer {
     this.updatePerfOverlay()
   }
 
-  /** Overlay de rendimiento para verificación headless (?perf=1). */
+  /** Overlay de rendimiento para verificaciÃ³n headless (?perf=1). */
   private updatePerfOverlay(): void {
     if (!/[?&]perf=1/.test(window.location.search)) return
     if (!this.perfEl) {

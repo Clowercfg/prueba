@@ -12,6 +12,7 @@ import { useGameStore } from '../game/stores/gameStore'
 import { growthProgressOf, useCropStore } from '../game/stores/cropStore'
 import { PLOTS } from '../game/utils/terrainMath'
 import { handleFarmTap } from '../game/systems/tapActions'
+import { collectAnimalViews } from '../game/systems/animalViews'
 import { startCropSystem } from '../game/systems/cropSystem'
 import { startProcessingSystem } from '../game/systems/processingSystem'
 import { startEconomySystem } from '../game/systems/economySystem'
@@ -51,8 +52,8 @@ export function GameCanvas() {
     const sprites = new SpriteAssetManager(ASSETS_CONFIG.baseUrl)
     const entities = createFarmEntities()
 
-    // Estado REAL de cultivos (cropStore) → banda de tierra. El composer
-    // rebakea por pasos del 5% (gKey), así que leer progreso continuo es barato.
+    // Estado REAL del juego → renderer. Cultivos: progreso por parcela.
+    // Animales: vistas visuales derivadas del registry (farmStore + AnimalAI).
     const hooks = {
       getGrowths: () => {
         const out = new Array<number>(PLOTS.length).fill(0)
@@ -63,6 +64,7 @@ export function GameCanvas() {
         }
         return out
       },
+      getAnimals: () => collectAnimalViews(),
     }
 
     const renderer = new Canvas2DRenderer(canvas, camera, tiles, sprites, entities, hooks)
