@@ -112,6 +112,8 @@ export class SceneComposer {
   private cache: HTMLCanvasElement | null = null
   private cacheKey = ''
   private lastBuildMs = 0
+  /** ¿El último horneado de la banda incluyó el arte real de huertos? */
+  private plotArtInCache = false
 
   /** Gradientes del acabado, cacheados por tamaño de viewport (#16). */
   private gradeKey = ''
@@ -333,6 +335,11 @@ export class SceneComposer {
     const growths = this.hooks.getGrowths?.() ?? null
     const gKey = growths ? `|g${growths.map((v) => Math.round(v * 20)).join('.')}` : ''
     const key = `${viewW}x${viewH}@${dpr}|${cam.x.toFixed(2)},${cam.y.toFixed(2)},${zoomBucket(this.camera.zoom).toFixed(3)}|${this.camera.isFixed}${gKey}`
+    // El arte de huertos llega tras el primer render (precarga diferida):
+    // si su presencia cambió desde el último horneado, fuerza rebuild una vez.
+    if (this.cache && !!this.assets?.get('terrain/farm_plot_hd.png') !== this.plotArtInCache) {
+      this.cacheKey = ''
+    }
     if (this.cache && this.cacheKey === key) return
 
     const t0 = performance.now()
@@ -356,7 +363,9 @@ export class SceneComposer {
     }
 
     // 3c) Parcelas excavadas: último de la banda de tierra, bajo todo objeto.
-    drawPlotsGround(cg, growths ?? undefined)
+    const plotArt = this.assets?.get('terrain/farm_plot_hd.png') ?? null
+    drawPlotsGround(cg, growths ?? undefined, plotArt)
+    this.plotArtInCache = !!plotArt
     // Suelo pisado del corral también pertenece a esta banda.
     drawPenFloor(cg, PADS.pen)
     // #25: anillo de vegetación que extiende el terreno hasta los bordes.

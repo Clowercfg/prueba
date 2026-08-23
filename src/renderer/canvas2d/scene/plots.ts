@@ -76,8 +76,15 @@ export function traceRoundedIsoQuad(
   g.closePath()
 }
 
-/** Dibuja un bancal excavado con cultivo según crecimiento (0..1). */
-export function drawPlot(c: PaintCtx, pad: Pad, growth: number): void {
+/** Dibuja un bancal excavado con cultivo según crecimiento (0..1).
+ *  art: arte real del bancal (opcional); si existe sustituye el lecho
+ *  excavado conservando berma, sombras y cultivos encima. */
+export function drawPlot(
+  c: PaintCtx,
+  pad: Pad,
+  growth: number,
+  art?: HTMLImageElement | null,
+): void {
   const g = c.g
   const z = c.z
   const inset = 0.08
@@ -91,67 +98,103 @@ export function drawPlot(c: PaintCtx, pad: Pad, growth: number): void {
   g.fillStyle = mixHex('#b28c5f', '#93b066', 0.28)
   g.fill()
 
-  // ---- 2) Lecho hundido (excavación).
-  traceRoundedIsoQuad(c, x0 + 0.04, y0 + 0.04, x1 - 0.04, y1 - 0.04)
-  g.fillStyle = PAL.soil.dark
-  g.fill()
-
-  // Sombra interna: la pared lejana queda en sombra (luz arriba-izquierda).
-  g.save()
-  traceRoundedIsoQuad(c, x0 + 0.04, y0 + 0.04, x1 - 0.04, y1 - 0.04)
-  g.clip()
-  g.strokeStyle = 'rgba(0,0,0,0.30)'
-  g.lineWidth = 5 * z
-  traceRoundedIsoQuad(c, x0 - 0.07, y0 - 0.08, x1 - 0.02, y1 + 0.02)
-  g.stroke()
-  // Labio iluminado en la orilla cercana.
-  g.strokeStyle = withAlpha('#ecd7a5', 0.4)
-  g.lineWidth = 3 * z
-  traceRoundedIsoQuad(c, x0 + 0.08, y0 + 0.12, x1 + 0.05, y1 + 0.09)
-  g.stroke()
-  g.restore()
-
-  // Humedad: tierra recién arada más oscura.
-  if (growth < 0.55) {
-    traceRoundedIsoQuad(c, x0 + 0.04, y0 + 0.04, x1 - 0.04, y1 - 0.04)
-    g.fillStyle = withAlpha('#241407', 0.15 * (1 - growth / 0.55))
-    g.fill()
-  }
-
-  // ---- 3) Surcos ondulados paralelos al eje x.
+  const hasArt = !!(art && art.naturalWidth > 0 && art.naturalHeight > 0)
   const rows = 4
-  g.strokeStyle = PAL.soil.furrow
-  g.lineWidth = 2.6 * z
-  g.lineCap = 'round'
-  g.beginPath()
-  for (let k = 0; k < rows; k++) {
-    const fy = y0 + ((y1 - y0) * (k + 0.5)) / rows
-    const wob = (unit(pad.x0 * 7 + k, pad.y0, 933) - 0.5) * 0.07
-    const a = pt(c, x0 + 0.14, fy, 0)
-    const b = pt(c, x1 - 0.14, fy, 0)
-    const m = pt(c, (x0 + x1) / 2, fy + wob, 0)
-    g.moveTo(a.x, a.y)
-    g.quadraticCurveTo(m.x, m.y, b.x, b.y)
-  }
-  g.stroke()
 
-  // ---- 4) Detritus mínimos del bancal (pajitas y piedrita).
-  for (let n = 0; n < 3; n++) {
-    const px = x0 + 0.25 + unit(n, 19, 941) * (x1 - x0 - 0.5)
-    const py = y0 + 0.18 + unit(n, 23, 942) * (y1 - y0 - 0.36)
-    const s = c.at(px, py)
-    if (n === 0) {
-      g.fillStyle = PAL.dirt.pebble
-      g.beginPath()
-      g.ellipse(s.x, s.y, 1.7 * z, 1.1 * z, 0, 0, Math.PI * 2)
+  if (hasArt) {
+    // ---- 2) Lecho = imagen recortada al quad interior (cover-fit).
+    g.save()
+    traceRoundedIsoQuad(c, x0 + 0.04, y0 + 0.04, x1 - 0.04, y1 - 0.04)
+    g.clip()
+    const qs = [pt(c, x0, y0, 0), pt(c, x1, y0, 0), pt(c, x1, y1, 0), pt(c, x0, y1, 0)]
+    let bx0 = Infinity
+    let by0 = Infinity
+    let bx1 = -Infinity
+    let by1 = -Infinity
+    for (const q of qs) {
+      if (q.x < bx0) bx0 = q.x
+      if (q.y < by0) by0 = q.y
+      if (q.x > bx1) bx1 = q.x
+      if (q.y > by1) by1 = q.y
+    }
+    const s = Math.max((bx1 - bx0) / art.naturalWidth, (by1 - by0) / art.naturalHeight)
+    const dw = art.naturalWidth * s
+    const dh = art.naturalHeight * s
+    g.drawImage(art, (bx0 + bx1 - dw) / 2, (by0 + by1 - dh) / 2, dw, dh)
+
+    // Sombra interna: la pared lejana queda en sombra (luz arriba-izquierda).
+    g.strokeStyle = 'rgba(0,0,0,0.30)'
+    g.lineWidth = 5 * z
+    traceRoundedIsoQuad(c, x0 - 0.07, y0 - 0.08, x1 - 0.02, y1 + 0.02)
+    g.stroke()
+    // Labio iluminado en la orilla cercana.
+    g.strokeStyle = withAlpha('#ecd7a5', 0.4)
+    g.lineWidth = 3 * z
+    traceRoundedIsoQuad(c, x0 + 0.08, y0 + 0.12, x1 + 0.05, y1 + 0.09)
+    g.stroke()
+    g.restore()
+  } else {
+    // ---- 2) Lecho hundido (excavación).
+    traceRoundedIsoQuad(c, x0 + 0.04, y0 + 0.04, x1 - 0.04, y1 - 0.04)
+    g.fillStyle = PAL.soil.dark
+    g.fill()
+
+    // Sombra interna: la pared lejana queda en sombra (luz arriba-izquierda).
+    g.save()
+    traceRoundedIsoQuad(c, x0 + 0.04, y0 + 0.04, x1 - 0.04, y1 - 0.04)
+    g.clip()
+    g.strokeStyle = 'rgba(0,0,0,0.30)'
+    g.lineWidth = 5 * z
+    traceRoundedIsoQuad(c, x0 - 0.07, y0 - 0.08, x1 - 0.02, y1 + 0.02)
+    g.stroke()
+    // Labio iluminado en la orilla cercana.
+    g.strokeStyle = withAlpha('#ecd7a5', 0.4)
+    g.lineWidth = 3 * z
+    traceRoundedIsoQuad(c, x0 + 0.08, y0 + 0.12, x1 + 0.05, y1 + 0.09)
+    g.stroke()
+    g.restore()
+
+    // Humedad: tierra recién arada más oscura.
+    if (growth < 0.55) {
+      traceRoundedIsoQuad(c, x0 + 0.04, y0 + 0.04, x1 - 0.04, y1 - 0.04)
+      g.fillStyle = withAlpha('#241407', 0.15 * (1 - growth / 0.55))
       g.fill()
-    } else {
-      g.strokeStyle = withAlpha('#d9bc8e', 0.7)
-      g.lineWidth = 1 * z
-      g.beginPath()
-      g.moveTo(s.x - 2 * z, s.y)
-      g.lineTo(s.x + 2 * z, s.y - 0.8 * z)
-      g.stroke()
+    }
+
+    // ---- 3) Surcos ondulados paralelos al eje x.
+    g.strokeStyle = PAL.soil.furrow
+    g.lineWidth = 2.6 * z
+    g.lineCap = 'round'
+    g.beginPath()
+    for (let k = 0; k < rows; k++) {
+      const fy = y0 + ((y1 - y0) * (k + 0.5)) / rows
+      const wob = (unit(pad.x0 * 7 + k, pad.y0, 933) - 0.5) * 0.07
+      const a = pt(c, x0 + 0.14, fy, 0)
+      const b = pt(c, x1 - 0.14, fy, 0)
+      const m = pt(c, (x0 + x1) / 2, fy + wob, 0)
+      g.moveTo(a.x, a.y)
+      g.quadraticCurveTo(m.x, m.y, b.x, b.y)
+    }
+    g.stroke()
+
+    // ---- 4) Detritus mínimos del bancal (pajitas y piedrita).
+    for (let n = 0; n < 3; n++) {
+      const px = x0 + 0.25 + unit(n, 19, 941) * (x1 - x0 - 0.5)
+      const py = y0 + 0.18 + unit(n, 23, 942) * (y1 - y0 - 0.36)
+      const s = c.at(px, py)
+      if (n === 0) {
+        g.fillStyle = PAL.dirt.pebble
+        g.beginPath()
+        g.ellipse(s.x, s.y, 1.7 * z, 1.1 * z, 0, 0, Math.PI * 2)
+        g.fill()
+      } else {
+        g.strokeStyle = withAlpha('#d9bc8e', 0.7)
+        g.lineWidth = 1 * z
+        g.beginPath()
+        g.moveTo(s.x - 2 * z, s.y)
+        g.lineTo(s.x + 2 * z, s.y - 0.8 * z)
+        g.stroke()
+      }
     }
   }
 

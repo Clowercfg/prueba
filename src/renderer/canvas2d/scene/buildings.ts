@@ -24,11 +24,16 @@ import { PLOT_GROWTH_DEMO, drawPlot, traceRoundedIsoQuad } from './plots'
 type Pad = { x0: number; y0: number; x1: number; y1: number }
 
 /** Pinta las parcelas en la banda de tierra (orden #12: bajo todo objeto).
- *  growths: crecimiento real por parcela; por defecto, demo determinista. */
-export function drawPlotsGround(c: PaintCtx, growths?: readonly number[]): void {
+ *  growths: crecimiento real por parcela; por defecto, demo determinista.
+ *  art: imagen opcional del lecho (se aplica a las 4 parcelas). */
+export function drawPlotsGround(
+  c: PaintCtx,
+  growths?: readonly number[],
+  art?: HTMLImageElement | null,
+): void {
   const plots: Pad[] = [PADS.plotA, PADS.plotB, PADS.plotC, PADS.plotD]
   for (let k = 0; k < plots.length; k++) {
-    drawPlot(c, plots[k], growths?.[k] ?? PLOT_GROWTH_DEMO[k] ?? 0)
+    drawPlot(c, plots[k], growths?.[k] ?? PLOT_GROWTH_DEMO[k] ?? 0, art)
   }
 }
 
