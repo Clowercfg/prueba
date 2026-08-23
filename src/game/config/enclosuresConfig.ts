@@ -18,13 +18,20 @@ export interface EnclosureDef {
   gate: { edge: "minX" | "maxX" | "minZ" | "maxZ"; t: number };
 }
 
+/**
+ * Bounds en el WORLD SPACE ÚNICO del mapa iso actual (1 unidad = 1 tile,
+ * banda PADS 0..28 — ver layoutConfig). Coinciden EXACTAMENTE con las áreas
+ * visuales donde los animales ya se dibujaban: spawn, IA, colisiones,
+ * renderer y selección comparten estos números sin ningún remapeo.
+ */
 export const ENCLOSURES: EnclosureDef[] = [
   {
     id: "cow-pen",
     name: "Corral de vacas",
     icon: "🐄",
     kind: "cow",
-    bounds: { minX: 36, maxX: 62, minZ: 26, maxZ: 48 },
+    // Pradera junto al granero (entre granero y reserva de la casa).
+    bounds: { minX: 13.2, maxX: 17.6, minZ: 9.2, maxZ: 14.2 },
     capacity: 12,
     gate: { edge: "minZ", t: 0.5 },
   },
@@ -33,7 +40,8 @@ export const ENCLOSURES: EnclosureDef[] = [
     name: "Corral de aves",
     icon: "🐔",
     kind: "chicken",
-    bounds: { minX: 40, maxX: 56, minZ: -2, maxZ: 14 },
+    // El corral cercado dibujado (PADS.pen y su suelo pisado).
+    bounds: { minX: 18.7, maxX: 22.3, minZ: 22.6, maxZ: 25.7 },
     capacity: 24,
     gate: { edge: "minZ", t: 0.4 },
   },
@@ -42,7 +50,8 @@ export const ENCLOSURES: EnclosureDef[] = [
     name: "Pocilga",
     icon: "🐖",
     kind: "pig",
-    bounds: { minX: 31, maxX: 55, minZ: -50, maxZ: -32 },
+    // Descampado al norte del corral de aves.
+    bounds: { minX: 15.0, maxX: 18.0, minZ: 15.4, maxZ: 19.4 },
     capacity: 20,
     gate: { edge: "minX", t: 0.5 },
   },

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+﻿import { useEffect, useRef } from 'react'
 import { ASSETS_CONFIG } from '../game/config/assetsConfig'
 import { CONTENT_VIEW, SAFE_AREA, WORLD_BOUNDS } from '../game/config/layoutConfig'
 import { GameLoop } from '../game/systems/GameLoop'
@@ -10,7 +10,7 @@ import { SpriteAssetManager } from '../game/assets/SpriteAssetManager'
 import { createFarmEntities } from '../game/entities/farmEntities'
 import { useGameStore } from '../game/stores/gameStore'
 import { growthProgressOf, useCropStore } from '../game/stores/cropStore'
-import { PLOTS } from '../game/utils/terrainMath'
+import { PLOT_PADS } from '../game/config/layoutConfig'
 import { handleFarmTap } from '../game/systems/tapActions'
 import { collectAnimalViews } from '../game/systems/animalViews'
 import { startCropSystem } from '../game/systems/cropSystem'
@@ -23,13 +23,13 @@ import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 const FPS_SAMPLE_MS = 500
 
 /**
- * Host del canvas. CÁMARA COMPLETAMENTE FIJA (#25): el encuadre es el fit
- * portrait de toda la granja y NUNCA se libera — sin pan, sin pinch y sin
- * rueda (sólo tap de selección). En cada resize se recalcula el fit estático.
+ * Host del canvas. CÃMARA COMPLETAMENTE FIJA (#25): el encuadre es el fit
+ * portrait de toda la granja y NUNCA se libera â€” sin pan, sin pinch y sin
+ * rueda (sÃ³lo tap de selecciÃ³n). En cada resize se recalcula el fit estÃ¡tico.
  * El fondo es pradera continua: nunca se ve espacio fuera del mapa. Los
  * assets cargan en background tras el primer frame y sustituyen los fallbacks.
  *
- * #24: sólo existe el motor canvas2d; ?engine=canvas2d se acepta explícito y
+ * #24: sÃ³lo existe el motor canvas2d; ?engine=canvas2d se acepta explÃ­cito y
  * cualquier otro valor cae al mismo motor.
  */
 export function GameCanvas() {
@@ -39,12 +39,12 @@ export function GameCanvas() {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    void new URLSearchParams(window.location.search).get('engine') // aceptado: único motor
+    void new URLSearchParams(window.location.search).get('engine') // aceptado: Ãºnico motor
 
     const store = useGameStore.getState()
     store.setStatus('running')
 
-    // Mundo: límites REALES del terreno (#25) derivados de la banda activa.
+    // Mundo: lÃ­mites REALES del terreno (#25) derivados de la banda activa.
     const camera = new Camera2D(WORLD_BOUNDS)
     camera.setViewport({ width: canvas.clientWidth || 1, height: canvas.clientHeight || 1 })
 
@@ -52,11 +52,11 @@ export function GameCanvas() {
     const sprites = new SpriteAssetManager(ASSETS_CONFIG.baseUrl)
     const entities = createFarmEntities()
 
-    // Estado REAL del juego → renderer. Cultivos: progreso por parcela.
+    // Estado REAL del juego â†’ renderer. Cultivos: progreso por parcela.
     // Animales: vistas visuales derivadas del registry (farmStore + AnimalAI).
     const hooks = {
       getGrowths: () => {
-        const out = new Array<number>(PLOTS.length).fill(0)
+        const out = new Array<number>(PLOT_PADS.length).fill(0)
         for (const p of useCropStore.getState().planted) {
           if (p.plotIndex >= 0 && p.plotIndex < out.length) {
             out[p.plotIndex] = p.state === 'ready' ? 1 : growthProgressOf(p)
@@ -69,7 +69,7 @@ export function GameCanvas() {
 
     const renderer = new Canvas2DRenderer(canvas, camera, tiles, sprites, entities, hooks)
 
-    // Encuadre estático: granja completa centrada en el rect útil (safe areas).
+    // Encuadre estÃ¡tico: granja completa centrada en el rect Ãºtil (safe areas).
     // Se recalcula en cada resize; el usuario no puede alterarlo (#25).
     const fitFarmToViewport = (viewport: { width: number; height: number }): void => {
       camera.setViewport(viewport)
@@ -86,9 +86,9 @@ export function GameCanvas() {
       fitFarmToViewport(viewport)
     })
 
-    // Interacción (#20/#25): SOLO tap. Pan/pinch/rueda deshabilitados.
-    // Las reglas de negocio viven en tapActions; aquí sólo el wiring:
-    // Interaction (screen→world) + hit-test del renderer inyectados.
+    // InteracciÃ³n (#20/#25): SOLO tap. Pan/pinch/rueda deshabilitados.
+    // Las reglas de negocio viven en tapActions; aquÃ­ sÃ³lo el wiring:
+    // Interaction (screenâ†’world) + hit-test del renderer inyectados.
     const interaction = new Interaction(
       canvas,
       camera,
@@ -99,7 +99,7 @@ export function GameCanvas() {
       { pan: false, pinch: false, wheel: false },
     )
 
-    // Selección → highlight de escena (sin pasar por React).
+    // SelecciÃ³n â†’ highlight de escena (sin pasar por React).
     const syncHighlight = (): void => {
       renderer.setHighlight(useGameStore.getState().selection)
     }
@@ -136,26 +136,26 @@ export function GameCanvas() {
       },
     )
 
-    resize.attach() // aplica tamaño + encuadre antes del primer frame
+    resize.attach() // aplica tamaÃ±o + encuadre antes del primer frame
     interaction.attach() // entrada disponible inmediatamente (#20)
-    loop.start() // PRIMERO el juego; los assets van detrás, nunca bloquean
+    loop.start() // PRIMERO el juego; los assets van detrÃ¡s, nunca bloquean
 
     // Sistema de cultivos migrado: tick de 1 s sobre cropStore (crecimiento por horas reales).
     const stopCropSystem = startCropSystem()
     // Sistema de procesamiento migrado: tick de 1 s sobre processingStore (entrega de productos).
     const stopProcessingSystem = startProcessingSystem()
-    // Sistema económico migrado: recolección de producción animal cada 4 s.
+    // Sistema econÃ³mico migrado: recolecciÃ³n de producciÃ³n animal cada 4 s.
     const stopEconomySystem = startEconomySystem()
-    // Sistema veterinario migrado: altas médicas + rollo de enfermedad (config).
+    // Sistema veterinario migrado: altas mÃ©dicas + rollo de enfermedad (config).
     const stopVetSystem = startVetSystem()
 
-    // Precarga de críticos en background: cuando termina quedan marcados para
+    // Precarga de crÃ­ticos en background: cuando termina quedan marcados para
     // verificar en tests que el primer frame fue ANTES de la carga completa.
     void sprites.preload(ASSETS_CONFIG.critical).then(() => {
       debug.criticalDone = performance.now()
     })
 
-    // Handle de depuración temporal para tests headless; se elimina en fases futuras.
+    // Handle de depuraciÃ³n temporal para tests headless; se elimina en fases futuras.
     const debug = {
       camera,
       tiles,

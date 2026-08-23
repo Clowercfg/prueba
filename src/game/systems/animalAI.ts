@@ -1,7 +1,7 @@
 import type { AnimalAgent, AnimalBounds } from "../types/entities";
 import { terrainHeight } from "../utils/terrainMath";
-import { WORLD } from "../config/worldConfig";
 import { OBSTACLES } from "../config/buildingsLayout";
+import { WORLD_BOUNDS } from "../config/layoutConfig";
 import { getTreeColliders } from "../utils/treeColliders";
 import { angLerp, clamp, lerp } from "../utils/math";
 import { useVetStore } from "../stores/vetStore";
@@ -182,8 +182,8 @@ export function updateAgent(a: AnimalAgent, dt: number, rng: () => number, now: 
   a.velocity[1] = 0;
   a.velocity[2] = lerp(a.velocity[2], vz, k);
 
-  a.position[0] = clamp(a.position[0] + a.velocity[0] * dt, -WORLD.half + 8, WORLD.half - 8);
-  a.position[2] = clamp(a.position[2] + a.velocity[2] * dt, -WORLD.half + 8, WORLD.half - 8);
+  a.position[0] = clamp(a.position[0] + a.velocity[0] * dt, WORLD_BOUNDS.minX, WORLD_BOUNDS.maxX);
+  a.position[2] = clamp(a.position[2] + a.velocity[2] * dt, WORLD_BOUNDS.minY, WORLD_BOUNDS.maxY);
   clampToBounds(a);
   a.position[1] = terrainHeight(a.position[0], a.position[2]);
 

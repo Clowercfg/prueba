@@ -31,8 +31,9 @@ const SCALE = {
 
 /** Árboles: (i, j, variante) — todos con |u| ≤ 6 para que la copa completa
  *  quede dentro del encuadre fijo (borde de banda u=±7 reservado a terreno).
- *  Colocados a mano para no pisar pads, caminos, huertos ni estanque. */
-const TREE_SPOTS: ReadonlyArray<readonly [number, number, number]> = [
+ *  Colocados a mano para no pisar pads, caminos, huertos ni estanque.
+ *  Exportados: son TAMBIÉN la fuente de colliders de la IA (world space único). */
+export const TREE_SPOTS: ReadonlyArray<readonly [number, number, number]> = [
   [5, 6, 0], [4, 9, 1], [6, 12, 0], // marco izquierdo del granero
   [11, 5, 1], [13, 7, 2], // marco derecho del granero
   [9, 4, 2], [6, 3, 0], [3, 8, 1], // bosque superior

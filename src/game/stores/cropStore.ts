@@ -1,8 +1,8 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import { getCropEconomy } from "../config/economyConfig";
 import { useEconomyStore } from "./economyStore";
 import { useUpgradesStore } from "./upgradesStore";
-import { PLOTS } from "../utils/terrainMath";
+import { PLOT_PADS } from "../config/layoutConfig";
 
 export type CropState = "growing" | "ready";
 
@@ -21,31 +21,31 @@ export interface CropInventory {
 }
 
 /**
- * Economía de cultivos. Reglas:
+ * EconomÃ­a de cultivos. Reglas:
  * - Comprar semillas descuenta su precio del saldo del jugador.
  * - La semilla se consume al sembrar (sin coste adicional).
  * - Al sembrar se plantan TODAS las semillas disponibles de golpe (hasta capacidad del granero).
  * - Tras `growthHours` el cultivo queda listo para cosechar.
  * - Al cosechar se recogen TODAS las unidades listas de golpe.
- * - Al vender se añade el precio de venta por unidad al saldo.
+ * - Al vender se aÃ±ade el precio de venta por unidad al saldo.
  */
 interface CropStore {
   inventory: Record<string, CropInventory>;
   planted: PlantedCrop[];
   nextId: number;
-  /** Compra semillas: descuenta qty * seedPrice del saldo y las añade al inventario. */
+  /** Compra semillas: descuenta qty * seedPrice del saldo y las aÃ±ade al inventario. */
   buySeed: (cropId: string, qty?: number) => boolean;
   /** Siembra todas las semillas disponibles de un cultivo en una parcela (hasta capacidad granero). */
   plantCrop: (cropId: string, plotIndex: number) => { planted: number } | false;
-  /** Encuentra el primer índice de parcela vacía, o -1 si no hay ninguna libre. */
+  /** Encuentra el primer Ã­ndice de parcela vacÃ­a, o -1 si no hay ninguna libre. */
   findEmptyPlot: () => number;
-  /** Actualiza el estado de los cultivos según el tiempo transcurrido. */
+  /** Actualiza el estado de los cultivos segÃºn el tiempo transcurrido. */
   tick: () => void;
   /** Cosecha TODAS las unidades listas de una parcela. */
   harvestCrop: (id: number) => { harvested: number } | false;
-  /** Vende cosecha del inventario: añade qty * sellPrice al saldo. */
+  /** Vende cosecha del inventario: aÃ±ade qty * sellPrice al saldo. */
   sellHarvest: (cropId: string, qty: number) => boolean;
-  /** Añade cosecha al inventario (herramienta de prueba/depuración). */
+  /** AÃ±ade cosecha al inventario (herramienta de prueba/depuraciÃ³n). */
   addHarvest: (cropId: string, qty?: number) => boolean;
 }
 
@@ -63,7 +63,7 @@ export function growthMsOf(planted: Pick<PlantedCrop, "cropId">): number {
   return econ ? econ.growthHours * 3600 * 1000 : 0;
 }
 
-/** Progreso de crecimiento 0..1 según el tiempo transcurrido. */
+/** Progreso de crecimiento 0..1 segÃºn el tiempo transcurrido. */
 export function growthProgressOf(planted: PlantedCrop): number {
   const ms = growthMsOf(planted);
   return ms > 0 ? Math.min(1, (Date.now() - planted.plantedAt) / ms) : 1;
@@ -90,7 +90,7 @@ export const useCropStore = create<CropStore>((set, get) => ({
   plantCrop: (cropId, plotIndex) => {
     const econ = getCropEconomy(cropId);
     if (!econ) return false;
-    if (plotIndex < 0 || plotIndex >= PLOTS.length) return false;
+    if (plotIndex < 0 || plotIndex >= PLOT_PADS.length) return false;
     if (get().planted.some((p) => p.plotIndex === plotIndex)) return false;
     const inv = get().inventory[cropId];
     if (!inv || inv.seeds < 1) return false;
@@ -115,7 +115,7 @@ export const useCropStore = create<CropStore>((set, get) => ({
 
   findEmptyPlot: () => {
     const occupied = new Set(get().planted.map((p) => p.plotIndex));
-    for (let i = 0; i < PLOTS.length; i++) {
+    for (let i = 0; i < PLOT_PADS.length; i++) {
       if (!occupied.has(i)) return i;
     }
     return -1;

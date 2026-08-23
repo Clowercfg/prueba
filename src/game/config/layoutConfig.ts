@@ -107,3 +107,14 @@ export function padCenterWorld(pad: { x0: number; y0: number; x1: number; y1: nu
 } {
   return { x: (pad.x0 + pad.x1 + 1) / 2, y: (pad.y0 + pad.y1 + 1) / 2 }
 }
+
+/**
+ * Parcelas jugables en orden lógico: cropStore indexa sus plantaciones y la
+ * interacción resuelve taps contra ESTA lista (world space único).
+ */
+export const PLOT_PADS: ReadonlyArray<{ x0: number; y0: number; x1: number; y1: number }> = [
+  PADS.plotA,
+  PADS.plotB,
+  PADS.plotC,
+  PADS.plotD,
+]
