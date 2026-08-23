@@ -37,6 +37,23 @@ body {
   /* Canvas inmersivo: la BottomBar es overlay nativa y gestiona su propia
      safe-area; arriba se respeta notch/safe area del HUD */
   padding-top: env(safe-area-inset-top);
+  /* Barra de sistema negra inferior: toda la UI se ancla POR ENCIMA de ella. */
+  --sysbar-h: calc(env(safe-area-inset-bottom) + 12px);
+}
+
+/* ------------------------------------------------------------------ */
+/* Barra de sistema negra (franja inferior tipo home-indicator).       */
+/* Opaca: absorbe la safe-area; ningún elemento UI la pisa.            */
+/* ------------------------------------------------------------------ */
+
+.system-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--sysbar-h);
+  background: #000;
+  z-index: 30;
 }
 
 .game-canvas {
@@ -85,9 +102,10 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  /* Apoyada SOBRE la barra negra (arriba en posición), nunca encima de ella. */
+  bottom: var(--sysbar-h);
   z-index: 20;
-  padding: 5px 4px calc(env(safe-area-inset-bottom) + 14px);
+  padding: 5px 4px 14px;
   background: rgba(14, 30, 18, 0.78);
   backdrop-filter: blur(8px);
   border-radius: 16px 16px 0 0;
@@ -181,11 +199,11 @@ body {
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  /* deja hueco para HUD arriba y barra abajo */
+  /* deja hueco para HUD arriba y barra + barra de sistema abajo */
   padding:
     calc(env(safe-area-inset-top) + 52px)
     16px
-    calc(env(safe-area-inset-bottom) + 85px);
+    calc(var(--sysbar-h) + 85px);
 }
 
 .panel-card {

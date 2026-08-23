@@ -33,6 +33,8 @@ export function GameApp() {
       <Hud />
       <PanelHost />
       <BottomBar />
+      {/* Barra de sistema negra: la UI vive por encima de esta franja. */}
+      <div className="system-bar" aria-hidden />
     </div>
   )
 }
