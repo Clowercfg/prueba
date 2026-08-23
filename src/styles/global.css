@@ -657,3 +657,113 @@ body {
 .ap-notice.st-err {
   color: #ff9d87;
 }
+
+/* ------------------------------------------------------------------ */
+/* Menú "Más" y paneles secundarios                                    */
+/* ------------------------------------------------------------------ */
+
+.mp-list,
+.iv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mp-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  padding: 12px;
+  cursor: pointer;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+.mp-item:active {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.mp-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.mp-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mp-text b {
+  font-size: 14px;
+}
+
+.mp-text small {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.mp-arrow {
+  font-size: 20px;
+  opacity: 0.4;
+}
+
+.row-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px;
+}
+
+.rc-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.rc-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rc-main b {
+  font-size: 13px;
+}
+
+.rc-main small {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.rc-sub {
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.rc-max {
+  font-weight: 800;
+  font-size: 12px;
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+.vt-sick {
+  color: #ff9d87;
+}
+
+.vt-rec {
+  color: #ffd27a;
+}

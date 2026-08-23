@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
 import { useUiStore } from '../game/stores/uiStore'
 
 /**
  * Navegación principal (capa React pura): ninguna regla de negocio vive aquí,
  * sólo traduce taps a acciones de uiStore (sección activa / tienda / home).
- * Los paneles reales se conectarán después vía React.lazy en PanelHost.
+ * El botón "Más" abre el menú secundario (MorePanel vía PanelHost); los
+ * paneles reales se cargan con React.lazy.
  */
 
 type TabId = 'farm' | 'animals' | 'crops' | 'processing' | 'store' | 'more'
@@ -82,12 +82,6 @@ const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'more', label: 'Más' },
 ]
 
-/** Opciones del menú "Más": sólo ids ya contemplados en uiStore con sistema migrado. */
-const MORE_OPTIONS: Array<{ id: 'veterinary' | 'infrastructure'; label: string }> = [
-  { id: 'veterinary', label: 'Veterinario' },
-  { id: 'infrastructure', label: 'Infraestructura' },
-]
-
 export function BottomBar() {
   const section = useUiStore((s) => s.section)
   const storeOpen = useUiStore((s) => s.storeOpen)
@@ -95,51 +89,24 @@ export function BottomBar() {
   const toggleStore = useUiStore((s) => s.toggleStore)
   const closeOverlays = useUiStore((s) => s.closeOverlays)
 
-  const [moreOpen, setMoreOpen] = useState(false)
-
-  // El menú secundario se cierra ante cualquier cambio de navegación externo.
-  useEffect(() => {
-    setMoreOpen(false)
-  }, [section, storeOpen])
-
   const activeTab: TabId =
-    storeOpen ? 'store' : section === 'animals' || section === 'crops' || section === 'processing' ? section : 'farm'
+    storeOpen
+      ? 'store'
+      : section === 'animals' || section === 'crops' || section === 'processing' || section === 'more'
+        ? section
+        : 'farm'
 
   function onTab(id: TabId): void {
     if (id === 'farm') {
-      setMoreOpen(false)
       closeOverlays()
       return
     }
-    if (id === 'more') {
-      setMoreOpen((v) => !v)
-      return
-    }
-    setMoreOpen(false)
     if (id === 'store') toggleStore()
     else toggleSection(id)
   }
 
   return (
     <nav className="bottom-bar" aria-label="Navegación principal">
-      {moreOpen && (
-        <div className="bb-more" role="menu">
-          {MORE_OPTIONS.map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              role="menuitem"
-              className={`bb-more-item${section === o.id ? ' is-active' : ''}`}
-              onClick={() => {
-                setMoreOpen(false)
-                toggleSection(o.id)
-              }}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
       <div className="bb-tabs">
         {TABS.map((t) => (
           <button

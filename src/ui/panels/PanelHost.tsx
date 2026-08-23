@@ -18,6 +18,11 @@ const AnimalsPanel = lazy(() => import("./AnimalsPanel"));
 const CropsPanel = lazy(() => import("./CropsPanel"));
 const ProcessingPanel = lazy(() => import("./ProcessingPanel"));
 const StorePanel = lazy(() => import("./StorePanel"));
+const MorePanel = lazy(() => import("./MorePanel"));
+const InventoryPanel = lazy(() => import("./InventoryPanel"));
+const InfrastructurePanel = lazy(() => import("./InfrastructurePanel"));
+const UpgradesPanel = lazy(() => import("./UpgradesPanel"));
+const VetPanel = lazy(() => import("./VetPanel"));
 
 const PANEL_TITLES: Record<string, string> = {
   animals: 'Animales',
@@ -25,6 +30,9 @@ const PANEL_TITLES: Record<string, string> = {
   processing: 'Procesar',
   veterinary: 'Veterinario',
   infrastructure: 'Infraestructura',
+  inventory: 'Inventario',
+  upgrades: 'Mejoras',
+  more: 'Más',
 }
 
 export function PanelHost() {
@@ -63,6 +71,26 @@ export function PanelHost() {
           ) : section === "processing" ? (
             <Suspense fallback={<p className="panel-loading">…</p>}>
               <ProcessingPanel />
+            </Suspense>
+          ) : section === "more" ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <MorePanel />
+            </Suspense>
+          ) : section === "inventory" ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <InventoryPanel />
+            </Suspense>
+          ) : section === "infrastructure" ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <InfrastructurePanel />
+            </Suspense>
+          ) : section === "upgrades" ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <UpgradesPanel />
+            </Suspense>
+          ) : section === "veterinary" ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <VetPanel />
             </Suspense>
           ) : (
             <p className="panel-soon">Disponible próximamente</p>
