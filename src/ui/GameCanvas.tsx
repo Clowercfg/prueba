@@ -9,7 +9,10 @@ import { worldToTileIndex } from '../game/systems/isometricProjection'
 import { TileSystem } from '../game/systems/TileSystem'
 import { SpriteAssetManager } from '../game/assets/SpriteAssetManager'
 import { createFarmEntities } from '../game/entities/farmEntities'
-import { PLOT_KEYS, READY_AT, useGameStore, type PlotId } from '../game/stores/gameStore'
+import { PLOT_KEYS, useGameStore } from '../game/stores/gameStore'
+import { growthProgressOf, useCropStore } from '../game/stores/cropStore'
+import { PLOTS } from '../game/utils/terrainMath'
+import { tapPlot } from '../game/systems/tapActions'
 import { startCropSystem } from '../game/systems/cropSystem'
 import { startProcessingSystem } from '../game/systems/processingSystem'
 import { startEconomySystem } from '../game/systems/economySystem'
@@ -19,13 +22,12 @@ import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 
 const FPS_SAMPLE_MS = 500
 
-const PLOT_PADS: ReadonlyArray<{ id: PlotId; pad: { x0: number; y0: number; x1: number; y1: number } }> =
-  [
-    { id: 'plotA', pad: PADS.plotA },
-    { id: 'plotB', pad: PADS.plotB },
-    { id: 'plotC', pad: PADS.plotC },
-    { id: 'plotD', pad: PADS.plotD },
-  ]
+const PLOT_PADS: ReadonlyArray<{ pad: { x0: number; y0: number; x1: number; y1: number } }> = [
+  { pad: PADS.plotA },
+  { pad: PADS.plotB },
+  { pad: PADS.plotC },
+  { pad: PADS.plotD },
+]
 
 function tileInPad(
   i: number,
@@ -38,25 +40,18 @@ function tileInPad(
 
 /**
  * Resuelve un tap de mundo contra las reglas del juego (#20):
- *   parcela vacía → plantar · cultivo listo → cosechar ·
- *   animal/edificio → seleccionar · resto → deseleccionar.
+ *   parcela → tapPlot (sembrar/cosechar/seleccionar con estado REAL de
+ *   cropStore) · animal/edificio → seleccionar · resto → deseleccionar.
  */
 function handleFarmTap(renderer: Canvas2DRenderer, wx: number, wy: number): void {
   const store = useGameStore.getState()
   const { i, j } = worldToTileIndex(wx, wy)
 
-  for (const { id, pad } of PLOT_PADS) {
-    if (!tileInPad(i, j, pad)) continue
-    const g = store.crops[id]
-    if (g <= 0.001) {
-      store.plantSeed(id)
-    } else if (g >= READY_AT) {
-      store.harvest(id)
-      store.select({ kind: 'plot', id })
-    } else {
-      store.select({ kind: 'plot', id })
+  for (let index = 0; index < PLOT_KEYS.length; index++) {
+    if (tileInPad(i, j, PLOT_PADS[index].pad)) {
+      tapPlot(index)
+      return
     }
-    return
   }
 
   const animalId = renderer.pickAnimal(wx, wy)
@@ -112,11 +107,17 @@ export function GameCanvas() {
     const sprites = new SpriteAssetManager(ASSETS_CONFIG.baseUrl)
     const entities = createFarmEntities()
 
-    // Estado real de cultivos → banda de tierra (rebake por pasos visibles).
+    // Estado REAL de cultivos (cropStore) → banda de tierra. El composer
+    // rebakea por pasos del 5% (gKey), así que leer progreso continuo es barato.
     const hooks = {
       getGrowths: () => {
-        const crops = useGameStore.getState().crops
-        return PLOT_KEYS.map((k) => crops[k])
+        const out = new Array<number>(PLOTS.length).fill(0)
+        for (const p of useCropStore.getState().planted) {
+          if (p.plotIndex >= 0 && p.plotIndex < out.length) {
+            out[p.plotIndex] = p.state === 'ready' ? 1 : growthProgressOf(p)
+          }
+        }
+        return out
       },
     }
 
@@ -158,7 +159,6 @@ export function GameCanvas() {
     let fpsAccumMs = 0
     const loop = new GameLoop(
       (frame) => {
-        useGameStore.getState().tickCrops(frame.delta)
         tickAnimalAI(frame.delta) // IA de animales migrada (dt en segundos)
         camera.update(frame.delta)
 

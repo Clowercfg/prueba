@@ -492,3 +492,55 @@ body {
   user-select: none;
   touch-action: manipulation;
 }
+
+/* ------------------------------------------------------------------ */
+/* Panel de Cultivos (contenido)                                       */
+/* ------------------------------------------------------------------ */
+
+.cp-row-static {
+  cursor: default;
+}
+
+.cp-remaining {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.cp-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.cp-sell {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--hud-fg);
+  font-weight: 700;
+  font-size: 13px;
+  min-height: 38px;
+  padding: 0 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cp-sell:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cp-harvest {
+  align-self: center;
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  background: #58c26a;
+  color: #06300f;
+  font-weight: 800;
+  font-size: 12px;
+  min-height: 40px;
+  padding: 0 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+}

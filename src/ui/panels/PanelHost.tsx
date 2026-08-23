@@ -15,6 +15,7 @@ import { useUiStore } from "../../game/stores/uiStore";
  */
 
 const AnimalsPanel = lazy(() => import("./AnimalsPanel"));
+const CropsPanel = lazy(() => import("./CropsPanel"));
 
 const PANEL_TITLES: Record<string, string> = {
   animals: 'Animales',
@@ -48,6 +49,10 @@ export function PanelHost() {
           {section === "animals" && !storeOpen ? (
             <Suspense fallback={<p className="panel-loading">…</p>}>
               <AnimalsPanel />
+            </Suspense>
+          ) : section === "crops" && !storeOpen ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <CropsPanel />
             </Suspense>
           ) : (
             <p className="panel-soon">Disponible próximamente</p>
