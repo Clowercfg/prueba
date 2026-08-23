@@ -112,9 +112,10 @@ export class SceneComposer {
   private cache: HTMLCanvasElement | null = null
   private cacheKey = ''
   private lastBuildMs = 0
-  /** ¿El último horneado incluyó el arte real (huertos / fondo)? */
+  /** ¿El último horneado incluyó el arte real (huertos / fondo / anillo)? */
   private plotArtInCache = false
   private bgArtInCache = false
+  private ringArtInCache = false
 
   /** Gradientes del acabado, cacheados por tamaño de viewport (#16). */
   private gradeKey = ''
@@ -349,7 +350,8 @@ export class SceneComposer {
     if (
       this.cache &&
       (!!this.assets?.get('terrain/farm_plot_hd.png') !== this.plotArtInCache ||
-        !!this.assets?.get('terrain/ground_hd.png') !== this.bgArtInCache)
+        !!this.assets?.get('terrain/ground_hd.png') !== this.bgArtInCache ||
+        !!this.assets?.get('vegetation/ring_tree_hd.png') !== this.ringArtInCache)
     ) {
       this.cacheKey = ''
     }
@@ -390,7 +392,8 @@ export class SceneComposer {
     // Suelo pisado del corral también pertenece a esta banda.
     drawPenFloor(cg, PADS.pen)
     // #25: anillo de vegetación que extiende el terreno hasta los bordes.
-    drawMeadowRing(cg)
+    drawMeadowRing(cg, this.assets?.get('vegetation/ring_tree_hd.png') ?? null)
+    this.ringArtInCache = !!this.assets?.get('vegetation/ring_tree_hd.png')
 
     this.cache = cv
     this.cacheKey = key

@@ -689,9 +689,17 @@ function shadowFlatLocal(
  * de la banda, en tres hileras de densidad decreciente. Determinista;
  * se hornea en la banda de tierra (bajo objetos, fuera del área de juego).
  */
-export function drawMeadowRing(c: PaintCtx): void {
+export function drawMeadowRing(c: PaintCtx, art?: HTMLImageElement | null): void {
   const { halfU, vMin, vMax } = BAND_CONFIG
   const uEdge = halfU + 1
+
+  // Árbol/seto real: imagen anclada al punto de contacto con el suelo.
+  const blitArt = (base: Vec2S, H: number): boolean => {
+    if (!art || art.naturalWidth === 0 || art.naturalHeight === 0) return false
+    const w = H * (art.naturalWidth / art.naturalHeight)
+    c.g.drawImage(art, base.x - w / 2, base.y - H, w, H)
+    return true
+  }
 
   const cluster = (wx: number, wy: number, row: number, seed: number): void => {
     const r = unit(wx * 7.3, wy * 5.1, 700 + (seed % 97))
@@ -699,11 +707,14 @@ export function drawMeadowRing(c: PaintCtx): void {
     // Árbol pequeño ocasional en la hilera interior → línea de bosque.
     if (row === 0 && r < 0.15) {
       const h = 60 + unit(wy, wx, 701) * 34
+      if (blitArt(base, h)) return
       if (r < 0.06) drawPine(c, base, h, seed % 8 === 0 ? 1 : 2)
       else drawOak(c, base, h, seed % 5)
       return
     }
-    drawBush(c, base, 22 + unit(wx, wy, 702) * 14, seed % 6)
+    const hb = 22 + unit(wx, wy, 702) * 14
+    if (blitArt(base, hb)) return
+    drawBush(c, base, hb, seed % 6)
   }
 
   // Densidad por hilera: interior continua, exteriores raleadas.
