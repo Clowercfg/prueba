@@ -1,17 +1,20 @@
-import { useUiStore } from '../../game/stores/uiStore'
+import { Suspense, lazy } from "react";
+import { useUiStore } from "../../game/stores/uiStore";
 
 /**
- * Punto de entrada único de paneles. Hoy renderiza placeholders; cada caso
- * está aislado para sustituirlo después por React.lazy(() => import(...))
- * SIN tocar la barra ni el Game Core:
+ * Punto de entrada único de paneles. La cabecera (título + ✕) vive aquí y el
+ * contenido se delega por sección. Los paneles reales se cargan con
+ * React.lazy para no engordar el bundle inicial:
  *
- *   animals      → panels/AnimalsPanel    (farmStore)
+ *   animals      → panels/AnimalsPanel    (farmStore)   [REAL]
  *   crops        → panels/CropsPanel      (cropStore + CropSystem)
  *   processing   → panels/ProcessingPanel (processingStore/goodsStore)
  *   store        → panels/Store           (shopStore/economyStore/ofertas)
  *   veterinary   → panels/VetPanel        (vetStore)
  *   infrastructure→ panels/Infrastructure (buildingState/upgradesStore)
  */
+
+const AnimalsPanel = lazy(() => import("./AnimalsPanel"));
 
 const PANEL_TITLES: Record<string, string> = {
   animals: 'Animales',
@@ -41,7 +44,14 @@ export function PanelHost() {
               ✕
             </button>
           </header>
-          <p className="panel-soon">Disponible próximamente</p>
+
+          {section === "animals" && !storeOpen ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <AnimalsPanel />
+            </Suspense>
+          ) : (
+            <p className="panel-soon">Disponible próximamente</p>
+          )}
         </div>
       ) : null}
     </div>

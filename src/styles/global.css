@@ -288,3 +288,207 @@ body {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* ------------------------------------------------------------------ */
+/* Panel de Animales (contenido)                                       */
+/* ------------------------------------------------------------------ */
+
+.panel-loading {
+  margin: 8px 0 2px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.ap-scroll {
+  max-height: min(52vh, 430px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  margin-top: 2px;
+  padding-right: 2px;
+}
+
+.ap-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
+.ap-group {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ap-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ap-group-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.ap-group-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ap-group-title b {
+  font-size: 14px;
+}
+
+.ap-group-title small {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.ap-buy {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  background: #f4b63f;
+  color: #3a2503;
+  font-weight: 800;
+  font-size: 13px;
+  min-height: 38px;
+  padding: 0 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ap-prod {
+  margin: 2px 0 6px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.ap-notice {
+  margin: 2px 0 6px;
+  font-size: 12px;
+  color: #ffd27a;
+}
+
+.ap-none {
+  margin: 4px 0 2px;
+  font-size: 12px;
+  opacity: 0.65;
+  font-style: italic;
+}
+
+.ap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ap-row {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--hud-fg);
+  padding: 8px;
+  cursor: pointer;
+  font: inherit;
+  touch-action: manipulation;
+}
+
+.ap-row.selected {
+  border-color: #f4b63f;
+  background: rgba(244, 182, 63, 0.14);
+}
+
+.ap-row-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.ap-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ap-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ap-sub {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.ap-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.ap-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.ap-bar-fill.good {
+  background: #58c26a;
+}
+
+.ap-bar-fill.warn {
+  background: #e8a33d;
+}
+
+.ap-bar-fill.bad {
+  background: #d95b43;
+}
+
+.ap-chip {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.ap-chip.sick {
+  background: rgba(217, 91, 67, 0.25);
+  color: #ff9d87;
+}
+
+.ap-chip.recovering {
+  background: rgba(232, 163, 61, 0.22);
+  color: #ffc978;
+}
+
+.ap-treat {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(88, 194, 106, 0.18);
+  font-size: 17px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+}
