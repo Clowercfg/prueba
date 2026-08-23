@@ -1,18 +1,17 @@
 import { useEffect, useRef } from 'react'
 import { ASSETS_CONFIG } from '../game/config/assetsConfig'
-import { CONTENT_VIEW, PADS, SAFE_AREA, WORLD_BOUNDS } from '../game/config/layoutConfig'
+import { CONTENT_VIEW, SAFE_AREA, WORLD_BOUNDS } from '../game/config/layoutConfig'
 import { GameLoop } from '../game/systems/GameLoop'
 import { Camera2D } from '../game/systems/Camera2D'
 import { Interaction } from '../game/systems/Interaction'
 import { ResizeSystem } from '../game/systems/ResizeSystem'
-import { worldToTileIndex } from '../game/systems/isometricProjection'
 import { TileSystem } from '../game/systems/TileSystem'
 import { SpriteAssetManager } from '../game/assets/SpriteAssetManager'
 import { createFarmEntities } from '../game/entities/farmEntities'
-import { PLOT_KEYS, useGameStore } from '../game/stores/gameStore'
+import { useGameStore } from '../game/stores/gameStore'
 import { growthProgressOf, useCropStore } from '../game/stores/cropStore'
 import { PLOTS } from '../game/utils/terrainMath'
-import { tapPlot } from '../game/systems/tapActions'
+import { handleFarmTap } from '../game/systems/tapActions'
 import { startCropSystem } from '../game/systems/cropSystem'
 import { startProcessingSystem } from '../game/systems/processingSystem'
 import { startEconomySystem } from '../game/systems/economySystem'
@@ -21,61 +20,6 @@ import { tickAnimalAI } from '../game/systems/animalAI'
 import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 
 const FPS_SAMPLE_MS = 500
-
-const PLOT_PADS: ReadonlyArray<{ pad: { x0: number; y0: number; x1: number; y1: number } }> = [
-  { pad: PADS.plotA },
-  { pad: PADS.plotB },
-  { pad: PADS.plotC },
-  { pad: PADS.plotD },
-]
-
-function tileInPad(
-  i: number,
-  j: number,
-  pad: { x0: number; y0: number; x1: number; y1: number },
-  inflate = 0,
-): boolean {
-  return i >= pad.x0 - inflate && i <= pad.x1 + inflate && j >= pad.y0 - inflate && j <= pad.y1 + inflate
-}
-
-/**
- * Resuelve un tap de mundo contra las reglas del juego (#20):
- *   parcela → tapPlot (sembrar/cosechar/seleccionar con estado REAL de
- *   cropStore) · animal/edificio → seleccionar · resto → deseleccionar.
- */
-function handleFarmTap(renderer: Canvas2DRenderer, wx: number, wy: number): void {
-  const store = useGameStore.getState()
-  const { i, j } = worldToTileIndex(wx, wy)
-
-  for (let index = 0; index < PLOT_KEYS.length; index++) {
-    if (tileInPad(i, j, PLOT_PADS[index].pad)) {
-      tapPlot(index)
-      return
-    }
-  }
-
-  const animalId = renderer.pickAnimal(wx, wy)
-  if (animalId) {
-    store.select({ kind: 'animal', id: animalId })
-    return
-  }
-
-  // Edificios: rectángulo del pad con un pequeño margen táctil.
-  if (tileInPad(i, j, PADS.barn, 0.6)) {
-    store.select({ kind: 'building', id: 'barn' })
-    return
-  }
-  if (tileInPad(i, j, PADS.house, 0.6)) {
-    store.select({ kind: 'building', id: 'house' })
-    return
-  }
-  if (tileInPad(i, j, PADS.pen, 0.4)) {
-    store.select({ kind: 'building', id: 'pen' })
-    return
-  }
-
-  store.select(null)
-}
 
 /**
  * Host del canvas. CÁMARA COMPLETAMENTE FIJA (#25): el encuadre es el fit
@@ -141,10 +85,15 @@ export function GameCanvas() {
     })
 
     // Interacción (#20/#25): SOLO tap. Pan/pinch/rueda deshabilitados.
+    // Las reglas de negocio viven en tapActions; aquí sólo el wiring:
+    // Interaction (screen→world) + hit-test del renderer inyectados.
     const interaction = new Interaction(
       canvas,
       camera,
-      { onTap: (w) => handleFarmTap(renderer, w.x, w.y) },
+      {
+        onTap: (w) =>
+          handleFarmTap({ pickAnimal: (wx, wy) => renderer.pickAnimal(wx, wy) }, w.x, w.y),
+      },
       { pan: false, pinch: false, wheel: false },
     )
 
