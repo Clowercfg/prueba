@@ -84,12 +84,12 @@ export interface ComposerHooks {
 
 /**
  * Clave de asset FINAL para una entidad (#14). Los sprites procedurales son
- * el placeholder de calidad; cuando exista p.ej. buildings/barn_hd.png en
- * /public/assets/2d/ (aÃ±adiendo su clave a ASSETS_CONFIG.critical), se
- * adopta automÃ¡ticamente SIN tocar este renderer.
+ * el placeholder de calidad; cuando exista p.ej. buildings/barn.webp en
+ * /public/assets/2d/ (añadiendo su clave a ASSETS_CONFIG.critical), se
+ * adopta automáticamente SIN tocar este renderer.
  */
 function hdKey(entityKey: string): string {
-  return entityKey.replace(/\.png$/, '_hd.png')
+  return entityKey.replace(/\.png$/, '.webp')
 }
 
 export class SceneComposer {
@@ -351,9 +351,9 @@ export class SceneComposer {
     // presencia cambiÃ³ desde el Ãºltimo horneado, fuerza rebuild una vez.
     if (
       this.cache &&
-      (!!this.assets?.get('terrain/farm_plot_hd.png') !== this.plotArtInCache ||
-        !!this.assets?.get('terrain/ground_hd.png') !== this.bgArtInCache ||
-        !!this.assets?.get('vegetation/ring_tree_hd.png') !== this.ringArtInCache)
+      (!!this.assets?.get('terrain/farm_plot.webp') !== this.plotArtInCache ||
+        !!this.assets?.get('terrain/ground.webp') !== this.bgArtInCache ||
+        !!this.assets?.get('vegetation/ring_tree.webp') !== this.ringArtInCache)
     ) {
       this.cacheKey = ''
     }
@@ -368,13 +368,13 @@ export class SceneComposer {
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
 
     // 1-2) Pradera + piso real recortado al rombo + agua estÃ¡tica.
-    this.ground.setGroundArt(!!this.assets?.get('terrain/ground_hd.png'))
+    this.ground.setGroundArt(!!this.assets?.get('terrain/ground.webp'))
     this.ground.paintBackground(
       g,
       this.camera,
       viewW,
       viewH,
-      this.assets?.get('terrain/ground_hd.png') ?? null,
+      this.assets?.get('terrain/ground.webp') ?? null,
     )
     this.bgArtInCache = this.ground.artActive
     this.ground.paintWaterStatic(g, this.camera)
@@ -388,14 +388,14 @@ export class SceneComposer {
     }
 
     // 3c) Parcelas excavadas: Ãºltimo de la banda de tierra, bajo todo objeto.
-    const plotArt = this.assets?.get('terrain/farm_plot_hd.png') ?? null
+    const plotArt = this.assets?.get('terrain/farm_plot.webp') ?? null
     drawPlotsGround(cg, growths ?? undefined, plotArt)
     this.plotArtInCache = !!plotArt
     // Suelo pisado del corral tambiÃ©n pertenece a esta banda.
     drawPenFloor(cg, PADS.pen)
     // #25: anillo de vegetaciÃ³n que extiende el terreno hasta los bordes.
-    drawMeadowRing(cg, this.assets?.get('vegetation/ring_tree_hd.png') ?? null)
-    this.ringArtInCache = !!this.assets?.get('vegetation/ring_tree_hd.png')
+    drawMeadowRing(cg, this.assets?.get('vegetation/ring_tree.webp') ?? null)
+    this.ringArtInCache = !!this.assets?.get('vegetation/ring_tree.webp')
 
     this.cache = cv
     this.cacheKey = key

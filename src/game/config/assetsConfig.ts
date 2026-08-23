@@ -1,16 +1,23 @@
 /**
  * Configuración de assets 2.5D.
- * Formato preferido: WebP con transparencia; PNG solo cuando sea necesario.
- * Los sprites dev de terreno se generan con: npm run assets:generate
+ * Formato: WebP con transparencia (los grandes); tiles de terreno dev en PNG
+ * 64×64 (~500 B cada uno). Los sprites se generan con: npm run assets:generate
  */
 export const ASSETS_CONFIG = {
-  /** Raíz pública de sprites (servida por Vite desde /public). */
-  baseUrl: '/assets/2d/',
+  /**
+   * Raíz pública de sprites. DEBE derivarse de BASE_URL: GitHub Pages sirve
+   * bajo /prueba/ y una ruta absoluta '/assets/2d/' da 404 (el manager cae
+   * a procedural sin avisar).
+   */
+  baseUrl: `${import.meta.env.BASE_URL}assets/2d/`,
 
   /** Tamaño (px) de la textura cuadrada que mapea al rombo isométrico. */
   spriteSize: 64,
 
-  /** Rutas de objetos de la granja (claves claras para SpriteAssetManager). */
+  /**
+   * Rutas base de objetos de la granja (identificadores de FarmEntity).
+   * El renderer resuelve el asset FINAL vía hdKey(): .png → .webp.
+   */
   paths: {
     tree: 'vegetation/tree.png',
     barn: 'buildings/barn.png',
@@ -21,10 +28,11 @@ export const ASSETS_CONFIG = {
 
   /**
    * Assets críticos: se precargan DESPUÉS del primer render (nunca bloquean).
-   * Terreno base + los 5 objetos de la granja portrait.
+   * Terreno base + los objetos visibles de la escena inicial, todos en WebP
+   * (total ≈ 0.93 MB). Los árboles/estanque son procedurales: sin asset.
    */
   critical: [
-    'terrain/ground_hd.png',
+    'terrain/ground.webp',
     'terrain/grass_01.png',
     'terrain/grass_02.png',
     'terrain/grass_03.png',
@@ -32,15 +40,10 @@ export const ASSETS_CONFIG = {
     'terrain/water_01.png',
     'terrain/water_02.png',
     'terrain/dirt_01.png',
-    'vegetation/tree.png',
-    'vegetation/ring_tree_hd.png',
-    'buildings/barn.png',
-    'buildings/barn_hd.png',
-    'terrain/pond.png',
-    'decoration/animal_pen.png',
-    'decoration/animal_pen_hd.png',
-    'terrain/farm_plot.png',
-    'terrain/farm_plot_hd.png',
+    'vegetation/ring_tree.webp',
+    'buildings/barn.webp',
+    'decoration/animal_pen.webp',
+    'terrain/farm_plot.webp',
   ],
 
   /** Assets secundarios: cargar bajo demanda con loadWhenIdle(). */
