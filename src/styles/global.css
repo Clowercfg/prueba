@@ -228,3 +228,63 @@ body {
   font-size: 13px;
   opacity: 0.85;
 }
+
+/* ------------------------------------------------------------------ */
+/* Pantalla de bloqueo (fuera de Telegram)                             */
+/* ------------------------------------------------------------------ */
+
+.blocked-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+  background: radial-gradient(120% 90% at 50% 0%, #2c5a35 0%, #16301d 55%, #0e2015 100%);
+}
+
+.blocked-card {
+  width: min(340px, 100%);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 22px 18px;
+  color: var(--hud-fg);
+}
+
+.blocked-title {
+  display: block;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  margin-bottom: 10px;
+}
+
+.blocked-text {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
+.blocked-cta {
+  display: inline-block;
+  min-height: 46px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  border: 0;
+  background: #2ea6ff;
+  color: #04263f;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.blocked-cta-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
