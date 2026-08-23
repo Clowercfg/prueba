@@ -11,6 +11,7 @@ import { SpriteAssetManager } from '../game/assets/SpriteAssetManager'
 import { createFarmEntities } from '../game/entities/farmEntities'
 import { PLOT_KEYS, READY_AT, useGameStore, type PlotId } from '../game/stores/gameStore'
 import { startCropSystem } from '../game/systems/cropSystem'
+import { startProcessingSystem } from '../game/systems/processingSystem'
 import { tickAnimalAI } from '../game/systems/animalAI'
 import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 
@@ -188,6 +189,8 @@ export function GameCanvas() {
 
     // Sistema de cultivos migrado: tick de 1 s sobre cropStore (crecimiento por horas reales).
     const stopCropSystem = startCropSystem()
+    // Sistema de procesamiento migrado: tick de 1 s sobre processingStore (entrega de productos).
+    const stopProcessingSystem = startProcessingSystem()
 
     // Precarga de críticos en background: cuando termina quedan marcados para
     // verificar en tests que el primer frame fue ANTES de la carga completa.
@@ -211,6 +214,7 @@ export function GameCanvas() {
     return () => {
       loop.stop()
       stopCropSystem()
+      stopProcessingSystem()
       resize.detach()
       interaction.detach()
       unsubStore()
