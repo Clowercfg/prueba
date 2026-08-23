@@ -1,0 +1,565 @@
+{
+  "app": {
+    "brand": "IMMERSIVE FARM 3D",
+    "tagline": "FARM SIMULATOR",
+    "loading": {
+      "webgpu": "Starting WebGPU engine…",
+      "webgl": "Starting WebGL2 engine…"
+    }
+  },
+  "weather": {
+    "clear": "Clear",
+    "cloudy": "Cloudy",
+    "rain": "Rain"
+  },
+  "time": {
+    "dayphase": {
+      "dawn": "Dawn",
+      "morning": "Morning",
+      "midday": "Midday",
+      "afternoon": "Afternoon",
+      "dusk": "Dusk",
+      "night": "Night"
+    },
+    "season": {
+      "spring": "Spring",
+      "summer": "Summer",
+      "autumn": "Autumn",
+      "winter": "Winter"
+    },
+    "weekday": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "month": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "weekday_short": ["S", "M", "T", "W", "T", "F", "S"],
+    "date_hud": "{dow}, {month} {day}, {year}",
+    "date_cal": "{month} {day}, {year}"
+  },
+  "sidebar": {
+    "store": "Shop",
+    "store_title": "Shop — buy everything for your farm",
+    "animals": "Animals",
+    "animals_hint": "Population and status",
+    "veterinary": "Veterinary",
+    "veterinary_hint": "Health and treatments",
+    "crops": "Crops",
+    "crops_hint": "Plots and harvests",
+    "processing": "Processing",
+    "processing_hint": "Boiled egg and upgrades",
+    "upgrades": "Upgrades",
+    "upgrades_hint": "Levels and capacities",
+    "inventory": "Inventory",
+    "inventory_hint": "Materials and resources",
+    "calendar": "Calendar",
+    "calendar_hint": "Real date and season",
+    "language": "Language",
+    "language_hint": "Change the interface language",
+    "affiliates": "Affiliates",
+    "affiliates_hint": "Referrals and commissions"
+  },
+  "language": {
+    "title": "Language",
+    "subtitle": "Choose the interface language",
+    "es": "Español",
+    "en": "English"
+  },
+  "hud": {
+    "level": "Level {level}",
+    "building_sub": "{name} · Level {level}",
+    "exit_building": "🚪 Leave the {name}",
+    "help_title": "Controls",
+    "help_move": "Move camera",
+    "help_boost": "Boost",
+    "help_rotate": "Rotate view",
+    "help_zoom": "Zoom",
+    "help_select": "Select",
+    "help_close": "Close panel",
+    "help_rmb": "RMB",
+    "state": "State",
+    "mood": "Mood",
+    "health": "Health",
+    "pending": "Pending production",
+    "prod_unit": {
+      "cow": "L milk",
+      "chicken": "eggs",
+      "rooster": "eggs",
+      "pig": "kg meat"
+    },
+    "prod_hint": "Animals produce throughout the day. Their production is sold automatically every few seconds.",
+    "enter_building": "🚪 Enter the {name}",
+    "enter_hint": "Enter to inspect the interior. Use the “Leave” button to return to the farm.",
+    "no_interior": "Existing farm building. Manage infrastructure from the side panel."
+  },
+  "animalState": {
+    "rest": "Resting",
+    "wander": "Wandering",
+    "eating": "Grazing",
+    "sleep": "Sleeping"
+  },
+  "crop": {
+    "wheat": "Wheat",
+    "corn": "Corn",
+    "carrot": "Carrot",
+    "potato": "Potato"
+  },
+  "animal": {
+    "chicken": "Chicken",
+    "rooster": "Rooster",
+    "cow": "Cow",
+    "pig": "Pig",
+    "production": {
+      "chicken": "1 egg every 5 h",
+      "rooster": "1 fertilized egg every 24 h",
+      "cow": "1 milk every 8 h",
+      "pig": "Fattening 7 days · 60 kg of meat"
+    }
+  },
+  "species": {
+    "chicken": "Chickens",
+    "rooster": "Roosters",
+    "cow": "Cows",
+    "pig": "Pigs"
+  },
+  "kind": {
+    "cow": "Dairy cow",
+    "chicken": "Laying chicken",
+    "rooster": "Breeding rooster",
+    "pig": "Fattening pig"
+  },
+  "product": {
+    "egg": "Egg",
+    "eggs": "Eggs",
+    "milk": "Milk",
+    "meat": "Meat",
+    "honey": "Honey",
+    "cheese": "Cheese",
+    "boiled-egg": "Boiled egg",
+    "boiled-eggs": "Boiled eggs"
+  },
+  "building": {
+    "generic": "building",
+    "barn": "Barn",
+    "house": "House",
+    "cowPen": "Cows' corral",
+    "chickenPen": "Chicken corral",
+    "warehouse": "Warehouse",
+    "greenhouse": "Greenhouse",
+    "workshop": "Workshop",
+    "coop": "Coop",
+    "stable": "Stable",
+    "pigPen": "Pigsty"
+  },
+  "enclosure": {
+    "cow-pen": "Cows' corral",
+    "chicken-pen": "Poultry corral",
+    "pig-pen": "Pigsty"
+  },
+  "feedPeriod": {
+    "day": "day",
+    "cycle": "cycle"
+  },
+  "upgrade": {
+    "coop": "Coop",
+    "stable": "Stable",
+    "pigPen": "Pigsty",
+    "incubator": "Incubator",
+    "granary": "Granary",
+    "processing": "Processor",
+    "special": {
+      "stable-speed": "Fast production",
+      "stable-speed.desc": "Production every 7 h instead of 8 h.",
+      "pig-engorde-1": "Fattening I",
+      "pig-engorde-1.desc": "Fattening cycle from 7 to 6 days.",
+      "pig-engorde-2": "Fattening II",
+      "pig-engorde-2.desc": "Fattening cycle from 7 to 5 days."
+    }
+  },
+  "unit": {
+    "hens": "chickens",
+    "cows": "cows",
+    "pigs": "pigs",
+    "eggs": "eggs",
+    "units": "u.",
+    "machines": "machines"
+  },
+  "offer": {
+    "seedpack": { "name": "Seed Bundle", "desc": "Wheat + Corn + Carrot + Potato, 100 of each." },
+    "beginner": { "name": "Beginner Combo", "desc": "Seeds to get started and a couple of chickens." },
+    "farmer": { "name": "Farmer Combo", "desc": "Varied crops and your first cow." },
+    "poultry": { "name": "Coop Combo", "desc": "Poultry for egg production." },
+    "dairy": { "name": "Dairy Combo", "desc": "Dairy cows and carrot fodder." },
+    "swine": { "name": "Pig Farmer Combo", "desc": "Fattening pigs for meat production." },
+    "repro": { "name": "Breeding Combo", "desc": "Roosters and chickens ready for the incubator." },
+    "granjero": { "name": "Farmer $300", "desc": "A large lot of seeds and livestock to grow fast." },
+    "advanced": { "name": "Advanced Farm", "desc": "Varied livestock and premium seeds for established farms." },
+    "mega": { "name": "Mega Farm", "desc": "The ultimate package: plenty of livestock and tons of seeds." }
+  },
+  "process": {
+    "machine": "Processor",
+    "egg-boiled.title": "PROCESS: BOILED EGG",
+    "info_title": "PROCESSOR",
+    "info_1": "The processor converts farm products into higher-value products.",
+    "info_2": "It unlocks by upgrading infrastructure in the UPGRADES category.",
+    "conversion": "{in} → {out} unit|{in} → {out} units"
+  },
+  "store": {
+    "tienda": "SHOP",
+    "de_la_granja": "OF THE FARM",
+    "monedas": "USDT",
+    "deposit": "DEPOSIT",
+    "buy_coins": "Buy coins",
+    "deposit_text": "Add balance via manual crypto deposit.",
+    "deposit_button": "+ DEPOSIT",
+    "close_store": "Close store",
+    "tabs_aria": "Store categories",
+    "category": {
+      "crops": "Crops",
+      "animals": "Animals",
+      "products": "Products",
+      "process": "Processing",
+      "infra": "Infrastructure",
+      "expansions": "Expansions",
+      "feed": "Feed",
+      "offers": "Limited offers"
+    },
+    "info_title": "ℹ️ INFORMATION",
+    "info_1": "Feed and maintenance costs are charged at the end of each cycle.",
+    "info_2": "Times may vary depending on upgrades.",
+    "info_3": "More production = More profit",
+    "coming_soon": "💎 COMING SOON",
+    "coming_soon_detail": "This feature will be available soon.",
+    "special_ribbon": "SPECIAL OFFER!",
+    "ahorras": "SAVE {money}",
+    "comprar": "BUY",
+    "combo_blocked_title": "Upgrade your buildings to hold this combo.",
+    "combo_warn": "Requires upgrading buildings.",
+    "view_all": "View all offers →",
+    "ver_ofertas": "VIEW OFFERS",
+    "qty_decrease_aria": "Decrease quantity",
+    "qty_increase_aria": "Increase quantity",
+    "buy": "BUY",
+    "crop": {
+      "seed": "Seed",
+      "growth": "⏱️ Growth {hours} h",
+      "profit": "Profit {profit}/u"
+    },
+    "animal": {
+      "info_aria": "More info about {name}",
+      "info_title": "Additional info",
+      "feed": "Feed",
+      "info_box": "Purchase price {price}. Veterinary treatment {treat}. Maintenance is charged at the end of each cycle.",
+      "building_fill": "{building}: {used}/{capacity}",
+      "full": "🚧 Building full — upgrade it in INFRASTRUCTURE."
+    },
+    "product": {
+      "source_default": "Production",
+      "market_default": "Warehouse",
+      "market": "Sale: {market}",
+      "price": "Sale price",
+      "ref": "(reference {money})",
+      "note": "Sold automatically from the farm or the warehouse."
+    },
+    "source": {
+      "egg": "Chickens",
+      "milk": "Cows",
+      "meat": "Pigs",
+      "boiled-egg": "Processor",
+      "honey": "Hives",
+      "cheese": "Processor"
+    },
+    "offer": {
+      "saving": "SAVING {money}",
+      "buy_combo": "BUY COMBO"
+    },
+    "expansion": {
+      "plots_title": "NEW PLOTS",
+      "plots_desc": "Expand your crop fields by unlocking new plots north of the farm.",
+      "sheep_title": "SHEEP PEN",
+      "sheep_desc": "New species for the west: produces wool, which you can sell or process.",
+      "pond_title": "FISH POND",
+      "pond_desc": "Raise fish in the farm pond and catch them when they are ready.",
+      "soon": "Coming soon"
+    },
+    "feed": {
+      "feed": "🌾 Feed",
+      "cost": "Cost:",
+      "note": "Feed and maintenance costs are charged at the end of each cycle.",
+      "how_title": "HOW IT WORKS",
+      "how_1": "Each animal consumes feed depending on its species. Pigs pay for feed per fattening cycle (7 days); the rest, per day.",
+      "how_2": "More production = more profit. Keep your animals healthy and fed."
+    },
+    "upgrade": {
+      "benefit_capacity": "Capacity {a} → {b} {unit}",
+      "benefit_speed": "Reduces production time",
+      "benefit_efficiency": "Reduces production costs",
+      "level": "Level {level}",
+      "next": "Next: Level {level}",
+      "max": "Max",
+      "completed": "COMPLETED",
+      "price": "Price:",
+      "mejorar": "UPGRADE",
+      "owned": "✓ OWNED",
+      "buy_special": "BUY {price}",
+      "msg_upgraded": "✓ {name} UPGRADED",
+      "msg_level": "Level {level}",
+      "msg_insufficient": "❌ INSUFFICIENT BALANCE",
+      "msg_insufficient_detail": "You need {money} for this upgrade."
+    },
+    "process": {
+      "margin": "Margin +{margin}"
+    }
+  },
+  "shop": {
+    "invalid_qty": "⚠️ INVALID QUANTITY",
+    "invalid_qty_detail": "Only positive whole numbers.",
+    "unavailable": "⚠️ PRODUCT NOT AVAILABLE",
+    "insufficient": "❌ INSUFFICIENT BALANCE",
+    "insufficient_detail": "Need: {need} · Available: {have}",
+    "capacity": "🚧 CAPACITY FULL",
+    "capacity_detail": "Only {free} fit in the {building}. Upgrade the building for more space.",
+    "seeds_bought": "✓ SEEDS BOUGHT",
+    "seeds_bought_detail": "Added {qty} × {name} to your inventory.",
+    "animal_bought": "✓ {name} PURCHASED",
+    "animal_bought_detail": "{qty} × {money} deducted from your balance.",
+    "offer_unavailable": "⚠️ OFFER NOT AVAILABLE",
+    "offer_bought": "✓ {name} PURCHASED",
+    "offer_bought_detail": "Off {pct}% · you saved {money}.",
+    "kind": {
+      "cow": "COW",
+      "chicken": "HEN",
+      "rooster": "ROOSTER",
+      "pig": "PIG"
+    }
+  },
+  "panel": {
+    "close_aria": "Close",
+    "animals": {
+      "title": "Animals",
+      "subtitle": "Population and status of your livestock",
+      "empty": "There are no animals in the pens.",
+      "mood": "{pct}% mood",
+      "hint": "Cows live in their corral, pigs in the pigsty and poultry in the poultry corral. During the day they wander and graze within their area; at night they lie down to sleep."
+    },
+    "vet": {
+      "title": "Veterinary",
+      "subtitle": "Livestock health and treatments",
+      "sick": "Sick",
+      "recovering": "Recovering",
+      "population": "Population",
+      "pending": "Pending treatments",
+      "empty": "There are no sick animals.",
+      "empty_ok": "The corrals are healthy. 🎉",
+      "sick_badge": "Sick",
+      "recovering_badge": "Recovering · {time}",
+      "treatment": "Treatment {price} · Recovery {hours} h",
+      "treat_btn": "⚠️ Treat",
+      "cured": "🩹 Cured",
+      "treat": "Treat",
+      "in_progress": "In progress",
+      "hint": "In a reference farm (~20 animals) about 1 animal gets sick every 9 days; each animal can only get sick at most every 14 days. You only pay for treatment when you decide, you don't need reserved balance, and no animal is removed for being sick."
+    },
+    "crops": {
+      "title": "Crops",
+      "subtitle": "Planting, growth and sale",
+      "plots": "Plots",
+      "seeds": "Seeds",
+      "planted": "Planted",
+      "harvest": "Harvest",
+      "capacity": "Capacity",
+      "detail": "Seed {seed} · Growth {hours} h · Sale {sell} · Profit {profit}",
+      "harvested": "{n} harvested",
+      "buy_seed": "Buy seed",
+      "plant": "Plant",
+      "harvest_btn": "Harvest",
+      "sell_1": "Sell 1",
+      "sell_all": "Sell all",
+      "seed_note": "Each seed costs {price} (deducted when buying).",
+      "growth": "Growth",
+      "plot_empty": "Empty — click the plot to plant",
+      "ready": "Ready to harvest",
+      "growing_left": "Growing · {time} left",
+      "plot_of": "{name} plot",
+      "plot_number": "Plot {n}",
+      "ready_short": "Ready!",
+      "summary": "{ready} ready|{ready} ready · {growing} growing.",
+      "hint": "In 3D: click the plot to plant, click the ready crop to harvest. Seeds and harvests in inventory don't count as USD until sold."
+    },
+    "upgrades": {
+      "title": "Upgrades",
+      "subtitle": "Levels, capacities and efficiency of your buildings",
+      "balance": "Available balance",
+      "upgradeable": "Upgradeable buildings",
+      "bought": "Upgrades bought",
+      "type": {
+        "capacity": "🟢 Capacity",
+        "speed": "🔵 Speed",
+        "efficiency": "🟡 Efficiency"
+      },
+      "free": "FREE",
+      "owned_chip": "Owned",
+      "roi": "Estimated payback: ≈ {days} day|Estimated payback: ≈ {days} days",
+      "missing": "missing {money}",
+      "buy": "UPGRADE",
+      "bought_btn": "✓ Owned",
+      "confirm": "✓ Purchase made: {name} Level {level}",
+      "level_range": "LEVEL {a} → {b}",
+      "level_max": "LEVEL {a} · MAX",
+      "capacity_line": "Capacity {a} → {b} {unit}",
+      "max_reached": "Maximum level reached.",
+      "benefit": "Benefit: +{delta} {unit} of capacity.",
+      "max": "MAX",
+      "hint_1": "Upgrades don't generate money directly: they increase capacity, speed or efficiency. The cost is deducted from your balance instantly and you can only buy in order (level by level).",
+      "hint_2": "Payback times are indicative and don't guarantee profitability: they depend on the real use you make of each upgrade."
+    },
+    "inventory": {
+      "title": "Inventory",
+      "subtitle": "Products stored in the Warehouse",
+      "harvests": "Harvests",
+      "seeds": "Seeds",
+      "crops": "Crops",
+      "harvests_title": "Stored harvests",
+      "harvests_hint": "Harvests are stored in the Warehouse and appear as crates on the shelves. Click a crate to see the amount and sell it.",
+      "seeds_title": "Seeds",
+      "seeds_of": "{name} seeds",
+      "resources": "Resources",
+      "hint": "The inventory reflects in real time what is collected on the farm and what is stored in the Warehouse."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "subtitle": "Farm time follows the real clock",
+      "moment": "Moment",
+      "season": "Season",
+      "day_progress": "Day progress",
+      "events": "Season events",
+      "ev": {
+        "summer": "Summer: days are long and animals graze more. Harvest early to avoid the heat.",
+        "spring": "Spring: ideal time for planting and breeding.",
+        "autumn": "Autumn: time for harvesting and preparing the barn.",
+        "winter": "Winter: nights are long; the farm rests."
+      },
+      "hint": "The game clock is synced with the system time. The day and season change automatically at midnight and as months pass."
+    },
+    "processing": {
+      "title": "Processor",
+      "subtitle": "Converts products into higher-value products",
+      "level": "Level {level}",
+      "capacity_label": "Capacity",
+      "capacity": "Capacity: {qty} eggs",
+      "time": "Time",
+      "cost_per_egg": "Cost",
+      "sale_value": "Sale value",
+      "profit": "Profit",
+      "start": "PROCESS",
+      "active": "Processing",
+      "remaining": "remaining",
+      "completed": "Completed!",
+      "no_eggs": "You have no eggs",
+      "no_balance": "Insufficient balance",
+      "at_capacity": "Maximum capacity reached",
+      "locked": "Processor locked",
+      "locked_desc": "Buy level 1 to unlock the processor.",
+      "unlock": "UNLOCK",
+      "upgrade": "Upgrade Processor",
+      "buy": "UPGRADE",
+      "next_level": "Next level",
+      "benefit_capacity": "Capacity: {a} → {b} eggs",
+      "benefit_time": "Time: {a} → {b}",
+      "benefit_cost": "Cost: {a} → {b}/egg",
+      "info_title": "Economic info",
+      "info_egg": "Egg value",
+      "info_cost": "Processing cost",
+      "info_boiled": "Boiled egg value",
+      "info_profit": "Additional profit",
+      "hint": "Select the number of eggs to process. Cost is deducted when starting. Boiled eggs appear in the warehouse for selling."
+    }
+  },
+  "crate": {
+    "goods_sub": "Warehouse · processed product",
+    "crop_sub": "Warehouse · stored harvest",
+    "quantity": "Quantity",
+    "sale_price": "Sale price",
+    "total_value": "Total value",
+    "sell_1": "Sell 1",
+    "sell_all": "Sell all",
+    "close": "Close",
+    "balance": "USD balance: {gold}"
+  },
+  "transition": {
+    "entering": "Entering the {name}…",
+    "leaving": "Leaving…"
+  },
+  "deposit": {
+    "title": "DEPOSIT",
+    "subtitle": "To add balance you must make a crypto transfer and contact us on Telegram.",
+    "network": "Accepted network",
+    "wallet": "Wallet address",
+    "telegram_contact": "Telegram contact",
+    "contact_telegram": "CONTACT ON TELEGRAM",
+    "instructions": "After making the transfer, send us on Telegram:",
+    "instr_user": "Your Harvest Valley username",
+    "instr_amount": "Amount sent",
+    "instr_network": "Currency and network used",
+    "instr_tx": "TX Hash of the transfer",
+    "note": "Balance will be added manually after verifying the transaction on the blockchain.",
+    "history": "Confirmed deposits"
+  },
+  "affiliate": {
+    "title": "AFFILIATES",
+    "subtitle": "Referral network and commissions",
+    "your_code": "Your affiliate code",
+    "register_referral": "Register with referral code",
+    "code_placeholder": "Enter code (e.g: FARM-X7K92A)",
+    "register_btn": "Link",
+    "register_success": "Registration successful! You are now part of the network.",
+    "stats": "Statistics",
+    "direct_referrals": "Direct referrals",
+    "total_network": "Total network",
+    "pending": "Pending",
+    "available": "Available",
+    "total_earned": "Total earned",
+    "by_level": "Breakdown by level",
+    "level": "Level",
+    "users": "Users",
+    "profit": "Profit",
+    "commission": "Commission",
+    "tree": "Referral tree",
+    "you": "YOU",
+    "history": "Commission history",
+    "loading": "Loading...",
+    "login_required": "Log in to view your affiliate dashboard.",
+    "status": {
+      "pending": "Pending",
+      "available": "Available",
+      "reversed": "Reversed",
+      "cancelled": "Cancelled"
+    },
+    "error": {
+      "missing_fields": "Missing required fields",
+      "invalid_code": "Invalid referral code",
+      "referrer_inactive": "Sponsor is not active",
+      "self_referral": "You cannot refer yourself",
+      "already_referred": "You already have a sponsor",
+      "cycle_detected": "This relationship would create a cycle",
+      "network_error": "Network error"
+    }
+  }
+}
