@@ -37,10 +37,9 @@ const KNOWN_PLATFORMS = new Set([
 
 /**
  * URL oficial de lanzamiento del Mini App (t.me/...).
- * Aún NO existe una configurada en el proyecto: null = el botón de la
- * pantalla de bloqueo queda preparado pero no navega a nada inventado.
+ * Configurada por el propietario: bot @harvestvalley_bot.
  */
-export const TELEGRAM_APP_URL: string | null = null
+export const TELEGRAM_APP_URL: string | null = 'https://t.me/harvestvalley_bot'
 
 export interface TelegramEnvironmentResult {
   /** true sólo si hay señales consistentes del cliente Telegram. */
