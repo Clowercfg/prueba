@@ -1,24 +1,91 @@
 import { useEffect, useRef } from 'react'
-import { MAP_CONFIG } from '../game/config/gameConfig'
 import { ASSETS_CONFIG } from '../game/config/assetsConfig'
-import { CONTENT_VIEW, SAFE_AREA } from '../game/config/layoutConfig'
+import { CONTENT_VIEW, PADS, SAFE_AREA, WORLD_BOUNDS } from '../game/config/layoutConfig'
 import { GameLoop } from '../game/systems/GameLoop'
 import { Camera2D } from '../game/systems/Camera2D'
-import type { WorldBounds } from '../game/systems/Camera2D'
-import { TileSystem } from '../game/systems/TileSystem'
+import { Interaction } from '../game/systems/Interaction'
 import { ResizeSystem } from '../game/systems/ResizeSystem'
+import { worldToTileIndex } from '../game/systems/isometricProjection'
+import { TileSystem } from '../game/systems/TileSystem'
 import { SpriteAssetManager } from '../game/assets/SpriteAssetManager'
 import { createFarmEntities } from '../game/entities/farmEntities'
-import { useGameStore } from '../game/stores/gameStore'
+import { PLOT_KEYS, READY_AT, useGameStore, type PlotId } from '../game/stores/gameStore'
 import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 
 const FPS_SAMPLE_MS = 500
 
+const PLOT_PADS: ReadonlyArray<{ id: PlotId; pad: { x0: number; y0: number; x1: number; y1: number } }> =
+  [
+    { id: 'plotA', pad: PADS.plotA },
+    { id: 'plotB', pad: PADS.plotB },
+    { id: 'plotC', pad: PADS.plotC },
+    { id: 'plotD', pad: PADS.plotD },
+  ]
+
+function tileInPad(
+  i: number,
+  j: number,
+  pad: { x0: number; y0: number; x1: number; y1: number },
+  inflate = 0,
+): boolean {
+  return i >= pad.x0 - inflate && i <= pad.x1 + inflate && j >= pad.y0 - inflate && j <= pad.y1 + inflate
+}
+
 /**
- * Host del canvas. CÁMARA FIJA portrait: se calcula un único encuadre que
- * muestra la granja completa (fitFarmToViewport) y NO hay entrada de cámara:
- * sin pan, sin drag, sin pinch, sin rueda. Los sprites cargan en background
- * tras el primer frame y sustituyen los fallbacks.
+ * Resuelve un tap de mundo contra las reglas del juego (#20):
+ *   parcela vacía → plantar · cultivo listo → cosechar ·
+ *   animal/edificio → seleccionar · resto → deseleccionar.
+ */
+function handleFarmTap(renderer: Canvas2DRenderer, wx: number, wy: number): void {
+  const store = useGameStore.getState()
+  const { i, j } = worldToTileIndex(wx, wy)
+
+  for (const { id, pad } of PLOT_PADS) {
+    if (!tileInPad(i, j, pad)) continue
+    const g = store.crops[id]
+    if (g <= 0.001) {
+      store.plantSeed(id)
+    } else if (g >= READY_AT) {
+      store.harvest(id)
+      store.select({ kind: 'plot', id })
+    } else {
+      store.select({ kind: 'plot', id })
+    }
+    return
+  }
+
+  const animalId = renderer.pickAnimal(wx, wy)
+  if (animalId) {
+    store.select({ kind: 'animal', id: animalId })
+    return
+  }
+
+  // Edificios: rectángulo del pad con un pequeño margen táctil.
+  if (tileInPad(i, j, PADS.barn, 0.6)) {
+    store.select({ kind: 'building', id: 'barn' })
+    return
+  }
+  if (tileInPad(i, j, PADS.house, 0.6)) {
+    store.select({ kind: 'building', id: 'house' })
+    return
+  }
+  if (tileInPad(i, j, PADS.pen, 0.4)) {
+    store.select({ kind: 'building', id: 'pen' })
+    return
+  }
+
+  store.select(null)
+}
+
+/**
+ * Host del canvas. CÁMARA COMPLETAMENTE FIJA (#25): el encuadre es el fit
+ * portrait de toda la granja y NUNCA se libera — sin pan, sin pinch y sin
+ * rueda (sólo tap de selección). En cada resize se recalcula el fit estático.
+ * El fondo es pradera continua: nunca se ve espacio fuera del mapa. Los
+ * assets cargan en background tras el primer frame y sustituyen los fallbacks.
+ *
+ * #24: sólo existe el motor canvas2d; ?engine=canvas2d se acepta explícito y
+ * cualquier otro valor cae al mismo motor.
  */
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -27,29 +94,31 @@ export function GameCanvas() {
     const canvas = canvasRef.current
     if (!canvas) return
 
+    void new URLSearchParams(window.location.search).get('engine') // aceptado: único motor
+
     const store = useGameStore.getState()
     store.setStatus('running')
 
-    // Mundo: límites del mapa en coordenadas de mundo (1 unidad = 1 tile).
-    const bounds: WorldBounds = {
-      minX: 0,
-      minY: 0,
-      maxX: MAP_CONFIG.tilesX,
-      maxY: MAP_CONFIG.tilesY,
-    }
-
-    const camera = new Camera2D(bounds)
+    // Mundo: límites REALES del terreno (#25) derivados de la banda activa.
+    const camera = new Camera2D(WORLD_BOUNDS)
     camera.setViewport({ width: canvas.clientWidth || 1, height: canvas.clientHeight || 1 })
 
     const tiles = new TileSystem()
     const sprites = new SpriteAssetManager(ASSETS_CONFIG.baseUrl)
     const entities = createFarmEntities()
 
-    // Presentación pura: no ejecuta lógica de juego.
-    const renderer = new Canvas2DRenderer(canvas, camera, tiles, sprites, entities)
+    // Estado real de cultivos → banda de tierra (rebake por pasos visibles).
+    const hooks = {
+      getGrowths: () => {
+        const crops = useGameStore.getState().crops
+        return PLOT_KEYS.map((k) => crops[k])
+      },
+    }
 
-    // fitFarmToViewport: zoom automático para ver TODA la granja, centrada
-    // en el rect útil (safe areas arriba/abajo). Se recalcula en cada resize.
+    const renderer = new Canvas2DRenderer(canvas, camera, tiles, sprites, entities, hooks)
+
+    // Encuadre estático: granja completa centrada en el rect útil (safe areas).
+    // Se recalcula en cada resize; el usuario no puede alterarlo (#25).
     const fitFarmToViewport = (viewport: { width: number; height: number }): void => {
       camera.setViewport(viewport)
       camera.setFixedView({
@@ -60,16 +129,31 @@ export function GameCanvas() {
       })
     }
 
-    // Ajuste responsive + DPR (máx 2). Cada cambio re-aplica el encuadre fijo.
     const resize = new ResizeSystem(canvas, (viewport) => {
       renderer.resize(viewport)
       fitFarmToViewport(viewport)
     })
 
+    // Interacción (#20/#25): SOLO tap. Pan/pinch/rueda deshabilitados.
+    const interaction = new Interaction(
+      canvas,
+      camera,
+      { onTap: (w) => handleFarmTap(renderer, w.x, w.y) },
+      { pan: false, pinch: false, wheel: false },
+    )
+
+    // Selección → highlight de escena (sin pasar por React).
+    const syncHighlight = (): void => {
+      renderer.setHighlight(useGameStore.getState().selection)
+    }
+    syncHighlight()
+    const unsubStore = useGameStore.subscribe(syncHighlight)
+
     let frames = 0
     let fpsAccumMs = 0
     const loop = new GameLoop(
       (frame) => {
+        useGameStore.getState().tickCrops(frame.delta)
         camera.update(frame.delta)
 
         if (debug.firstFrame === null) debug.firstFrame = performance.now()
@@ -77,9 +161,10 @@ export function GameCanvas() {
         frames += 1
         fpsAccumMs += frame.delta * 1000
         if (fpsAccumMs >= FPS_SAMPLE_MS) {
-          store.setFps(Math.round((frames * 1000) / fpsAccumMs))
+          const st = useGameStore.getState()
+          st.setFps(Math.round((frames * 1000) / fpsAccumMs))
           const pos = camera.position
-          store.setCamInfo({
+          st.setCamInfo({
             zoom: camera.zoom,
             x: pos.x,
             y: pos.y,
@@ -94,7 +179,8 @@ export function GameCanvas() {
       },
     )
 
-    resize.attach() // aplica tamaño + encuadre fijo antes del primer frame
+    resize.attach() // aplica tamaño + encuadre antes del primer frame
+    interaction.attach() // entrada disponible inmediatamente (#20)
     loop.start() // PRIMERO el juego; los assets van detrás, nunca bloquean
 
     // Precarga de críticos en background: cuando termina quedan marcados para
@@ -110,6 +196,7 @@ export function GameCanvas() {
       renderer,
       sprites,
       entities,
+      interaction,
       firstFrame: null as number | null,
       criticalDone: null as number | null,
     }
@@ -118,6 +205,8 @@ export function GameCanvas() {
     return () => {
       loop.stop()
       resize.detach()
+      interaction.detach()
+      unsubStore()
       renderer.dispose()
       delete (window as unknown as Record<string, unknown>).__HV
       useGameStore.getState().setStatus('stopped')

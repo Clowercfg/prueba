@@ -1,78 +1,153 @@
-import { RENDER_CONFIG } from '../../game/config/renderConfig'
 import type { ViewportInfo } from '../../game/types'
 import type { Camera2D } from '../../game/systems/Camera2D'
 import type { TileSystem } from '../../game/systems/TileSystem'
 import type { SpriteAssetManager } from '../../game/assets/SpriteAssetManager'
 import type { FarmEntity } from '../../game/entities/farmEntities'
-import { ObjectRenderer } from './ObjectRenderer'
 import type { Renderer } from '../Renderer'
-import { TerrainRenderer } from './TerrainRenderer'
+import { SceneComposer, type ComposerHooks, type Highlight } from './scene/SceneComposer'
+import { PAL } from './scene/palette'
 
 /**
- * Renderer Canvas 2D. Solo presentación: no ejecuta lógica de juego.
- * Trabaja en CSS pixels (escala por DPR una vez en resize); la cámara aporta
- * worldToScreen y el TerrainRenderer decide qué tiles se dibujan (culling).
+ * Renderer Canvas 2D de Harvest Valley.
+ *
+ * Bandas: cache estático de tierra → blit → objetos y-sorteados (sprites
+ * horneados en ObjectSpriteCache) intercalados con animales → ambiente →
+ * grado de luz. Sin WebGL ni motores 3D: sólo Canvas2D (#15).
  */
 export class Canvas2DRenderer implements Renderer {
   private readonly ctx: CanvasRenderingContext2D
-  private readonly terrain: TerrainRenderer
-  private readonly objects: ObjectRenderer | null
-  private readonly sprites: SpriteAssetManager | null
-  private readonly camera: Camera2D
+  private readonly composer: SceneComposer
+
+  private viewW = 1
+  private viewH = 1
+  private dpr = 1
+  private lastElapsed = -1
+  private lastPhysW = -1
+  private lastPhysH = -1
+
+  // Métricas (#15): primer draw y media móvil de frame.
+  private readonly t0 = performance.now()
+  private firstDrawMs = -1
+  private frameEma = 0
+  private frameCount = 0
+  private perfEl: HTMLDivElement | null = null
 
   constructor(
     canvas: HTMLCanvasElement,
     camera: Camera2D,
-    tiles: TileSystem,
+    _tiles: TileSystem,
     sprites?: SpriteAssetManager | null,
     entities?: FarmEntity[] | null,
+    hooks?: ComposerHooks,
   ) {
     const ctx = canvas.getContext('2d', { alpha: false })
     if (!ctx) {
       throw new Error('Canvas2DRenderer: no se pudo obtener el contexto 2D')
     }
     this.ctx = ctx
-    this.camera = camera
-    this.sprites = sprites ?? null
-    this.terrain = new TerrainRenderer(camera, tiles, sprites)
-    this.objects = entities && sprites ? new ObjectRenderer(entities) : null
+    // #14: el SpriteSystem existente alimenta la escena; procedural = fallback.
+    this.composer = new SceneComposer(camera, _tiles, entities ?? [], sprites ?? null, hooks)
+  }
+
+  /** Selección actual (halo pintado bajo objetos; no invalida caches). */
+  setHighlight(h: Highlight): void {
+    this.composer.setHighlight(h)
+  }
+
+  /** Hit-test de animales para la capa de interacción (#20). */
+  pickAnimal(wx: number, wy: number): string | null {
+    return this.composer.pickAnimal(wx, wy)
   }
 
   resize(viewport: ViewportInfo): void {
     this.ctx.setTransform(viewport.dpr, 0, 0, viewport.dpr, 0, 0)
-    this.terrain.setViewport(viewport)
+    // Suavizado de calidad media: nítido sin coste excesivo en móvil (#19).
+    this.ctx.imageSmoothingEnabled = true
+    this.ctx.imageSmoothingQuality = 'medium'
+    this.viewW = Math.max(1, viewport.width)
+    this.viewH = Math.max(1, viewport.height)
+    this.dpr = viewport.dpr
   }
 
   get terrainStats(): { drawn: number; considered: number; total: number } {
-    return this.terrain.stats
+    return this.composer.terrainStats
   }
 
   get objectStats(): { count: number; drawnLastFrame: number; drawOrder: number[] } {
+    return this.composer.objectStats
+  }
+
+  get perf(): { firstDrawMs: number; frameMs: number; buildMs: number } {
     return {
-      count: this.objects?.count ?? 0,
-      drawnLastFrame: this.objects?.lastDrawOrder.length ?? 0,
-      drawOrder: this.objects?.lastDrawOrder ?? [],
+      firstDrawMs: Math.round(this.firstDrawMs * 100) / 100,
+      frameMs: Math.round(this.frameEma * 100) / 100,
+      buildMs: this.composer.perfStats.buildMs,
     }
   }
 
-  render(_frameTimeMs: number, _elapsed: number): void {
+  render(_frameTimeMs: number, elapsed: number): void {
     const { ctx } = this
-    ctx.save()
-    // Clear en píxeles físicos para no depender del frame anterior.
-    ctx.setTransform(1, 0, 0, 1, 0, 0)
-    ctx.fillStyle = RENDER_CONFIG.backgroundColor
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    ctx.restore()
+    const tStart = performance.now()
 
-    this.terrain.draw(ctx)
+    // dt interno (segundos) para las capas animadas, acotado a 100 ms.
+    let dt = 0
+    if (this.lastElapsed >= 0) {
+      dt = Math.min(0.1, Math.max(0, (elapsed - this.lastElapsed) / 1000))
+    }
+    this.lastElapsed = elapsed
+    this.composer.update(dt)
 
-    // Entidades con depth sorting encima del terreno.
-    if (this.objects && this.sprites) {
-      this.objects.draw(ctx, this.camera, this.sprites)
+    // Clear físico solo cuando cambia el tamaño/DPR (#15): la banda de
+    // suelo cacheada cubre siempre el viewport, pintar encima es opaco.
+    const physW = ctx.canvas.width
+    const physH = ctx.canvas.height
+    if (physW !== this.lastPhysW || physH !== this.lastPhysH) {
+      ctx.save()
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.fillStyle = PAL.meadow.lo
+      ctx.fillRect(0, 0, physW, physH)
+      ctx.restore()
+      this.lastPhysW = physW
+      this.lastPhysH = physH
+    }
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'medium'
+
+    this.composer.ensureCache(this.viewW, this.viewH, this.dpr)
+    this.composer.blit(ctx, this.viewW, this.viewH)
+    this.composer.drawDynamic(ctx, elapsed, this.viewW, this.viewH)
+
+    // Métricas.
+    const frameDt = performance.now() - tStart
+    if (this.firstDrawMs < 0) this.firstDrawMs = performance.now() - this.t0
+    this.frameEma = this.frameEma === 0 ? frameDt : this.frameEma * 0.9 + frameDt * 0.1
+    this.frameCount++
+    this.updatePerfOverlay()
+  }
+
+  /** Overlay de rendimiento para verificación headless (?perf=1). */
+  private updatePerfOverlay(): void {
+    if (!/[?&]perf=1/.test(window.location.search)) return
+    if (!this.perfEl) {
+      this.perfEl = document.createElement('div')
+      this.perfEl.id = 'hv-perf'
+      this.perfEl.style.cssText =
+        'position:fixed;top:4px;left:4px;z-index:99;font:10px monospace;color:#fff;' +
+        'background:rgba(0,0,0,.55);padding:2px 6px;border-radius:4px;pointer-events:none;'
+      document.body.appendChild(this.perfEl)
+    }
+    const p = this.perf
+    const line = `first:${p.firstDrawMs}ms build:${p.buildMs}ms frame:${p.frameMs}ms`
+    this.perfEl.textContent = line
+    document.title = line
+    if (this.frameCount <= 3 || this.frameCount === 120) {
+      console.info(`[HV-perf] f${this.frameCount} ${line} objs:${this.objectStats.drawnLastFrame}`)
     }
   }
 
   dispose(): void {
-    // Canvas 2D no requiere liberar recursos explícitos hoy.
+    this.composer.dispose()
+    this.perfEl?.remove()
+    this.perfEl = null
   }
 }

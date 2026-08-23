@@ -33,6 +33,7 @@ export const ASSETS_CONFIG = {
     'terrain/dirt_01.png',
     'vegetation/tree.png',
     'buildings/barn.png',
+    'buildings/barn_hd.png',
     'terrain/pond.png',
     'decoration/animal_pen.png',
     'terrain/farm_plot.png',

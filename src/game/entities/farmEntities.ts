@@ -23,6 +23,7 @@ const SCALE = {
   tree: [0.115, 0.104, 0.093], // grande / medio / pequeño (mismo PNG)
   shrub: 0.062,
   barn: 0.25,
+  house: 0.21,
   pond: 0.23,
   pen: 0.19,
   plot: 0.125,
@@ -67,6 +68,18 @@ export function createFarmEntities(): FarmEntity[] {
     anchorX: 0.5,
     anchorY: 0.88,
     depth: barn.y,
+  })
+
+  // CASA del granjero: cierra el triángulo granero-casa-huertos.
+  const house = padCenterWorld(PADS.house)
+  entities.push({
+    key: 'buildings/house.png',
+    x: house.x,
+    y: house.y,
+    scale: SCALE.house,
+    anchorX: 0.5,
+    anchorY: 0.88,
+    depth: house.y,
   })
 
   // ESTANQUE: centro visual del agua (bajo el corral, lado derecho).

@@ -67,6 +67,14 @@ export class Camera2D {
   }
 
   /**
+   * Abandona el modo fijo CONSERVANDO el encuadre actual (posición y zoom).
+   * A partir de aquí pan/pinch/rueda responden; los límites siguen aplicando.
+   */
+  releaseFixed(): void {
+    this.fixed = false
+  }
+
+  /**
    * CÁMARA FIJA (portrait): calcula el zoom para que TODO el contenido quepa
    * en el rect útil del viewport (descontando safe areas) y lo centra ahí.
    * Se recalcula en cada resize; el usuario no puede alterar el resultado.

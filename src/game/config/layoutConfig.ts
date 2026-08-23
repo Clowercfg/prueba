@@ -35,6 +35,40 @@ export function isBandActive(i: number, j: number): boolean {
 export const SAFE_AREA = { top: 56, bottom: 76 } as const
 
 /**
+ * Límites REALES del terreno jugable (#25), derivados de la banda activa:
+ *   u = i-j ∈ [-(halfU+1), halfU+1] · v = i+j ∈ [vMin, vMax+2]
+ * Despejando i=(u+v)/2 y j=(v-u)/2 queda el AABB en coords de mundo.
+ * NO se inventan valores: cualquier cambio de BAND_CONFIG los actualiza.
+ */
+export const WORLD_BOUNDS = (() => {
+  const uExt = BAND_CONFIG.halfU + 1 // extensión u incluyendo medio rombo
+  return {
+    minX: (BAND_CONFIG.vMin - uExt) / 2,
+    minY: (BAND_CONFIG.vMin - uExt) / 2,
+    maxX: (BAND_CONFIG.vMax + 2 + uExt) / 2,
+    maxY: (BAND_CONFIG.vMax + 2 + uExt) / 2,
+  }
+})()
+
+/**
+ * Encuadre del TERRENO proyectado (rombo isométrico de la banda) a zoom 1:
+ * ancho = 2·uExt·32 px, alto = Δv·16 px, centro en i+j medio.
+ * Sirve para fit/clipping de cámara a partir de coordenadas reales.
+ */
+export const GROUND_VIEW = (() => {
+  const hw = RENDER_CONFIG.tileWidth / 2
+  const hh = RENDER_CONFIG.tileHeight / 2
+  const uExt = BAND_CONFIG.halfU + 1
+  const v0 = BAND_CONFIG.vMin
+  const v1 = BAND_CONFIG.vMax + 2
+  return {
+    spanW: 2 * uExt * hw,
+    spanH: (v1 - v0) * hh,
+    centerIso: { x: 0, y: ((v0 + v1) / 2) * hh },
+  }
+})()
+
+/**
  * Encuadre del contenido en píxeles iso a zoom 1, respecto al origen del mapa:
  * span = tamaño total a encuadrar; centerIso = centro del contenido proyectado.
  *
