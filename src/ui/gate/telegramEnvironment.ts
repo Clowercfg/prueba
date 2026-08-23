@@ -31,7 +31,9 @@ const KNOWN_PLATFORMS = new Set([
   'tdesktop',
   'desktop',
   'weba',
+  'webk',
   'web',
+  'unofficial',
   'unknown',
 ])
 
