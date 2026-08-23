@@ -160,10 +160,10 @@ export function drawDecor(c: PaintCtx, it: DecorItem): void {
   const base = c.at(it.x, it.y)
   switch (it.kind) {
     case 'oak':
-      drawOak(c, base, 95 * it.s, it.seed)
+      drawOak(c, base, 76 * it.s, it.seed)
       break
     case 'pine':
-      drawPine(c, base, 100 * it.s, it.seed)
+      drawPine(c, base, 80 * it.s, it.seed)
       break
     case 'bush':
       drawBush(c, base, 46 * it.s, it.seed)
@@ -197,8 +197,8 @@ export function drawDecor(c: PaintCtx, it: DecorItem): void {
  * árbol maduro; .062 = arbusto. La variante oak/pine sale del seed posicional.
  */
 export function drawTreeEntity(c: PaintCtx, e: FarmEntity): void {
-  // Árboles del mapa un ~15% más chicos (ajuste visual Mini App).
-  const heightPx = e.scale * 860
+  // Árboles del mapa ~32% más chicos que el original (ajuste visual Mini App).
+  const heightPx = e.scale * 680
   const seed = unit(Math.round(e.x * 10), Math.round(e.y * 10), 501)
   const base = c.at(e.x, e.y)
   if (e.scale < 0.08) {
