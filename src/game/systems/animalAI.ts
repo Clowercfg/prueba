@@ -235,7 +235,11 @@ let sessionRng: (() => number) | null = null;
 export function tickAnimalAI(dt: number): void {
   if (aiPaused) return;
   if (!sessionRng) sessionRng = createRandom();
-  const now = performance.now() / 1000;
+  // GAME TIME PERSISTENTE: Date.now() (segundos), misma referencia absoluta
+  // que animalSpawn y que la persistencia — sobrevive a reload/background.
+  // El tiempo de FRAME (performance.now → rAF → dt) sigue siendo el único
+  // insumo del movimiento/animación vía el parámetro dt.
+  const now = Date.now() / 1000;
   for (const a of animalRegistry.values()) registerSeparation(a);
   for (const a of animalRegistry.values()) updateAgent(a, dt, sessionRng, now);
 }

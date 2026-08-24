@@ -45,7 +45,10 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     if (!recipe) return { ok: false, reason: "recipe_not_found" };
     if (qty <= 0) return { ok: false, reason: "invalid_qty" };
 
-    const level = useUpgradesStore.getState().capacityOf("processing");
+    // El nivel del procesador vive en upgradesStore.levels (startLevel 0).
+    // capacityOf() devuelve la CAPACIDAD del nivel, no el nivel: mezclarlos
+    // aplicaba tarifas/horas de un nivel distinto al comprado.
+    const level = useUpgradesStore.getState().levels.processing ?? 0;
     if (level <= 0) return { ok: false, reason: "no_processor" };
 
     const def = getProcessorLevelDef(level);
@@ -69,7 +72,7 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     const recipe = PROCESS_ECONOMY[recipeId];
     if (!recipe) return false;
 
-    const level = useUpgradesStore.getState().capacityOf("processing");
+    const level = useUpgradesStore.getState().levels.processing ?? 0;
     const def = getProcessorLevelDef(level);
     const totalCost = qty * def.costPerEgg;
 
@@ -108,7 +111,7 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     const now = Date.now();
     if (now >= job.endTime) return false;
 
-    const level = useUpgradesStore.getState().capacityOf("processing");
+    const level = useUpgradesStore.getState().levels.processing ?? 0;
     const def = getProcessorLevelDef(level);
     if (job.qty >= def.capacity) return false;
 

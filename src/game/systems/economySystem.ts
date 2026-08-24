@@ -35,11 +35,18 @@ export function collectProduction(): void {
   for (const a of animalRegistry.values()) {
     if (a.pendingProduction > 0) {
       if (EGG_PRODUCERS.has(a.kind)) {
-        goods.addGoods('eggs', Math.floor(a.pendingProduction))
+        // Las aves entregan huevos ENTEROS: la fracción (<1) se retiene en
+        // pendingProduction hasta acumular 1. Resetearla aquí perdía esa
+        // producción con cada ciclo del collector (intervalos < periodo).
+        const delivered = Math.floor(a.pendingProduction)
+        if (delivered > 0) {
+          goods.addGoods('eggs', delivered)
+          a.pendingProduction -= delivered
+        }
       } else {
         income += a.pendingProduction * PRODUCTION_PRICE[a.kind as keyof typeof PRODUCTION_PRICE]
+        a.pendingProduction = 0
       }
-      a.pendingProduction = 0
     }
   }
   if (income > 0) eco.addGold(income, 'producción')
