@@ -3,7 +3,8 @@
  *
  * Señal oficial: el cliente de Telegram inyecta window.Telegram.WebApp
  * antes de cargar la Mini App. Exigimos objeto + plataforma conocida +
- * API mínima (ready). El User-Agent NO se usa como prueba.
+ * initData NO vacía (sesión real firmada por el cliente) + API mínima
+ * (ready). El User-Agent NO se usa como prueba.
  *
  * LIMITACIÓN DOCUMENTADA (#8): este gate es una restricción de
  * interfaz/ejecución en cliente. La autenticidad criptográfica real
@@ -23,18 +24,24 @@ interface TelegramWindow {
   Telegram?: { WebApp?: TelegramWebAppLike }
 }
 
-/** Plataformas reportadas por clientes Telegram oficiales. */
+/**
+ * Plataformas que los clientes Telegram oficiales reportan en
+ * WebApp.platform cuando la Mini App corre DENTRO de Telegram:
+ * android/ios (móvil), macos (macOS), tdesktop (Telegram Desktop),
+ * weba (Web A) y webk/webz (Web K/Z).
+ *
+ * 'unknown' queda FUERA a propósito: es el valor que el SDK oficial
+ * auto-inyecta cuando telegram-web-app.js se carga fuera de Telegram
+ * (navegador normal), por lo que no puede usarse como prueba de entorno.
+ */
 const KNOWN_PLATFORMS = new Set([
   'android',
   'ios',
   'macos',
   'tdesktop',
-  'desktop',
   'weba',
   'webk',
-  'web',
-  'unofficial',
-  'unknown',
+  'webz',
 ])
 
 /**
@@ -59,7 +66,14 @@ function inspect(w: TelegramWindow): TelegramEnvironmentResult {
   }
   const platform = typeof wa.platform === 'string' ? wa.platform : ''
   if (!platform || !KNOWN_PLATFORMS.has(platform)) {
-    return { isTelegram: false, reason: `platform desconocida "${platform}"`, webApp: null }
+    return { isTelegram: false, reason: `platform no válida para Mini App`, webApp: null }
+  }
+  // Señal primaria de "Mini App realmente abierta desde Telegram": el
+  // cliente entrega initData firmada (query string). El SDK standalone del
+  // navegador normal la deja vacía. No se loguea NUNCA su contenido.
+  const initData = typeof wa.initData === 'string' ? wa.initData.trim() : ''
+  if (!initData) {
+    return { isTelegram: false, reason: 'sin initData (no es una sesión real de Telegram)', webApp: null }
   }
   if (typeof wa.ready !== 'function') {
     return { isTelegram: false, reason: 'WebApp sin API ready()', webApp: null }
