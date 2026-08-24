@@ -25,6 +25,7 @@ const UpgradesPanel = lazy(() => import("./UpgradesPanel"));
 const VetPanel = lazy(() => import("./VetPanel"));
 const ProfilePanel = lazy(() => import("./ProfilePanel"));
 const LanguagePanel = lazy(() => import("./LanguagePanel"));
+const FarmPanel = lazy(() => import("./FarmPanel"));
 
 const PANEL_TITLES: Record<string, string> = {
   animals: 'Animales',
@@ -37,6 +38,7 @@ const PANEL_TITLES: Record<string, string> = {
   more: 'Más',
   profile: 'Perfil',
   language: 'Idioma',
+  farm: 'Mi Granja',
 }
 
 export function PanelHost() {
@@ -63,6 +65,10 @@ export function PanelHost() {
           {storeOpen ? (
             <Suspense fallback={<p className="panel-loading">…</p>}>
               <StorePanel />
+            </Suspense>
+          ) : section === "farm" ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <FarmPanel />
             </Suspense>
           ) : section === "animals" ? (
             <Suspense fallback={<p className="panel-loading">…</p>}>

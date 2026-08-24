@@ -87,20 +87,21 @@ export function BottomBar() {
   const storeOpen = useUiStore((s) => s.storeOpen)
   const toggleSection = useUiStore((s) => s.toggleSection)
   const toggleStore = useUiStore((s) => s.toggleStore)
-  const closeOverlays = useUiStore((s) => s.closeOverlays)
 
   const activeTab: TabId =
     storeOpen
       ? 'store'
-      : section === 'animals' || section === 'crops' || section === 'processing' || section === 'more'
+      : section === 'farm' ||
+          section === 'animals' ||
+          section === 'crops' ||
+          section === 'processing' ||
+          section === 'more'
         ? section
         : 'farm'
 
   function onTab(id: TabId): void {
-    if (id === 'farm') {
-      closeOverlays()
-      return
-    }
+    // Granja abre/cierra el Centro de Gestión (dashboard); el mapa queda
+    // siempre accesible tocando el canvas (closeOverlays) o Esc.
     if (id === 'store') toggleStore()
     else toggleSection(id)
   }

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export type GameSectionId =
+  | "farm"
   | "animals"
   | "veterinary"
   | "crops"

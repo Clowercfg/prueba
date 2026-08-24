@@ -570,5 +570,33 @@
       "cycle_detected": "This relationship would create a cycle",
       "network_error": "Network error"
     }
+  },
+  "dashboard": {
+    "title": "My Farm",
+    "economy": "Economy",
+    "diamonds": "Diamonds",
+    "crops": "Crops",
+    "animals": "Animals",
+    "production": "Production",
+    "inventory": "Inventory",
+    "infrastructure": "Infrastructure",
+    "plots_total": "{n} plots",
+    "total": "{n} animals",
+    "growing": "{n} growing",
+    "ready_plots": "{n} ready",
+    "empty_plots": "{n} empty",
+    "sick": "{n} sick",
+    "recovering": "{n} recovering",
+    "active_jobs": "{n} active job|{n} active jobs",
+    "in_process": "{n} goods in process",
+    "level_n": "Level {n}",
+    "capacity": "Capacity: {n}",
+    "income": "Income: {v}",
+    "expenses": "Expenses: {v}",
+    "seeds_total": "{n} seeds",
+    "harvest_total": "{n} harvests",
+    "open_section": "Open",
+    "not_built": "Not built",
+    "empty_inv": "No products yet"
   }
 }

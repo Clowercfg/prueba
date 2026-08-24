@@ -570,5 +570,33 @@
       "cycle_detected": "Esta relación crearía un ciclo",
       "network_error": "Error de red"
     }
+  },
+  "dashboard": {
+    "title": "Mi Granja",
+    "economy": "Economía",
+    "diamonds": "Diamantes",
+    "crops": "Cultivos",
+    "animals": "Animales",
+    "production": "Producción",
+    "inventory": "Inventario",
+    "infrastructure": "Infraestructura",
+    "plots_total": "{n} parcelas",
+    "total": "{n} animales",
+    "growing": "{n} creciendo",
+    "ready_plots": "{n} listas",
+    "empty_plots": "{n} vacías",
+    "sick": "{n} enfermos",
+    "recovering": "{n} recuperándose",
+    "active_jobs": "{n} trabajo activo|{n} trabajos activos",
+    "in_process": "{n} productos en proceso",
+    "level_n": "Nivel {n}",
+    "capacity": "Capacidad: {n}",
+    "income": "Ingresos: {v}",
+    "expenses": "Gastos: {v}",
+    "seeds_total": "{n} semillas",
+    "harvest_total": "{n} cosechas",
+    "open_section": "Abrir",
+    "not_built": "Sin construir",
+    "empty_inv": "Sin productos todavía"
   }
 }
