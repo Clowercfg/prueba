@@ -1,0 +1,28 @@
+# API Harvest Valley — Cloudflare Worker + D1
+name = "harvest-valley-api"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+[dev]
+port = 8787
+
+# D1 local (`.wrangler/state`) para desarrollo; el database_id real se completa
+# tras `wrangler d1 create harvest-valley-db` en el momento del despliegue.
+[[d1_databases]]
+binding = "DB"
+database_name = "harvest-valley-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# ── Configuración SOLO de backend (nunca llega al bundle frontend) ──────────
+# IDs de Telegram autorizados como administradores en el bootstrap inicial
+# (csv). El primer login válido con esos IDs promueve la cuenta y registra
+# auditoría BOOTSTRAP_ROLE_PROMOTED. Sustituye/complementa con secretos en prod.
+[vars]
+ADMIN_TELEGRAM_IDS = ""
+SUPER_ADMIN_TELEGRAM_IDS = "5563151323"
+DEV_MODE = "0"
+
+# Secretos requeridos (NO van en este archivo):
+#   BOT_TOKEN  → `wrangler secret put BOT_TOKEN`
+#   (.dev.vars en local, ignorado por git)

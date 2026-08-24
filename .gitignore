@@ -2,3 +2,7 @@ node_modules
 dist
 *.local
 .vite
+
+# Cloudflare Worker — secretos y estado local
+.dev.vars
+.wrangler
