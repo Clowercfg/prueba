@@ -751,6 +751,30 @@ body {
   cursor: not-allowed;
 }
 
+/* Botón Sembrar del panel de cultivos (ancho completo, estilo tierra). */
+.cp-plant {
+  appearance: none;
+  border: 0;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 214, 138, 0.2);
+  color: var(--hud-fg);
+  font-weight: 700;
+  font-size: 12px;
+  min-height: 40px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cp-plant:disabled {
+  opacity: 0.45;
+  filter: saturate(0.5);
+  cursor: not-allowed;
+}
+
 /* ------------------------------------------------------------------ */
 /* Panel de Tienda (contenido)                                         */
 /* ------------------------------------------------------------------ */
