@@ -330,6 +330,7 @@
     }
   },
   "shop": {
+    "gold": "Monedas",
     "invalid_qty": "⚠️ CANTIDAD INVÁLIDA",
     "invalid_qty_detail": "Solo cantidades enteras positivas.",
     "unavailable": "⚠️ PRODUCTO NO DISPONIBLE",

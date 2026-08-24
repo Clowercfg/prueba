@@ -27,10 +27,10 @@ export default function LanguagePanel() {
             aria-pressed={lang === l.id}
             onClick={() => setLang(l.id)}
           >
-            <span className="mp-icon">{l.id === "es" ? "🇪🇸" : "🇬🇧"}</span>
+            <span className="mp-icon lp-code">{l.id.toUpperCase()}</span>
             <span className="mp-text">
               <b>{t(l.labelKey)}</b>
-              <small>{l.id.toUpperCase()}</small>
+              <small>{l.id === "es" ? "Español" : "English"}</small>
             </span>
             {lang === l.id && <span className="lp-check">✓</span>}
           </button>

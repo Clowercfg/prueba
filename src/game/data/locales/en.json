@@ -330,6 +330,7 @@
     }
   },
   "shop": {
+    "gold": "Coins",
     "invalid_qty": "⚠️ INVALID QUANTITY",
     "invalid_qty_detail": "Only positive whole numbers.",
     "unavailable": "⚠️ PRODUCT NOT AVAILABLE",

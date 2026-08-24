@@ -2,6 +2,8 @@
   color-scheme: light;
   --hud-bg: rgba(20, 40, 24, 0.55);
   --hud-fg: #f4fff4;
+  --gold: #f4b63f;
+  --gold-soft: #ffd27a;
 }
 
 * {
@@ -72,12 +74,14 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
   pointer-events: none;
   color: var(--hud-fg);
   background: var(--hud-bg);
   backdrop-filter: blur(6px);
-  border-radius: 10px;
-  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 10px;
   font-size: 13px;
   line-height: 1.2;
 }
@@ -86,10 +90,43 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
   flex-shrink: 0;
+  font-size: 13px;
+}
+
+/* Empuja chips y botón de perfil hacia la derecha */
+.hud-spacer {
+  flex: 1;
+  min-width: 4px;
+}
+
+/* Chips de estado del juego (saldo / diamantes): info, no interactivos. */
+.hud-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.hud-chip b {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hud-gold b {
+  color: var(--gold-soft);
+}
+
+.hud-gems b {
+  color: #a8e2ff;
 }
 
 .hud-meta {
-  opacity: 0.85;
+  opacity: 0.7;
   font-variant-numeric: tabular-nums;
   min-width: 0;
   white-space: nowrap;
@@ -105,17 +142,16 @@ body {
 
 .tn-btn {
   appearance: none;
-  border: 0;
-  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.28);
   color: var(--hud-fg);
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
-  line-height: 1;
   cursor: pointer;
   pointer-events: auto;
   touch-action: manipulation;
@@ -125,9 +161,49 @@ body {
     transform 0.1s ease;
 }
 
+.tn-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
 .tn-btn:active {
-  background: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.22);
   transform: scale(0.94);
+}
+
+/* Código de idioma (ES/EN) en el selector: chip tipográfico uniforme.  */
+.lp-code {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--gold-soft);
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+
+/* Pantallas muy estrechas: prioriza chips de saldo sobre la marca.     */
+@media (max-width: 379px) {
+  .hud-title {
+    display: none;
+  }
+
+  .hud-chip b {
+    font-size: 11px;
+  }
+}
+
+/* Tablets / pantallas anchas: centra la barra y amplía paneles.        */
+@media (min-width: 520px) {
+  .bb-tabs {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .panel-card {
+    width: min(390px, 100%);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -143,20 +219,22 @@ body {
   /* Apoyada SOBRE la barra negra (arriba en posición), nunca encima de ella. */
   bottom: var(--sysbar-h);
   z-index: 20;
-  padding: 5px 4px 14px;
-  background: rgba(14, 30, 18, 0.78);
+  padding: 6px 6px 12px;
+  background: linear-gradient(180deg, rgba(26, 52, 31, 0.94) 0%, rgba(13, 28, 17, 0.96) 100%);
+  border-top: 1px solid rgba(244, 182, 63, 0.22);
   backdrop-filter: blur(8px);
-  border-radius: 16px 16px 0 0;
+  border-radius: 18px 18px 0 0;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.28);
 }
 
 .bb-tabs {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 2px;
+  gap: 3px;
 }
 
 .bb-tab {
+  position: relative;
   appearance: none;
   border: 0;
   background: transparent;
@@ -165,24 +243,49 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  min-height: 46px;
-  padding: 4px 1px;
-  border-radius: 10px;
+  gap: 3px;
+  min-height: 50px;
+  padding: 6px 1px 5px;
+  border-radius: 12px;
   cursor: pointer;
   font-family: inherit;
-  opacity: 0.78;
+  opacity: 0.72;
   transition:
     background-color 0.15s ease,
-    opacity 0.15s ease;
+    color 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.1s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
+.bb-tab svg {
+  width: 22px;
+  height: 22px;
+}
+
+.bb-tab:active {
+  transform: scale(0.94);
+}
+
+/* Estado activo: acento dorado + indicador superior (lenguaje del juego). */
 .bb-tab.is-active {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(244, 182, 63, 0.16);
+  color: var(--gold-soft);
   opacity: 1;
   font-weight: 600;
+}
+
+.bb-tab.is-active::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 18px;
+  height: 3px;
+  margin-left: -9px;
+  border-radius: 2px;
+  background: var(--gold);
 }
 
 .bb-label {
@@ -190,6 +293,7 @@ body {
   line-height: 1;
   white-space: nowrap;
   letter-spacing: 0.01em;
+  font-weight: 600;
 }
 
 /* Menú secundario "Más" */
@@ -246,10 +350,11 @@ body {
 
 .panel-card {
   pointer-events: auto;
-  width: min(340px, 100%);
-  background: rgba(16, 34, 20, 0.82);
+  width: min(360px, 100%);
+  background: linear-gradient(180deg, rgba(23, 47, 28, 0.94) 0%, rgba(15, 32, 20, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 16px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   color: var(--hud-fg);
 }
@@ -258,12 +363,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .panel-title {
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.01em;
 }
 
 .panel-close {
@@ -271,12 +377,21 @@ body {
   border: 0;
   background: rgba(255, 255, 255, 0.14);
   color: var(--hud-fg);
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1;
+  touch-action: manipulation;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.panel-close:active {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(0.92);
 }
 
 .panel-soon {
@@ -356,7 +471,7 @@ body {
 }
 
 .ap-scroll {
-  max-height: min(52vh, 430px);
+  max-height: min(56vh, 470px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -410,15 +525,30 @@ body {
 .ap-buy {
   appearance: none;
   border: 0;
-  border-radius: 10px;
-  background: #f4b63f;
+  border-bottom: 2px solid #b97c14;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffc95e 0%, #f0a92e 100%);
   color: #3a2503;
   font-weight: 800;
   font-size: 13px;
-  min-height: 38px;
-  padding: 0 12px;
+  min-height: 40px;
+  padding: 0 14px;
   cursor: pointer;
   touch-action: manipulation;
+  transition:
+    filter 0.15s ease,
+    transform 0.1s ease;
+}
+
+.ap-buy:active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(0.95);
+}
+
+.ap-buy:disabled {
+  opacity: 0.45;
+  filter: saturate(0.5);
+  cursor: not-allowed;
 }
 
 .ap-prod {
@@ -438,6 +568,17 @@ body {
   font-size: 12px;
   opacity: 0.65;
   font-style: italic;
+}
+
+/* Estado vacío compartido (VetPanel / InventoryPanel).                 */
+.ap-empty {
+  margin: 8px 0;
+  padding: 16px 10px;
+  text-align: center;
+  font-size: 13px;
+  opacity: 0.7;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
 }
 
 .ap-list {
@@ -570,12 +711,13 @@ body {
 .cp-sell {
   appearance: none;
   border: 0;
-  border-radius: 10px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.16);
   color: var(--hud-fg);
   font-weight: 700;
   font-size: 13px;
-  min-height: 38px;
+  min-height: 40px;
   padding: 0 12px;
   cursor: pointer;
   touch-action: manipulation;
@@ -583,6 +725,7 @@ body {
 
 .cp-sell:disabled {
   opacity: 0.45;
+  filter: saturate(0.5);
   cursor: not-allowed;
 }
 
@@ -590,8 +733,9 @@ body {
   align-self: center;
   appearance: none;
   border: 0;
-  border-radius: 10px;
-  background: #58c26a;
+  border-bottom: 2px solid #357e44;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #6fd481 0%, #4cae60 100%);
   color: #06300f;
   font-weight: 800;
   font-size: 12px;
@@ -599,6 +743,12 @@ body {
   padding: 0 10px;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.cp-harvest:disabled {
+  opacity: 0.45;
+  filter: saturate(0.5);
+  cursor: not-allowed;
 }
 
 /* ------------------------------------------------------------------ */
@@ -609,7 +759,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(244, 182, 63, 0.25);
   border-radius: 12px;
   padding: 10px 12px;
   font-weight: 800;
@@ -638,24 +789,33 @@ body {
   align-items: center;
   gap: 4px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
-  padding: 10px 8px;
+  padding: 12px 8px;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.st-card:active {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .st-icon {
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1;
 }
 
 .st-name {
   font-size: 13px;
   font-weight: 700;
+  text-align: center;
 }
 
 .st-price {
   font-size: 13px;
-  opacity: 0.9;
+  color: var(--gold-soft);
+  font-weight: 800;
 }
 
 .st-card .ap-buy {
@@ -730,24 +890,50 @@ body {
   align-items: center;
   gap: 12px;
   width: 100%;
+  min-height: 58px;
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
   color: inherit;
   padding: 12px;
   cursor: pointer;
   text-align: left;
   touch-action: manipulation;
+  font: inherit;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
 }
 
 .mp-item:active {
   background: rgba(255, 255, 255, 0.09);
+  transform: scale(0.985);
+}
+
+/* Contenedor uniforme de iconos de fila (SVG o emoji temático).        */
+.mp-icon,
+.rc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .mp-icon {
-  font-size: 22px;
-  line-height: 1;
+  font-size: 20px;
+}
+
+.rc-icon {
+  font-size: 19px;
+}
+
+.mp-icon-svg {
+  color: var(--gold-soft);
 }
 
 .mp-text {
@@ -780,11 +966,6 @@ body {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
   padding: 10px;
-}
-
-.rc-icon {
-  font-size: 22px;
-  line-height: 1;
 }
 
 .rc-main {
