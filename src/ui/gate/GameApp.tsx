@@ -5,16 +5,18 @@ import { BottomBar } from '../BottomBar'
 import { PanelHost } from '../panels/PanelHost'
 import { NotificationCenter } from '../NotificationCenter'
 import { AdminApp } from '../admin/AdminApp'
-import { api, type MeResponse } from '../../game/api/client'
+import { useAuthStore } from '../../game/stores/authStore'
 import { detectTelegramEnvironment, type TelegramWebAppLike } from './telegramEnvironment'
 
 /**
  * Juego completo: SOLO se monta cuando el gate confirma entorno Telegram.
- * Al montar notifica ready()/expand() al cliente y consulta /api/me:
+ * Al montar notifica ready()/expand() al cliente y lanza la autenticación
+ * EN BACKGROUND (useAuthStore.signIn → /api/me):
+ * - Canvas2D se renderiza de inmediato, sin esperar al backend.
  * - rol ADMIN/SUPER_ADMIN → redirección automática al panel (con botón
  *   "Volver al juego").
- * - USER → juego normal + centro de notificaciones si el backend responde.
- * Si el backend no está disponible el juego funciona igual que siempre.
+ * - USER autenticado → juego normal + centro de notificaciones.
+ * - unauthenticated/error → el juego funciona igual que siempre.
  */
 function notifyTelegramReady(webApp: TelegramWebAppLike | null): void {
   if (!webApp) return
@@ -28,7 +30,9 @@ function notifyTelegramReady(webApp: TelegramWebAppLike | null): void {
 
 export function GameApp() {
   const env = detectTelegramEnvironment()
-  const [me, setMe] = useState<MeResponse | null>(null)
+  const status = useAuthStore((s) => s.status)
+  const me = useAuthStore((s) => s.me)
+  const signIn = useAuthStore((s) => s.signIn)
   const [screen, setScreen] = useState<'game' | 'admin'>('game')
 
   useEffect(() => {
@@ -36,25 +40,18 @@ export function GameApp() {
   }, [env])
 
   useEffect(() => {
-    let alive = true
-    api
-      .me()
-      .then((r) => {
-        if (!alive) return
-        setMe(r)
-        if (r.user.role !== 'USER') setScreen('admin')
-      })
-      .catch(() => {
-        /* sin backend: juego normal */
-      })
-    return () => {
-      alive = false
-    }
-  }, [])
+    void signIn()
+  }, [signIn])
+
+  useEffect(() => {
+    if (status === 'authenticated' && me && me.user.role !== 'USER') setScreen('admin')
+  }, [status, me])
 
   if (me && me.user.role !== 'USER' && screen === 'admin') {
     return <AdminApp me={me} onBackToGame={() => setScreen('game')} />
   }
+
+  const isNormalUser = status === 'authenticated' && me?.user.role === 'USER'
 
   return (
     <div className="app-root">
@@ -64,7 +61,7 @@ export function GameApp() {
       <BottomBar />
       {/* Barra de sistema negra: la UI vive por encima de esta franja. */}
       <div className="system-bar" aria-hidden />
-      {me && me.user.role === 'USER' && screen === 'game' && <NotificationCenter initialUnread={me.unreadNotifications} />}
+      {isNormalUser && screen === 'game' && <NotificationCenter initialUnread={me.unreadNotifications} />}
     </div>
   )
 }

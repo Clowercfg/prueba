@@ -12,6 +12,7 @@ export interface TelegramUser {
   id: string
   username?: string
   first_name?: string
+  last_name?: string
   language_code?: string
   auth_date: number
 }
@@ -78,6 +79,7 @@ export async function verifyInitData(initData: string | null, botToken: string, 
       id: String(id),
       username: typeof parsed['username'] === 'string' ? parsed['username'] : undefined,
       first_name: typeof parsed['first_name'] === 'string' ? parsed['first_name'] : undefined,
+      last_name: typeof parsed['last_name'] === 'string' ? parsed['last_name'] : undefined,
       language_code: typeof parsed['language_code'] === 'string' ? parsed['language_code'] : undefined,
       auth_date: authDate,
     },
@@ -108,15 +110,16 @@ export async function resolveUser(db: D1Database, env: Env, tUser: TelegramUser)
   const now = Date.now()
   const row = await db
     .prepare(
-      `INSERT INTO users (telegram_id, username, first_name, language_code, created_at, updated_at)
-       VALUES (?1, ?2, ?3, COALESCE(?4, 'es'), ?5, ?5)
+      `INSERT INTO users (telegram_id, username, first_name, last_name, language_code, created_at, updated_at)
+       VALUES (?1, ?2, ?3, ?4, COALESCE(?5, 'es'), ?6, ?6)
        ON CONFLICT(telegram_id) DO UPDATE SET
          username   = COALESCE(excluded.username, username),
          first_name = COALESCE(excluded.first_name, first_name),
+         last_name  = COALESCE(excluded.last_name, last_name),
          updated_at = excluded.updated_at
        RETURNING id, telegram_id, username, first_name, role, status`,
     )
-    .bind(tUser.id, tUser.username ?? null, tUser.first_name ?? null, tUser.language_code ?? null, now)
+    .bind(tUser.id, tUser.username ?? null, tUser.first_name ?? null, tUser.last_name ?? null, tUser.language_code ?? null, now)
     .first<UserRow>()
   if (!row) throw new HttpError(500, 'No se pudo resolver el usuario')
   if (row.status !== 'ACTIVE') throw new HttpError(403, 'Usuario bloqueado')
