@@ -42,7 +42,10 @@ export const ASSETS_CONFIG = {
     'terrain/dirt_01.png',
     'vegetation/ring_tree.webp',
     'buildings/barn.webp',
-    'buildings/house.webp',
+    // 'buildings/house.webp' retirado: el webp adoptado era un placeholder
+    // corrupto (bloque negro 256x256). La casa vuelve al pintor procedural
+    // drawHouse() via fallback #14; si se adopta arte real, bastaria con
+    // restaurar el archivo y esta linea.
     'decoration/animal_pen.webp',
     'terrain/farm_plot.webp',
     'vegetation/tree_01.webp',
