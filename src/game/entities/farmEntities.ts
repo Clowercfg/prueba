@@ -122,25 +122,25 @@ export function createFarmEntities(): FarmEntity[] {
     })
   }
 
-  // ÁRBOLES: misma imagen, escalas ligeramente distintas.
-  for (const [i, j, tier] of TREE_SPOTS) {
+  // ÁRBOLES: arte real con 3 variantes (tree_01..03); la escala la fija el tier.
+  for (const [i, j, variant] of TREE_SPOTS) {
     const w = worldOf(i, j)
     entities.push({
-      key: 'vegetation/tree.png',
+      key: `vegetation/tree_0${(variant % 3) + 1}.png`,
       x: w.x,
       y: w.y,
-      scale: SCALE.tree[tier % SCALE.tree.length],
+      scale: SCALE.tree[variant % SCALE.tree.length],
       anchorX: 0.5,
       anchorY: 0.92,
       depth: w.y + 0.04,
     })
   }
 
-  // SETOS: mismo árbol.png muy pequeño.
+  // SETOS: arbusto real a escala pequeña.
   for (const [i, j] of SHRUB_SPOTS) {
     const w = worldOf(i, j)
     entities.push({
-      key: 'vegetation/tree.png',
+      key: 'vegetation/bush_01.png',
       x: w.x,
       y: w.y,
       scale: SCALE.shrub,

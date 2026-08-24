@@ -14,12 +14,11 @@ export const ASSETS_CONFIG = {
   /** Tamaño (px) de la textura cuadrada que mapea al rombo isométrico. */
   spriteSize: 64,
 
-  /**
-   * Rutas base de objetos de la granja (identificadores de FarmEntity).
-   * El renderer resuelve el asset FINAL vía hdKey(): .png → .webp.
-   */
+  /** Rutas base de objetos de la granja (identificadores de FarmEntity).
+   *  El renderer resuelve el asset FINAL vía hdKey(): .png → .webp.
+   *  Árboles: 3 variantes reales tree_01..03 (elección por TREE_SPOTS). */
   paths: {
-    tree: 'vegetation/tree.png',
+    tree: 'vegetation/tree_01.png',
     barn: 'buildings/barn.png',
     pond: 'terrain/pond.png',
     pen: 'decoration/animal_pen.png',
@@ -28,8 +27,9 @@ export const ASSETS_CONFIG = {
 
   /**
    * Assets críticos: se precargan DESPUÉS del primer render (nunca bloquean).
-   * Terreno base + los objetos visibles de la escena inicial, todos en WebP
-   * (total ≈ 0.93 MB). Los árboles/estanque son procedurales: sin asset.
+   * Terreno base + los objetos visibles de la escena inicial, todos en WebP.
+   * El estanque sigue siendo procedural: no existe asset de agua en el pack
+   * (el pintor GroundLayer + AmbientLayer lo cubre).
    */
   critical: [
     'terrain/ground.webp',
@@ -42,8 +42,13 @@ export const ASSETS_CONFIG = {
     'terrain/dirt_01.png',
     'vegetation/ring_tree.webp',
     'buildings/barn.webp',
+    'buildings/house.webp',
     'decoration/animal_pen.webp',
     'terrain/farm_plot.webp',
+    'vegetation/tree_01.webp',
+    'vegetation/tree_02.webp',
+    'vegetation/tree_03.webp',
+    'vegetation/bush_01.webp',
   ],
 
   /** Assets secundarios: cargar bajo demanda con loadWhenIdle(). */
