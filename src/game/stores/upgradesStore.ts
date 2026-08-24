@@ -1,4 +1,4 @@
-﻿import { create } from "zustand";
+import { create } from "zustand";
 import type { AnimalKind } from "../types/entities";
 import { useEconomyStore } from "./economyStore";
 import {
@@ -25,13 +25,13 @@ interface UpgradesStore {
   buySpecial: (specialId: string) => boolean;
   /** Capacidad actual del edificio. */
   capacityOf: (buildingId: string) => number;
-  /** Capacidad del siguiente nivel (o la actual si estÃ¡ al mÃ¡ximo). */
+  /** Capacidad del siguiente nivel (o la actual si está al máximo). */
   nextCapacityOf: (buildingId: string) => number;
-  /** Nivel siguiente comprable o null si estÃ¡ al mÃ¡ximo. */
+  /** Nivel siguiente comprable o null si está al máximo. */
   nextLevelOf: (buildingId: string) => { level: number; price: number; capacity?: number } | null;
-  /** Factor de intervalo de producciÃ³n para un animal (1 = sin mejora). */
+  /** Factor de intervalo de producción para un animal (1 = sin mejora). */
   intervalFactor: (kind: AnimalKind) => number;
-  /** DÃ­as del ciclo de engorde de la pocilga con las mejoras compradas. */
+  /** Días del ciclo de engorde de la pocilga con las mejoras compradas. */
   cycleDaysOf: () => number;
   reset: () => void;
 }

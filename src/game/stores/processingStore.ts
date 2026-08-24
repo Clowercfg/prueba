@@ -29,7 +29,7 @@ interface ProcessingStore {
   ) => { ok: boolean; reason?: string };
   /** Inicia un ciclo de procesamiento. Descuenta gold + huevos, crea job. */
   startProcess: (recipeId: string, qty: number) => boolean;
-  /** AÃ±ade 1 huevo a un job en curso. Descuenta egg + gold, extiende endTime. */
+  /** Añade 1 huevo a un job en curso. Descuenta egg + gold, extiende endTime. */
   addToJob: (jobId: string) => boolean;
   /** Tick: entrega productos de jobs completados. Llamar cada ~1s. */
   tick: () => void;

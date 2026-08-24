@@ -1,12 +1,12 @@
-﻿import { ENCLOSURES } from "../config/enclosuresConfig";
+import { ENCLOSURES } from "../config/enclosuresConfig";
 import { fbm } from "./noise";
 import { smoothstep } from "./math";
 
 /**
- * Altura de terreno para el world space Ãºnico (tiles 0..28). FunciÃ³n pura y
+ * Altura de terreno para el world space único (tiles 0..28). Función pura y
  * determinista: aplana suavemente los interiores de los corrales reales
  * (ENCLOSURES) y devuelve colinas suaves fuera de ellos. La componente Y de
- * animal.position la consume solo lÃ³gica interna, nunca el render iso.
+ * animal.position la consume solo lógica interna, nunca el render iso.
  */
 
 interface PlotRect {
