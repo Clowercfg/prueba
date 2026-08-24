@@ -1,11 +1,9 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import { PROCESS_ECONOMY } from "../config/processingConfig";
 import { getProcessorLevelDef } from "../config/upgradesConfig";
 import { useEconomyStore } from "./economyStore";
 import { useGoodsStore } from "./goodsStore";
 import { useUpgradesStore } from "./upgradesStore";
-
-const STORAGE_KEY = "granja-inmersiva-processing-v1";
 
 export interface ProcessingJob {
   id: string;
@@ -20,24 +18,6 @@ export interface ProcessingJob {
   level: number;
 }
 
-function loadSaved(): ProcessingJob[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) ?? [];
-  } catch {
-    return [];
-  }
-}
-
-function persist(jobs: ProcessingJob[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-  } catch {
-    /* almacenamiento no disponible */
-  }
-}
-
 let nextId = Date.now();
 
 interface ProcessingStore {
@@ -49,7 +29,7 @@ interface ProcessingStore {
   ) => { ok: boolean; reason?: string };
   /** Inicia un ciclo de procesamiento. Descuenta gold + huevos, crea job. */
   startProcess: (recipeId: string, qty: number) => boolean;
-  /** Añade 1 huevo a un job en curso. Descuenta egg + gold, extiende endTime. */
+  /** AÃ±ade 1 huevo a un job en curso. Descuenta egg + gold, extiende endTime. */
   addToJob: (jobId: string) => boolean;
   /** Tick: entrega productos de jobs completados. Llamar cada ~1s. */
   tick: () => void;
@@ -58,7 +38,7 @@ interface ProcessingStore {
 }
 
 export const useProcessingStore = create<ProcessingStore>((set, get) => ({
-  jobs: loadSaved(),
+  jobs: [],
 
   canProcess: (recipeId, qty) => {
     const recipe = PROCESS_ECONOMY[recipeId];
@@ -116,9 +96,7 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
       level,
     };
 
-    const jobs = [...get().jobs, job];
-    set({ jobs });
-    persist(jobs);
+    set({ jobs: [...get().jobs, job] });
     return true;
   },
 
@@ -157,7 +135,6 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
         : j
     );
     set({ jobs: updated });
-    persist(updated);
     return true;
   },
 
@@ -182,11 +159,9 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     }
 
     set({ jobs: remaining });
-    persist(remaining);
   },
 
   reset: () => {
     set({ jobs: [] });
-    persist([]);
   },
 }));

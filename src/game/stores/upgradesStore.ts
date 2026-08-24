@@ -1,4 +1,4 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import type { AnimalKind } from "../types/entities";
 import { useEconomyStore } from "./economyStore";
 import {
@@ -10,26 +10,10 @@ import {
   PIG_CYCLE_DAYS,
 } from "../config/upgradesConfig";
 
-const STORAGE_KEY = "granja-inmersiva-upgrades-v1";
-
 function defaultLevels(): Record<string, number> {
   const out: Record<string, number> = {};
   for (const def of Object.values(UPGRADES_ECONOMY)) out[def.id] = def.startLevel;
   return out;
-}
-
-function loadSaved(): { levels: Record<string, number>; specials: Record<string, boolean> } {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { levels: defaultLevels(), specials: {} };
-    const parsed = JSON.parse(raw);
-    const levels = { ...defaultLevels(), ...(parsed.levels ?? {}) };
-    const specials: Record<string, boolean> = {};
-    for (const k of Object.keys(parsed.specials ?? {})) if (parsed.specials[k]) specials[k] = true;
-    return { levels, specials };
-  } catch {
-    return { levels: defaultLevels(), specials: {} };
-  }
 }
 
 interface UpgradesStore {
@@ -41,26 +25,18 @@ interface UpgradesStore {
   buySpecial: (specialId: string) => boolean;
   /** Capacidad actual del edificio. */
   capacityOf: (buildingId: string) => number;
-  /** Capacidad del siguiente nivel (o la actual si está al máximo). */
+  /** Capacidad del siguiente nivel (o la actual si estÃ¡ al mÃ¡ximo). */
   nextCapacityOf: (buildingId: string) => number;
-  /** Nivel siguiente comprable o null si está al máximo. */
+  /** Nivel siguiente comprable o null si estÃ¡ al mÃ¡ximo. */
   nextLevelOf: (buildingId: string) => { level: number; price: number; capacity?: number } | null;
-  /** Factor de intervalo de producción para un animal (1 = sin mejora). */
+  /** Factor de intervalo de producciÃ³n para un animal (1 = sin mejora). */
   intervalFactor: (kind: AnimalKind) => number;
-  /** Días del ciclo de engorde de la pocilga con las mejoras compradas. */
+  /** DÃ­as del ciclo de engorde de la pocilga con las mejoras compradas. */
   cycleDaysOf: () => number;
   reset: () => void;
 }
 
-function persist(levels: Record<string, number>, specials: Record<string, boolean>): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ levels, specials }));
-  } catch {
-    /* almacenamiento no disponible */
-  }
-}
-
-const initial = loadSaved();
+const initial = { levels: defaultLevels(), specials: {} as Record<string, boolean> };
 
 export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
   levels: initial.levels,
@@ -75,7 +51,6 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
     if (next.price > 0 && !useEconomyStore.getState().spendGold(next.price)) return false;
     const levels = { ...get().levels, [buildingId]: next.level };
     set({ levels });
-    persist(levels, get().specials);
     return true;
   },
 
@@ -86,7 +61,6 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
     if (special.price > 0 && !useEconomyStore.getState().spendGold(special.price)) return false;
     const specials = { ...get().specials, [specialId]: true };
     set({ specials });
-    persist(get().levels, specials);
     return true;
   },
 
@@ -135,6 +109,5 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
     const levels = defaultLevels();
     const specials: Record<string, boolean> = {};
     set({ levels, specials });
-    persist(levels, specials);
   },
 }));

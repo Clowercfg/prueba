@@ -18,6 +18,7 @@ import { startProcessingSystem } from '../game/systems/processingSystem'
 import { startEconomySystem } from '../game/systems/economySystem'
 import { startVetSystem } from '../game/systems/vetSystem'
 import { tickAnimalAI } from '../game/systems/animalAI'
+import { hydratePersistence, saveNow, startPersistence } from '../game/persistence/persistence'
 import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
 
 const FPS_SAMPLE_MS = 500
@@ -42,6 +43,9 @@ export function GameCanvas() {
     void new URLSearchParams(window.location.search).get('engine') // aceptado: Ãºnico motor
 
     const store = useGameStore.getState()
+    // Persistencia local: hidratación síncrona y ligera ANTES de arrancar
+    // loop/sistemas (no espera assets ni red; save corrupto ⇒ estado inicial).
+    hydratePersistence()
     store.setStatus('running')
 
     // Mundo: lÃ­mites REALES del terreno (#25) derivados de la banda activa.
@@ -148,6 +152,8 @@ export function GameCanvas() {
     const stopEconomySystem = startEconomySystem()
     // Sistema veterinario migrado: altas mÃ©dicas + rollo de enfermedad (config).
     const stopVetSystem = startVetSystem()
+    // Persistencia local: debounce por cambios + visibilitychange/pagehide.
+    const stopPersistence = startPersistence()
 
     // Precarga de crÃ­ticos en background: cuando termina quedan marcados para
     // verificar en tests que el primer frame fue ANTES de la carga completa.
@@ -167,6 +173,8 @@ export function GameCanvas() {
       criticalDone: null as number | null,
     }
     ;(window as unknown as Record<string, unknown>).__HV = debug
+    // Guardado manual para tests headless (la capa ya guarda sola).
+    ;(debug as unknown as Record<string, unknown>).save = saveNow
 
     return () => {
       loop.stop()
@@ -174,6 +182,7 @@ export function GameCanvas() {
       stopProcessingSystem()
       stopEconomySystem()
       stopVetSystem()
+      stopPersistence()
       resize.detach()
       interaction.detach()
       unsubStore()

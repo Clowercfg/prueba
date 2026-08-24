@@ -2,28 +2,7 @@ import { create } from "zustand";
 import { getGoodsEconomy } from "../config/economyConfig";
 import { useEconomyStore } from "./economyStore";
 
-const STORAGE_KEY = "granja-inmersiva-goods-v1";
-
 const DEFAULT_GOODS: Record<string, number> = { milk: 6, eggs: 8, honey: 4, cheese: 5 };
-
-function loadSaved(): Record<string, number> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_GOODS };
-    const parsed = JSON.parse(raw);
-    return { ...DEFAULT_GOODS, ...(parsed ?? {}) };
-  } catch {
-    return { ...DEFAULT_GOODS };
-  }
-}
-
-function persist(inventory: Record<string, number>): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
-  } catch {
-    /* almacenamiento no disponible */
-  }
-}
 
 interface GoodsStore {
   inventory: Record<string, number>;
@@ -38,7 +17,7 @@ interface GoodsStore {
 }
 
 export const useGoodsStore = create<GoodsStore>((set, get) => ({
-  inventory: loadSaved(),
+  inventory: { ...DEFAULT_GOODS },
 
   sellGoods: (goodId, qty) => {
     const econ = getGoodsEconomy(goodId);
@@ -48,7 +27,6 @@ export const useGoodsStore = create<GoodsStore>((set, get) => ({
     useEconomyStore.getState().addGold(qty * econ.sellPrice, "producto");
     const next = { ...inv, [goodId]: (inv[goodId] ?? 0) - qty };
     set({ inventory: next });
-    persist(next);
     return true;
   },
 
@@ -56,7 +34,6 @@ export const useGoodsStore = create<GoodsStore>((set, get) => ({
     if (qty <= 0) return false;
     const next = { ...get().inventory, [goodId]: (get().inventory[goodId] ?? 0) + qty };
     set({ inventory: next });
-    persist(next);
     return true;
   },
 
@@ -66,13 +43,10 @@ export const useGoodsStore = create<GoodsStore>((set, get) => ({
     if ((inv[goodId] ?? 0) < qty) return false;
     const next = { ...inv, [goodId]: (inv[goodId] ?? 0) - qty };
     set({ inventory: next });
-    persist(next);
     return true;
   },
 
   reset: () => {
-    const next = { ...DEFAULT_GOODS };
-    set({ inventory: next });
-    persist(next);
+    set({ inventory: { ...DEFAULT_GOODS } });
   },
 }));

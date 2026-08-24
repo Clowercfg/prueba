@@ -6,8 +6,20 @@ import { ENCLOSURE_BY_KIND } from "../config/enclosuresConfig";
 
 let idCounter = 1;
 
-/** Crea un agente de animal listo para registrarse en la granja. */
-export function createAnimalAgent(kind: AnimalKind, name: string, rng?: () => number): AnimalAgent {
+/** Garantiza que los nuevos ids no colisionen con los restaurados del save. */
+export function ensureAnimalIdFloor(maxId: number): void {
+  if (maxId >= idCounter) idCounter = maxId + 1;
+}
+
+/** Crea un agente de animal listo para registrarse en la granja.
+ *  `preset` permite a la capa de persistencia restaurar los campos
+ *  persistentes (id/posición/etc.) sobre el agente recién fabricado. */
+export function createAnimalAgent(
+  kind: AnimalKind,
+  name: string,
+  rng?: () => number,
+  preset?: Partial<AnimalAgent>,
+): AnimalAgent {
   const rand = rng ?? Math.random;
   const enc = ENCLOSURE_BY_KIND[kind];
   const b = enc.bounds;
@@ -36,6 +48,7 @@ export function createAnimalAgent(kind: AnimalKind, name: string, rng?: () => nu
     speed: 1,
     pendingProduction: 0,
     nextHarvestAt: now + (kind === "cow" ? 20 : kind === "pig" ? 18 : 15),
+    ...preset,
   };
 }
 
