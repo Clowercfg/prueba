@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { GameCanvas } from '../GameCanvas'
-import { Hud } from '../Hud'
+import { TopNav } from '../TopNav'
 import { BottomBar } from '../BottomBar'
 import { PanelHost } from '../panels/PanelHost'
 import { detectTelegramEnvironment, type TelegramWebAppLike } from './telegramEnvironment'
@@ -30,7 +30,7 @@ export function GameApp() {
   return (
     <div className="app-root">
       <GameCanvas />
-      <Hud />
+      <TopNav />
       <PanelHost />
       <BottomBar />
       {/* Barra de sistema negra: la UI vive por encima de esta franja. */}

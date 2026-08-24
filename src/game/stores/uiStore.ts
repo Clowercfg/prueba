@@ -11,6 +11,7 @@ export type GameSectionId =
   | "more"
   | "calendar"
   | "language"
+  | "profile"
   | "affiliates";
 
 interface UiStore {

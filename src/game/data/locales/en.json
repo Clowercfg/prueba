@@ -74,7 +74,8 @@
     "language": "Language",
     "language_hint": "Change the interface language",
     "affiliates": "Affiliates",
-    "affiliates_hint": "Referrals and commissions"
+      "affiliates_hint": "Referrals and commissions",
+      "profile": "Profile"
   },
   "language": {
     "title": "Language",
@@ -352,6 +353,13 @@
   },
   "panel": {
     "close_aria": "Close",
+    "profile": {
+      "subtitle": "Your account and benefits",
+      "info_title": "Player information",
+      "info_soon": "Coming soon",
+      "referrals_title": "Referrals",
+      "referrals_soon": "Referrals will arrive in a later phase"
+    },
     "animals": {
       "title": "Animals",
       "subtitle": "Population and status of your livestock",

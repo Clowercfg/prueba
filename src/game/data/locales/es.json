@@ -74,7 +74,8 @@
     "language": "Idioma",
     "language_hint": "Cambia el idioma de la interfaz",
     "affiliates": "Afiliados",
-    "affiliates_hint": "Referidos y comisiones"
+      "affiliates_hint": "Referidos y comisiones",
+      "profile": "Perfil"
   },
   "language": {
     "title": "Idioma",
@@ -352,6 +353,13 @@
   },
   "panel": {
     "close_aria": "Cerrar",
+    "profile": {
+      "subtitle": "Tu cuenta y beneficios",
+      "info_title": "Información del jugador",
+      "info_soon": "Disponible próximamente",
+      "referrals_title": "Referidos",
+      "referrals_soon": "Los referidos llegarán en una fase posterior"
+    },
     "animals": {
       "title": "Animales",
       "subtitle": "Población y estado de tu ganado",

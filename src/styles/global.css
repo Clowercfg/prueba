@@ -85,11 +85,49 @@ body {
 .hud-title {
   font-weight: 700;
   letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
 .hud-meta {
   opacity: 0.85;
   font-variant-numeric: tabular-nums;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------------ */
+/* Navegación superior compacta: idioma (izq.) y perfil (der.).        */
+/* Viven DENTRO de la franja .hud existente; sólo el botón captura     */
+/* toques (el strip es pointer-events:none). Área táctil ≥ 40 px.      */
+/* ------------------------------------------------------------------ */
+
+.tn-btn {
+  appearance: none;
+  border: 0;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--hud-fg);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.tn-btn:active {
+  background: rgba(255, 255, 255, 0.26);
+  transform: scale(0.94);
 }
 
 /* ------------------------------------------------------------------ */
@@ -784,4 +822,21 @@ body {
 
 .vt-rec {
   color: #ffd27a;
+}
+
+.panel-subtitle {
+  margin: 4px 0 8px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* Opción activa del selector de idioma (reutiliza filas .mp-item)     */
+.lp-option.is-active {
+  background: rgba(46, 166, 255, 0.16);
+}
+
+.lp-check {
+  margin-left: auto;
+  color: #2ea6ff;
+  font-weight: 700;
 }
