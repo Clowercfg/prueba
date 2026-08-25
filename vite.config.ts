@@ -1,9 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// GitHub Pages sirve el sitio bajo /prueba/ (nombre del repo).
+// Node env sin depender de @types/node (este archivo corre en Node en build).
+declare const process: { env: Record<string, string | undefined> }
+
+// Base del sitio: GitHub Pages sirve bajo /prueba/ (nombre del repo);
+// Cloudflare (Workers Builds, SPA + API en un solo origen) sirve en '/'.
+// El build de Cloudflare define VITE_BASE_PATH=/ como variable de build.
 export default defineConfig({
-  base: '/prueba/',
+  base: process.env.VITE_BASE_PATH ?? '/prueba/',
   plugins: [react()],
   server: {
     host: true,

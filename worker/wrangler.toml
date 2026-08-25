@@ -1,13 +1,22 @@
-# API Harvest Valley — Cloudflare Worker + D1
+# API Harvest Valley — Cloudflare Worker + D1 + SPA estática (un solo origen)
 name = "harvest-valley-api"
 main = "src/index.ts"
 compatibility_date = "2026-08-01"
 
+# Frontend (Vite dist) servido por el mismo worker: sin CORS ni VITE_API_BASE.
+# /api/* no coincide con ningún archivo → invoca el worker; el resto es asset.
+# SPA fallback: las rutas desconocidas devuelven index.html.
+[assets]
+directory = "../dist"
+not_found_handling = "single-page-application"
+
 [dev]
 port = 8787
 
-# D1 local (`.wrangler/state`) para desarrollo; el database_id real se completa
-# tras `wrangler d1 create harvest-valley-db` en el momento del despliegue.
+# D1 local (`.wrangler/state`) para desarrollo. Para el deploy en Cloudflare:
+#   1) `wrangler d1 create harvest-valley-db` (o crearla en el dashboard)
+#   2) pegar el database_id real aquí
+#   3) `wrangler d1 migrations apply harvest-valley-db --remote`
 [[d1_databases]]
 binding = "DB"
 database_name = "harvest-valley-db"
