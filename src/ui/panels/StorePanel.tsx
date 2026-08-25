@@ -53,7 +53,7 @@ function SeedCard({ cropId, onResult }: { cropId: string; onResult: (r: ShopResu
         className="ap-buy"
         onClick={() => onResult(buySeed(cropId, 1))}
       >
-        {tr("panel.shop.comprar")}
+        {tr("store.comprar")}
       </button>
     </div>
   );
@@ -72,7 +72,7 @@ function AnimalCard({ kind, onResult }: { kind: AnimalKind; onResult: (r: ShopRe
         className="ap-buy"
         onClick={() => onResult(buyAnimal(kind, 1))}
       >
-        {tr("panel.shop.comprar")}
+        {tr("store.comprar")}
       </button>
     </div>
   );
@@ -98,14 +98,14 @@ function OfferCard({ offerId, onResult }: { offerId: string; onResult: (r: ShopR
       </header>
       <p className="st-prices">
         <s>{money(normal)}</s> <b>{money(sale)}</b>{" "}
-        <em>{tr("offer.saving", { money: money(normal - sale) })}</em>
+        <em>{tr("store.offer.saving", { money: money(normal - sale) })}</em>
       </p>
       <button
         type="button"
         className="ap-buy st-buy-wide"
         onClick={() => onResult(buyCombo(def.id))}
       >
-        {tr("offer.buy_combo")}
+        {tr("store.offer.buy_combo")}
       </button>
     </div>
   );
