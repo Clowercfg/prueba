@@ -1,7 +1,8 @@
 # API Harvest Valley — Cloudflare Worker + D1 + SPA estática (un solo origen)
 # Config en la RAÍZ para que el deploy por defecto de Workers Builds
-# (`npx wrangler deploy`) funcione sin flags.
-name = "harvest-valley-api"
+# (`npx wrangler deploy`) funcione sin flags. El nombre coincide con el app
+# del build en el dashboard para que URL y despliegues sean coherentes.
+name = "pruebafinal"
 main = "worker/src/index.ts"
 compatibility_date = "2026-08-01"
 
