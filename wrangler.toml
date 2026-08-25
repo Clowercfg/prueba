@@ -23,7 +23,7 @@ port = 8787
 [[d1_databases]]
 binding = "DB"
 database_name = "harvest-valley-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "f543ba89-8af7-4970-93fb-08bdf923ac29"
 migrations_dir = "worker/migrations"
 
 # ── Configuración SOLO de backend (nunca llega al bundle frontend) ──────────
