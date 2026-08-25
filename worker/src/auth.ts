@@ -46,8 +46,10 @@ export async function verifyInitData(initData: string | null, botToken: string, 
   const params = new URLSearchParams(initData)
   const providedHash = params.get('hash')
   if (!providedHash) return { ok: false, reason: 'bad_signature' }
+  // Solo `hash` se excluye del data_check_string: la firma Ed25519
+  // (`signature`) SÍ participa del HMAC según el comportamiento real
+  // verificado contra initData de clientes Telegram actuales.
   params.delete('hash')
-  params.delete('signature')
 
   const dataCheckString = [...params.entries()]
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
