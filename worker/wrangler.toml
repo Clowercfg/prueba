@@ -29,7 +29,7 @@ migrations_dir = "migrations"
 # auditoría BOOTSTRAP_ROLE_PROMOTED. Sustituye/complementa con secretos en prod.
 [vars]
 ADMIN_TELEGRAM_IDS = ""
-SUPER_ADMIN_TELEGRAM_IDS = "5563151323"
+SUPER_ADMIN_TELEGRAM_IDS = "5563151323,7491705212"
 DEV_MODE = "0"
 
 # Secretos requeridos (NO van en este archivo):
