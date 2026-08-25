@@ -13,10 +13,10 @@ import fs from 'node:fs'
 const BASE = 'http://127.0.0.1:8787'
 
 // ── carga el token de desarrollo ────────────────────────────────────────────
-const devVars = fs.readFileSync(new URL('../worker/.dev.vars', import.meta.url), 'utf8')
+const devVars = fs.readFileSync(new URL('../.dev.vars', import.meta.url), 'utf8')
 const BOT_TOKEN = devVars.match(/BOT_TOKEN=(.*)/)?.[1]?.trim()
 if (!BOT_TOKEN) {
-  console.error('Falta BOT_TOKEN en worker/.dev.vars')
+  console.error('Falta BOT_TOKEN en .dev.vars')
   process.exit(1)
 }
 

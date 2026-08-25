@@ -44,4 +44,8 @@ app.use('/api/admin/*', requireAuth)
 app.route('/api/admin', adminRoutes)
 app.route('/api/admin', superAdmin)
 
+// SPA fallback: cualquier ruta no-API sin asset sirve index.html (assets
+// primero; si llega aquí es porque no hubo match → not_found_handling SPA).
+app.get('*', (c) => c.env.ASSETS.fetch(c.req.raw))
+
 export default app

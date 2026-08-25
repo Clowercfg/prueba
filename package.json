@@ -10,9 +10,9 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "assets:generate": "node scripts/generate-dev-assets.mjs",
-    "api:dev": "wrangler dev -c worker/wrangler.toml",
+    "api:dev": "wrangler dev",
     "api:typecheck": "tsc -p worker/tsconfig.json",
-    "api:migrate": "wrangler d1 migrations apply harvest-valley-db -c worker/wrangler.toml --local",
+    "api:migrate": "wrangler d1 migrations apply harvest-valley-db --local",
     "api:test": "node scripts/test-admin.mjs"
   },
   "dependencies": {

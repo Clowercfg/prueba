@@ -14,10 +14,10 @@ import { execSync } from 'node:child_process'
 
 const BASE = 'http://127.0.0.1:8787'
 
-const devVars = fs.readFileSync(new URL('../worker/.dev.vars', import.meta.url), 'utf8')
+const devVars = fs.readFileSync(new URL('../.dev.vars', import.meta.url), 'utf8')
 const BOT_TOKEN = devVars.match(/BOT_TOKEN=(.*)/)?.[1]?.trim()
 if (!BOT_TOKEN) {
-  console.error('Falta BOT_TOKEN en worker/.dev.vars')
+  console.error('Falta BOT_TOKEN en .dev.vars')
   process.exit(1)
 }
 
@@ -50,7 +50,7 @@ async function me(initData = null, extraHeaders = {}) {
 
 async function d1(sql) {
   const out = execSync(
-    `npx wrangler d1 execute harvest-valley-db --local --config worker/wrangler.toml --json --command "${sql.replace(/"/g, '\\"')}"`,
+    `npx wrangler d1 execute harvest-valley-db --local --json --command "${sql.replace(/"/g, '\\"')}"`,
     { encoding: 'utf8' },
   )
   const parsed = JSON.parse(out.slice(out.indexOf('[')))

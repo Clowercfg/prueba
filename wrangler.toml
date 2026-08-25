@@ -1,14 +1,17 @@
 # API Harvest Valley — Cloudflare Worker + D1 + SPA estática (un solo origen)
+# Config en la RAÍZ para que el deploy por defecto de Workers Builds
+# (`npx wrangler deploy`) funcione sin flags.
 name = "harvest-valley-api"
-main = "src/index.ts"
+main = "worker/src/index.ts"
 compatibility_date = "2026-08-01"
 
 # Frontend (Vite dist) servido por el mismo worker: sin CORS ni VITE_API_BASE.
 # /api/* no coincide con ningún archivo → invoca el worker; el resto es asset.
-# SPA fallback: las rutas desconocidas devuelven index.html.
+# SPA fallback: el worker reenvía a ASSETS las rutas sin match (index.html).
 [assets]
-directory = "../dist"
+directory = "dist"
 not_found_handling = "single-page-application"
+binding = "ASSETS"
 
 [dev]
 port = 8787
@@ -21,7 +24,7 @@ port = 8787
 binding = "DB"
 database_name = "harvest-valley-db"
 database_id = "00000000-0000-0000-0000-000000000000"
-migrations_dir = "migrations"
+migrations_dir = "worker/migrations"
 
 # ── Configuración SOLO de backend (nunca llega al bundle frontend) ──────────
 # IDs de Telegram autorizados como administradores en el bootstrap inicial

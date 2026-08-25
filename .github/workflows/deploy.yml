@@ -24,7 +24,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Mirror en Pages bajo /prueba/; el deploy principal es Cloudflare (base '/').
       - run: npm run build
+        env:
+          VITE_BASE_PATH: /prueba/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

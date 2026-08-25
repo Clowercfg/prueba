@@ -7,6 +7,8 @@ export type Role = 'USER' | 'ADMIN' | 'SUPER_ADMIN'
 export interface Env {
   /** Base de datos D1 */
   DB: D1Database
+  /** Assets estáticos del frontend (dist) servidos por este mismo worker */
+  ASSETS: Fetcher
   /** Bot token (secreto) usado para verificar la firma HMAC de initData */
   BOT_TOKEN: string
   /** IDs de Telegram (csv) promovidos a ADMIN en el bootstrap inicial */
