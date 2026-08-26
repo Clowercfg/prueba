@@ -77,6 +77,7 @@ export function TopNav() {
   const tilesDrawn = useGameStore((s) => s.tilesDrawn)
   const toggleLanguage = useUiStore((s) => s.toggleSection)
   const toggleProfile = useUiStore((s) => s.toggleSection)
+  const openDeposits = useUiStore((s) => s.openDeposits)
 
   return (
     <div className="hud">
@@ -94,6 +95,15 @@ export function TopNav() {
         <CoinIcon />
         <b>{Math.floor(gold).toLocaleString('es')}</b>
       </span>
+      <button
+        type="button"
+        className="tn-plus"
+        aria-label={t('store.deposit')}
+        title={t('store.deposit')}
+        onClick={openDeposits}
+      >
+        +
+      </button>
       <span className="hud-chip hud-gems" aria-label="Diamantes">
         <GemIcon />
         <b>{diamonds.toLocaleString('es')}</b>

@@ -5,7 +5,9 @@ import { BottomBar } from '../BottomBar'
 import { PanelHost } from '../panels/PanelHost'
 import { NotificationCenter } from '../NotificationCenter'
 import { AdminApp } from '../admin/AdminApp'
+import { DepositPanel } from '../panels/DepositPanel'
 import { useAuthStore } from '../../game/stores/authStore'
+import { useUiStore } from '../../game/stores/uiStore'
 import { detectTelegramEnvironment, type TelegramWebAppLike } from './telegramEnvironment'
 
 /**
@@ -33,6 +35,8 @@ export function GameApp() {
   const status = useAuthStore((s) => s.status)
   const me = useAuthStore((s) => s.me)
   const signIn = useAuthStore((s) => s.signIn)
+  const depositOpen = useUiStore((s) => s.depositOpen)
+  const closeDeposits = useUiStore((s) => s.closeDeposits)
   const [screen, setScreen] = useState<'game' | 'admin'>('game')
 
   useEffect(() => {
@@ -62,6 +66,7 @@ export function GameApp() {
       {/* Barra de sistema negra: la UI vive por encima de esta franja. */}
       <div className="system-bar" aria-hidden />
       {isNormalUser && screen === 'game' && <NotificationCenter initialUnread={me.unreadNotifications} />}
+      {depositOpen && <DepositPanel onClose={closeDeposits} />}
     </div>
   )
 }

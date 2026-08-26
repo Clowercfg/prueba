@@ -13,6 +13,7 @@ import {
 } from "../../game/config/offersConfig";
 import type { AnimalKind } from "../../game/types/entities";
 import { useT, t as tr } from "../../game/stores/languageStore";
+import { useUiStore } from "../../game/stores/uiStore";
 import { DepositPanel } from "./DepositPanel";
 
 /**
@@ -114,7 +115,9 @@ function OfferCard({ offerId, onResult }: { offerId: string; onResult: (r: ShopR
 
 export default function StorePanel() {
   const [result, setResult] = useState<ShopResult | null>(null);
-  const [depositOpen, setDepositOpen] = useState(false);
+  const depositOpen = useUiStore((s) => s.depositOpen);
+  const closeDeposits = useUiStore((s) => s.closeDeposits);
+  const openDeposits = useUiStore((s) => s.openDeposits);
   const gold = useEconomyStore((s) => s.gold);
   const diamonds = useEconomyStore((s) => s.diamonds);
 
@@ -123,7 +126,7 @@ export default function StorePanel() {
       <div className="st-balance">
         <span>💎 {diamonds.toLocaleString("es")}</span>
         <span>💰 {gold.toFixed(2)}</span>
-        <button type="button" className="st-deposit-btn" onClick={() => setDepositOpen(true)}>
+        <button type="button" className="st-deposit-btn" onClick={openDeposits}>
           {tr("store.deposit_button")}
         </button>
       </div>
@@ -151,7 +154,7 @@ export default function StorePanel() {
         ))}
       </div>
 
-      {depositOpen && <DepositPanel onClose={() => setDepositOpen(false)} />}
+      {depositOpen && <DepositPanel onClose={closeDeposits} />}
     </div>
   );
 }

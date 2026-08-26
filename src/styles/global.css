@@ -864,6 +864,32 @@ body {
   letter-spacing: 0.4px;
 }
 
+/* Botón + de depósitos en la barra superior (junto al saldo de oro). */
+.tn-plus {
+  appearance: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+
+.tn-plus:hover {
+  filter: brightness(1.12);
+}
+
 .deposit-backdrop {
   position: fixed;
   inset: 0;
