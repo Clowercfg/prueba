@@ -35,7 +35,7 @@ const LEGACY_KEYS = [
   "granja-inmersiva-processing-v1",
 ] as const;
 
-const VERSION = 1;
+const VERSION = 2;
 
 const ANIMAL_KINDS: readonly AnimalKind[] = ["cow", "chicken", "rooster", "pig"];
 
@@ -96,6 +96,10 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 /**
  * Valida estructura y tipos del payload. Devuelve null si el save no sirve
  * (versión desconocida, campos ausentes o basura) ⇒ estado inicial limpio.
+ *
+ * Migración v1→v2: los saves antiguos conservan todo su progreso PERO su
+ * saldo se pone a 0 una sola vez (decisión de balance: nadie nace con dinero;
+ * al guardar de nuevo el payload queda en v2 y no se vuelve a tocar).
  */
 function validatePayload(raw: string): SaveState | null {
   let data: unknown;
@@ -104,10 +108,17 @@ function validatePayload(raw: string): SaveState | null {
   } catch {
     return null;
   }
-  if (!isRecord(data) || data.version !== VERSION || !isRecord(data.state)) return null;
+  if (!isRecord(data) || !isRecord(data.state)) return null;
+  const v = data.version;
+  if (v !== 1 && v !== VERSION) return null;
   const s = data.state as Record<string, unknown>;
   try {
-    return buildValidatedState(s);
+    const state = buildValidatedState(s);
+    if (v === 1) {
+      state.economy.gold = 0;
+      state.economy.diamonds = 0;
+    }
+    return state;
   } catch {
     return null;
   }
