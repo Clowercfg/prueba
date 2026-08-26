@@ -14,7 +14,9 @@ interface EconomyStore {
 }
 
 export const useEconomyStore = create<EconomyStore>((set, get) => ({
-  gold: 2500,
+  // Los usuarios inician con saldo 0: el dinero se gana vendiendo cosecha
+  // (traen semillas y cosecha inicial) o depositando vía wallet.
+  gold: 0,
   diamonds: 25,
   lastIncomeAt: Date.now(),
   totalIncome: 0,
