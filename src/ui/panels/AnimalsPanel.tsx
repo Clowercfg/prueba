@@ -117,8 +117,7 @@ function KindGroup({
   }, [list]);
 
   const onBuy = () => {
-    const res = buyAnimal(kind, 1);
-    setNotice(res.message);
+    void buyAnimal(kind, 1).then((res) => setNotice(res.message));
   };
 
   return (

@@ -22,6 +22,8 @@ import {
   effectiveDiscount,
 } from "../config/offersConfig";
 import { useEconomyStore } from "./economyStore";
+import { useAuthStore } from "./authStore";
+import { useWalletStore } from "./walletStore";
 import { useFarmStore } from "./farmStore";
 import { useCropStore } from "./cropStore";
 import { useLanguageStore } from "./languageStore";
@@ -63,8 +65,8 @@ function invalidQty(qty: number): boolean {
   return !Number.isFinite(qty) || Math.floor(qty) !== qty || qty <= 0;
 }
 
-function insufficient(cost: number): ShopResult {
-  const available = useEconomyStore.getState().gold;
+function insufficient(cost: number, have?: number): ShopResult {
+  const available = have ?? useEconomyStore.getState().gold;
   return {
     ok: false,
     message: tr("shop.insufficient"),
@@ -77,8 +79,8 @@ function insufficient(cost: number): ShopResult {
 
 interface ShopStore {
   buySeed: (cropId: string, qty: number) => ShopResult;
-  buyAnimal: (kind: AnimalKind, qty: number) => ShopResult;
-  buyCombo: (comboId: string) => ShopResult;
+  buyAnimal: (kind: AnimalKind, qty: number) => Promise<ShopResult>;
+  buyCombo: (comboId: string) => Promise<ShopResult>;
 }
 
 export const useShopStore = create<ShopStore>((_set, _get) => ({
@@ -99,7 +101,12 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     };
   },
 
-  buyAnimal: (kind, qty) => {
+  /**
+   * Compra de animales. Autenticado: paga con el saldo USDT del wallet
+   * (débito server-authoritative; sin saldo el backend rechaza). Sin sesión
+   * (dev local): paga con el oro del juego como siempre.
+   */
+  buyAnimal: async (kind, qty) => {
     if (invalidQty(qty)) {
       return { ok: false, message: tr("shop.invalid_qty"), detail: tr("shop.invalid_qty_detail") };
     }
@@ -108,7 +115,15 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     const cap = capacityFor(kind);
     if (cap.used + qty > cap.capacity) return noCapacity(cap.building, cap.capacity, qty);
     const cost = def.price * qty;
-    if (!useEconomyStore.getState().spendGold(cost)) return insufficient(cost);
+    if (useAuthStore.getState().status === "authenticated") {
+      // El wallet maneja unidades menores (centavos): convertir desde dólares.
+      const err = await useWalletStore.getState().debit(Math.round(cost * 100), `animal:${kind}`);
+      if (err) {
+        return insufficient(cost, useWalletStore.getState().usdtMinor / 100);
+      }
+    } else if (!useEconomyStore.getState().spendGold(cost)) {
+      return insufficient(cost);
+    }
     const farm = useFarmStore.getState();
     for (let i = 0; i < qty; i++) farm.registerAnimal(createAnimalAgent(kind, animalName(kind)));
     return {
@@ -122,7 +137,7 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     };
   },
 
-  buyCombo: (comboId) => {
+  buyCombo: async (comboId) => {
     const def = getOffer(comboId);
     if (!def) return { ok: false, message: tr("shop.offer_unavailable") };
     const sale = offerSalePrice(def);
@@ -132,7 +147,14 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     const capErr = validateAnimalCapacity(def.items);
     if (capErr) return capErr;
 
-    if (!useEconomyStore.getState().spendGold(sale)) return insufficient(sale);
+    if (useAuthStore.getState().status === "authenticated") {
+      const err = await useWalletStore.getState().debit(Math.round(sale * 100), `combo:${comboId}`);
+      if (err) {
+        return insufficient(sale, useWalletStore.getState().usdtMinor / 100);
+      }
+    } else if (!useEconomyStore.getState().spendGold(sale)) {
+      return insufficient(sale);
+    }
 
     const farm = useFarmStore.getState();
     for (const item of def.items) {

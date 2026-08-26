@@ -140,6 +140,35 @@ export async function creditDeposit(env: Env, p: MoneyOp): Promise<void> {
   }
 }
 
+/**
+ * Débito de compra del usuario (animales/combos pagados con saldo USDT).
+ * Atómico: el CHECK(available_minor >= 0) impide saldo negativo y el
+ * rollback del batch deja ledger y wallet consistentes.
+ */
+export async function debitPurchase(
+  env: Env,
+  p: { userId: number; amountMinor: number; currency?: string; sourceId: number },
+): Promise<void> {
+  const ts = now()
+  try {
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO wallet_ledger (user_id, type, direction, amount_minor, currency, source_type, source_id, created_at)
+         VALUES (?1, 'PURCHASE', 'DEBIT', ?2, ?3, 'purchase', ?4, ?5)`,
+      ).bind(p.userId, p.amountMinor, p.currency ?? 'USD', p.sourceId, ts),
+      env.DB.prepare(
+        `UPDATE wallets SET available_minor = available_minor - ?2, updated_at = ?3
+          WHERE user_id = ?1 AND currency = ?4`,
+      ).bind(p.userId, p.amountMinor, ts, p.currency ?? 'USD'),
+    ])
+  } catch (e) {
+    const msg = String((e as Error)?.message ?? e)
+    if (msg.includes('CHECK')) throw new HttpError(400, 'Saldo disponible insuficiente')
+    if (msg.includes('UNIQUE')) throw new FinancialConflict('PURCHASE: ya procesado (idempotencia)')
+    throw e instanceof Error ? e : new Error(msg)
+  }
+}
+
 /** Enmascara el destino dejando cabeza y cola visibles. */
 export function maskDestination(raw: string): string {
   const t = raw.trim()

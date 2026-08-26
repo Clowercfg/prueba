@@ -7,7 +7,7 @@ import { Hono } from 'hono'
 import type { AppEnv } from '../env'
 import { HttpError } from '../auth'
 import { requireAuth, rateLimit } from '../middleware'
-import { createWithdrawalWithReserve, maskDestination } from '../services/ledger'
+import { createWithdrawalWithReserve, debitPurchase, maskDestination } from '../services/ledger'
 
 const wallet = new Hono<AppEnv>()
 
@@ -101,6 +101,22 @@ wallet.get('/withdrawals', async (c) => {
     .bind(user.id, (page - 1) * 20)
     .all()
   return c.json({ items: rows.results?.slice(0, 20), hasMore: (rows.results?.length ?? 0) > 20 })
+})
+
+/** POST /api/wallet/debit — compra con saldo USDT (animales/combos).
+ *  Server-authoritative: sin saldo suficiente falla y NO se entrega nada. */
+wallet.post('/debit', rateLimit('purchase', 30, 60), async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => null)
+  const amountMinor = parseAmount(body)
+  const sourceId = Date.now()
+  await debitPurchase(c.env, { userId: user.id, amountMinor, sourceId })
+  const w = await c.env.DB.prepare(
+    `SELECT available_minor AS availableMinor FROM wallets WHERE user_id = ?1 AND currency = 'USD'`,
+  )
+    .bind(user.id)
+    .first<{ availableMinor: number }>()
+  return c.json({ ok: true, availableMinor: w?.availableMinor ?? 0 })
 })
 
 /** GET /api/wallet — saldos + últimas entradas del ledger. */

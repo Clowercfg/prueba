@@ -864,7 +864,7 @@ body {
   letter-spacing: 0.4px;
 }
 
-/* Botón + de depósitos en la barra superior (junto al saldo de oro). */
+/* Botón + de depósitos en la barra superior (junto al saldo USDT). */
 .tn-plus {
   appearance: none;
   border: 1.5px solid rgba(255, 255, 255, 0.25);
@@ -888,6 +888,25 @@ body {
 
 .tn-plus:hover {
   filter: brightness(1.12);
+}
+
+/* Chip de saldo USDT del wallet (clicable: abre depósitos). */
+.hud-usdt {
+  appearance: none;
+  border: 1.5px solid rgba(76, 175, 80, 0.55);
+  background: rgba(76, 175, 80, 0.16);
+  color: #c9e8c9;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.st-usdt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  color: #8fd494;
 }
 
 .deposit-backdrop {

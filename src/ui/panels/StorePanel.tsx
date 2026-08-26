@@ -14,12 +14,13 @@ import {
 import type { AnimalKind } from "../../game/types/entities";
 import { useT, t as tr } from "../../game/stores/languageStore";
 import { useUiStore } from "../../game/stores/uiStore";
+import { useWalletStore } from "../../game/stores/walletStore";
 import { DepositPanel } from "./DepositPanel";
 
 /**
  * Panel de Tienda (contenido). Sólo consume catálogos de config y acciones
- * de shopStore (buySeed/buyAnimal/buyCombo); el saldo vive en economyStore.
- * Ningún precio se calcula aquí.
+ * de shopStore (buySeed/buyAnimal/buyCombo); el saldo real vive en el wallet
+ * USDT del backend (walletStore). Ningún precio se calcula aquí.
  */
 
 const CROP_ICON: Record<string, string> = {
@@ -30,6 +31,15 @@ const CROP_ICON: Record<string, string> = {
 };
 
 const money = (n: number) => `$${n.toFixed(2)}`;
+
+function UsdIcon() {
+  return (
+    <svg width={13} height={13} viewBox="0 0 24 24" aria-hidden>
+      <circle cx="12" cy="12" r="9" fill="#4caf50" />
+      <path d="M12 6.2v11.6M14.8 8.6c-.6-.9-1.6-1.4-2.8-1.4-1.7 0-3 .9-3 2.3 0 3 5.9 1.6 5.9 4.6 0 1.4-1.3 2.3-3 2.3-1.3 0-2.4-.6-3-1.5" fill="none" stroke="#0e3d16" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function Notice({ result }: { result: ShopResult | null }) {
   if (!result) return null;
@@ -72,7 +82,7 @@ function AnimalCard({ kind, onResult }: { kind: AnimalKind; onResult: (r: ShopRe
       <button
         type="button"
         className="ap-buy"
-        onClick={() => onResult(buyAnimal(kind, 1))}
+        onClick={() => void buyAnimal(kind, 1).then(onResult)}
       >
         {tr("store.comprar")}
       </button>
@@ -105,7 +115,7 @@ function OfferCard({ offerId, onResult }: { offerId: string; onResult: (r: ShopR
       <button
         type="button"
         className="ap-buy st-buy-wide"
-        onClick={() => onResult(buyCombo(def.id))}
+        onClick={() => void buyCombo(def.id).then(onResult)}
       >
         {tr("store.offer.buy_combo")}
       </button>
@@ -118,14 +128,16 @@ export default function StorePanel() {
   const depositOpen = useUiStore((s) => s.depositOpen);
   const closeDeposits = useUiStore((s) => s.closeDeposits);
   const openDeposits = useUiStore((s) => s.openDeposits);
-  const gold = useEconomyStore((s) => s.gold);
+  const usdtMinor = useWalletStore((s) => s.usdtMinor);
   const diamonds = useEconomyStore((s) => s.diamonds);
 
   return (
     <div className="ap-scroll">
       <div className="st-balance">
         <span>💎 {diamonds.toLocaleString("es")}</span>
-        <span>💰 {gold.toFixed(2)}</span>
+        <span className="st-usdt">
+          <UsdIcon /> ${(usdtMinor / 100).toFixed(2)}
+        </span>
         <button type="button" className="st-deposit-btn" onClick={openDeposits}>
           {tr("store.deposit_button")}
         </button>

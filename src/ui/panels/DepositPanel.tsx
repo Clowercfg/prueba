@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, fmtMoney, ApiError, type DepositConfig, type MyDepositRow } from "../../game/api/client";
 import { useT } from "../../game/stores/languageStore";
 import { useAuthStore } from "../../game/stores/authStore";
+import { useWalletStore } from "../../game/stores/walletStore";
 
 /**
  * Apartado de DEPÓSITOS — portado del proyecto anterior (granja-inmersiva)
@@ -22,9 +23,7 @@ const STATUS_CLASS: Record<string, string> = {
 export function DepositPanel({ onClose }: { onClose: () => void }) {
   const t = useT();
   const status = useAuthStore((s) => s.status);
-  // Referencias estables: `?? []` FUERA del selector (evita snapshot nuevo por
-  // llamada → bucle infinito de useSyncExternalStore).
-  const wallets = useAuthStore((s) => s.me?.wallets) ?? [];
+  const usdtMinor = useWalletStore((s) => s.usdtMinor);
   const [config, setConfig] = useState<DepositConfig | null>(null);
   const [deposits, setDeposits] = useState<MyDepositRow[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
@@ -93,8 +92,6 @@ export function DepositPanel({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const usdBalance = wallets.find((w) => w.currency === "USD");
-
   return (
     <div className="deposit-backdrop" onClick={onClose}>
       <div className="deposit-modal" onClick={(e) => e.stopPropagation()}>
@@ -106,11 +103,11 @@ export function DepositPanel({ onClose }: { onClose: () => void }) {
           <div className="deposit-header-icon">💰</div>
           <h2>{t("deposit.title")}</h2>
           <p className="deposit-subtitle">{t("deposit.subtitle")}</p>
-          {status === "authenticated" && usdBalance && (
-            <p className="deposit-balance">
-              {t("deposit.balance")}: <b>{fmtMoney(usdBalance.availableMinor)}</b>
-            </p>
-          )}
+        {status === "authenticated" && (
+          <p className="deposit-balance">
+            {t("deposit.balance")}: <b>{fmtMoney(usdtMinor)}</b>
+          </p>
+        )}
         </div>
 
         <div className="deposit-info">

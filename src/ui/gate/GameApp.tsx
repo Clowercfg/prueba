@@ -8,6 +8,7 @@ import { AdminApp } from '../admin/AdminApp'
 import { DepositPanel } from '../panels/DepositPanel'
 import { useAuthStore } from '../../game/stores/authStore'
 import { useUiStore } from '../../game/stores/uiStore'
+import { useWalletStore } from '../../game/stores/walletStore'
 import { detectTelegramEnvironment, type TelegramWebAppLike } from './telegramEnvironment'
 
 /**
@@ -37,6 +38,7 @@ export function GameApp() {
   const signIn = useAuthStore((s) => s.signIn)
   const depositOpen = useUiStore((s) => s.depositOpen)
   const closeDeposits = useUiStore((s) => s.closeDeposits)
+  const refreshWallet = useWalletStore((s) => s.refresh)
   const [screen, setScreen] = useState<'game' | 'admin'>('game')
 
   useEffect(() => {
@@ -46,6 +48,24 @@ export function GameApp() {
   useEffect(() => {
     void signIn()
   }, [signIn])
+
+  // Saldo USDT: al autenticar, al enfocar la app (volver de aprobar un
+  // depósito en otro dispositivo) y al cerrar el modal de depósitos.
+  useEffect(() => {
+    if (status === 'authenticated') void refreshWallet()
+  }, [status, refreshWallet])
+
+  useEffect(() => {
+    const onFocus = (): void => {
+      if (useAuthStore.getState().status === 'authenticated') void refreshWallet()
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refreshWallet])
+
+  useEffect(() => {
+    if (!depositOpen && useAuthStore.getState().status === 'authenticated') void refreshWallet()
+  }, [depositOpen, refreshWallet])
 
   useEffect(() => {
     if (status === 'authenticated' && me && me.user.role !== 'USER') setScreen('admin')

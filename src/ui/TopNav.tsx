@@ -2,6 +2,8 @@ import { GAME_CONFIG } from '../game/config/gameConfig'
 import { useGameStore } from '../game/stores/gameStore'
 import { useEconomyStore } from '../game/stores/economyStore'
 import { useUiStore } from '../game/stores/uiStore'
+import { useWalletStore } from '../game/stores/walletStore'
+import { useAuthStore } from '../game/stores/authStore'
 import { useT } from '../game/stores/languageStore'
 
 /**
@@ -47,11 +49,11 @@ function UserIcon() {
   )
 }
 
-function CoinIcon() {
+function UsdIcon() {
   return (
     <svg width={14} height={14} viewBox="0 0 24 24" aria-hidden>
-      <circle cx="12" cy="12" r="9" fill="#f4b63f" />
-      <circle cx="12" cy="12" r="5.2" fill="none" stroke="#a86f10" strokeWidth="2" />
+      <circle cx="12" cy="12" r="9" fill="#4caf50" />
+      <path d="M12 6.2v11.6M14.8 8.6c-.6-.9-1.6-1.4-2.8-1.4-1.7 0-3 .9-3 2.3 0 3 5.9 1.6 5.9 4.6 0 1.4-1.3 2.3-3 2.3-1.3 0-2.4-.6-3-1.5" fill="none" stroke="#0e3d16" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   )
 }
@@ -67,8 +69,8 @@ function GemIcon() {
 
 export function TopNav() {
   const t = useT()
-  const gold = useEconomyStore((s) => s.gold)
   const diamonds = useEconomyStore((s) => s.diamonds)
+  const usdtMinor = useWalletStore((s) => s.usdtMinor)
   const fps = useGameStore((s) => s.fps)
   const status = useGameStore((s) => s.status)
   const camZoom = useGameStore((s) => s.camZoom)
@@ -78,6 +80,7 @@ export function TopNav() {
   const toggleLanguage = useUiStore((s) => s.toggleSection)
   const toggleProfile = useUiStore((s) => s.toggleSection)
   const openDeposits = useUiStore((s) => s.openDeposits)
+  const authed = useAuthStore((s) => s.status) === 'authenticated'
 
   return (
     <div className="hud">
@@ -91,10 +94,17 @@ export function TopNav() {
       </button>
       <span className="hud-title">{GAME_CONFIG.name}</span>
       <span className="hud-spacer" />
-      <span className="hud-chip hud-gold" aria-label={t('shop.gold', { defaultValue: 'Monedas' })}>
-        <CoinIcon />
-        <b>{Math.floor(gold).toLocaleString('es')}</b>
-      </span>
+      {authed && (
+      <button
+        type="button"
+        className="hud-chip hud-usdt"
+        aria-label={t('deposit.balance')}
+        onClick={openDeposits}
+      >
+        <UsdIcon />
+        <b>{(usdtMinor / 100).toFixed(2)}</b>
+      </button>
+      )}
       <button
         type="button"
         className="tn-plus"
