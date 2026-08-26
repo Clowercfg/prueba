@@ -13,6 +13,7 @@ import {
 } from "../../game/config/offersConfig";
 import type { AnimalKind } from "../../game/types/entities";
 import { useT, t as tr } from "../../game/stores/languageStore";
+import { DepositPanel } from "./DepositPanel";
 
 /**
  * Panel de Tienda (contenido). Sólo consume catálogos de config y acciones
@@ -113,6 +114,7 @@ function OfferCard({ offerId, onResult }: { offerId: string; onResult: (r: ShopR
 
 export default function StorePanel() {
   const [result, setResult] = useState<ShopResult | null>(null);
+  const [depositOpen, setDepositOpen] = useState(false);
   const gold = useEconomyStore((s) => s.gold);
   const diamonds = useEconomyStore((s) => s.diamonds);
 
@@ -121,6 +123,9 @@ export default function StorePanel() {
       <div className="st-balance">
         <span>💎 {diamonds.toLocaleString("es")}</span>
         <span>💰 {gold.toFixed(2)}</span>
+        <button type="button" className="st-deposit-btn" onClick={() => setDepositOpen(true)}>
+          {tr("store.deposit_button")}
+        </button>
       </div>
 
       <Notice result={result} />
@@ -145,6 +150,8 @@ export default function StorePanel() {
           <OfferCard key={o.id} offerId={o.id} onResult={setResult} />
         ))}
       </div>
+
+      {depositOpen && <DepositPanel onClose={() => setDepositOpen(false)} />}
     </div>
   );
 }

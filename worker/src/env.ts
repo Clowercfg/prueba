@@ -19,6 +19,10 @@ export interface Env {
   DEV_MODE?: string
   /** Marcado como 'production' en el despliegue real */
   ENVIRONMENT?: string
+  /** Datos mostrados en el apartado de depósitos (config del proyecto anterior) */
+  DEPOSIT_WALLET_ADDRESS?: string
+  DEPOSIT_NETWORK?: string
+  DEPOSIT_TELEGRAM?: string
 }
 
 export interface SessionUser {

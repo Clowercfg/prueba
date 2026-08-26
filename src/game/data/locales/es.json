@@ -359,7 +359,12 @@
       "info_title": "Información del jugador",
       "info_soon": "Disponible próximamente",
       "referrals_title": "Referidos",
-      "referrals_soon": "Los referidos llegarán en una fase posterior"
+      "referrals_soon": "Los referidos llegarán en una fase posterior",
+      "name": "Nombre",
+      "username": "Usuario",
+      "tgid": "ID de Telegram",
+      "info_login": "Entra desde Telegram para ver tus datos",
+      "unknown": "Jugador"
     },
     "animals": {
       "title": "Animales",
@@ -529,7 +534,16 @@
     "instr_network": "Moneda y red utilizada",
     "instr_tx": "TX Hash de la transferencia",
     "note": "El saldo será añadido manualmente después de verificar la transacción en la blockchain.",
-    "history": "Depósitos confirmados"
+    "history": "Depósitos confirmados",
+    "reg_title": "Registrar depósito",
+    "amount": "Monto enviado (USD)",
+    "reference": "TX Hash / referencia",
+    "submit": "Registrar depósito",
+    "sent_ok": "Depósito #{id} registrado: se acreditará tras verificación.",
+    "none": "Sin depósitos registrados.",
+    "mine": "Mis depósitos",
+    "need_auth": "Entra desde Telegram para depositar.",
+    "balance": "Saldo wallet"
   },
   "affiliate": {
     "title": "AFILIADOS",

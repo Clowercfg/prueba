@@ -359,7 +359,12 @@
       "info_title": "Player information",
       "info_soon": "Coming soon",
       "referrals_title": "Referrals",
-      "referrals_soon": "Referrals will arrive in a later phase"
+      "referrals_soon": "Referrals will arrive in a later phase",
+      "name": "Name",
+      "username": "Username",
+      "tgid": "Telegram ID",
+      "info_login": "Sign in from Telegram to see your details",
+      "unknown": "Player"
     },
     "animals": {
       "title": "Animals",
@@ -529,7 +534,16 @@
     "instr_network": "Currency and network used",
     "instr_tx": "TX Hash of the transfer",
     "note": "Balance will be added manually after verifying the transaction on the blockchain.",
-    "history": "Confirmed deposits"
+    "history": "Confirmed deposits",
+    "reg_title": "Register deposit",
+    "amount": "Amount sent (USD)",
+    "reference": "TX Hash / reference",
+    "submit": "Register deposit",
+    "sent_ok": "Deposit #{id} registered: it will be credited after verification.",
+    "none": "No deposits registered.",
+    "mine": "My deposits",
+    "need_auth": "Sign in from Telegram to deposit.",
+    "balance": "Wallet balance"
   },
   "affiliate": {
     "title": "AFFILIATES",

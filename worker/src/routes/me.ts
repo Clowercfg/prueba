@@ -33,6 +33,9 @@ me.get('/', requireAuth, async (c) => {
   return c.json({
     user: {
       id: user.id,
+      telegramId: user.telegramId,
+      username: user.username,
+      firstName: user.firstName,
       role: user.role,
       status: user.status,
     },

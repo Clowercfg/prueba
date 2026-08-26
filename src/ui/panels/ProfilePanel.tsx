@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useT } from "../../game/stores/languageStore";
+import { useAuthStore } from "../../game/stores/authStore";
 
 const ICON_PROPS = {
   width: 20,
@@ -34,30 +36,73 @@ function ReferralsIcon() {
 }
 
 /**
- * Shell del panel PERFIL (esquina superior derecha → acceso).
- * Sólo estructura de navegación: la lógica real (datos del jugador,
- * referidos/afiliados, pagos) NO se migra en esta fase.
- *
- * Estructura futura preparada:
+ * Panel PERFIL (esquina superior derecha → acceso).
  *   Perfil
- *   ├── Información del jugador
- *   └── Referidos
+ *   ├── Información del jugador (nombre y ID de Telegram, datos del backend)
+ *   └── Referidos (próximamente)
  */
 export default function ProfilePanel() {
   const t = useT();
+  const status = useAuthStore((s) => s.status);
+  const user = useAuthStore((s) => s.me?.user ?? null);
+  const [infoOpen, setInfoOpen] = useState(false);
+
+  const displayName =
+    user?.firstName?.trim() ||
+    (user?.username ? `@${user.username}` : null) ||
+    t("panel.profile.unknown");
+
   return (
     <div className="ap-scroll">
       <p className="panel-subtitle">{t("panel.profile.subtitle")}</p>
       <div className="mp-list">
-        <div className="mp-item pp-row" role="group">
+        <button
+          type="button"
+          className="mp-item pp-row pp-toggle"
+          onClick={() => setInfoOpen((v) => !v)}
+          aria-expanded={infoOpen}
+        >
           <span className="mp-icon mp-icon-svg">
             <PlayerIcon />
           </span>
           <span className="mp-text">
             <b>{t("panel.profile.info_title")}</b>
-            <small>{t("panel.profile.info_soon")}</small>
+            <small>
+              {status === "authenticated"
+                ? displayName
+                : t("panel.profile.info_login")}
+            </small>
           </span>
-        </div>
+          <span className={`pp-chevron ${infoOpen ? "open" : ""}`} aria-hidden>
+            ›
+          </span>
+        </button>
+
+        {infoOpen && (
+          <div className="pp-info" role="group">
+            {status === "authenticated" && user ? (
+              <>
+                <div className="pp-info-row">
+                  <span className="pp-info-label">{t("panel.profile.name")}</span>
+                  <b className="pp-info-value">{displayName}</b>
+                </div>
+                {user.username && (
+                  <div className="pp-info-row">
+                    <span className="pp-info-label">{t("panel.profile.username")}</span>
+                    <b className="pp-info-value">@{user.username}</b>
+                  </div>
+                )}
+                <div className="pp-info-row">
+                  <span className="pp-info-label">{t("panel.profile.tgid")}</span>
+                  <b className="pp-info-value pp-info-mono">{user.telegramId}</b>
+                </div>
+              </>
+            ) : (
+              <p className="pp-info-empty">{t("panel.profile.info_login")}</p>
+            )}
+          </div>
+        )}
+
         <div className="mp-item pp-row" role="group">
           <span className="mp-icon mp-icon-svg">
             <ReferralsIcon />

@@ -74,9 +74,34 @@ export const apiPost = <T>(path: string, body?: unknown) =>
 export type Role = 'USER' | 'ADMIN' | 'SUPER_ADMIN'
 
 export interface MeResponse {
-  user: { id: number; role: Role; status: string }
+  user: {
+    id: number
+    telegramId: string
+    username: string | null
+    firstName: string | null
+    role: Role
+    status: string
+  }
   wallets: WalletRow[]
   unreadNotifications: number
+}
+
+/** Config del apartado de depósitos (espejo de /api/wallet/deposit-config). */
+export interface DepositConfig {
+  walletAddress: string
+  network: string
+  telegram: string
+}
+
+/** Depósito propio (espejo de GET /api/wallet/deposits). */
+export interface MyDepositRow {
+  id: number
+  amountMinor: number
+  currency: string
+  method: string
+  reference: string | null
+  status: string
+  createdAt: number
 }
 
 export interface WalletRow {
@@ -190,6 +215,14 @@ export const api = {
     apiGet<{ wallets: WalletRow[]; ledger: LedgerRow[] }>('/wallet'),
   notifications: () => apiGet<{ items: NotificationRow[]; unread: number }>('/notifications'),
   markNotificationRead: (id: number) => apiPost<{ ok: boolean; changed: boolean }>(`/notifications/${id}/read`),
+  depositConfig: () => apiGet<DepositConfig>('/wallet/deposit-config'),
+  createDeposit: (amountMinor: number, reference?: string) =>
+    apiPost<{ id: number; status: string }>('/wallet/deposits', {
+      amountMinor,
+      ...(reference ? { reference } : {}),
+    }),
+  myDeposits: (page = 1) =>
+    apiGet<{ items: MyDepositRow[]; hasMore: boolean }>(`/wallet/deposits?page=${page}`),
 
   admin: {
     dashboard: () => apiGet<DashboardResponse>('/admin/dashboard'),

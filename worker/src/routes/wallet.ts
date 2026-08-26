@@ -13,6 +13,16 @@ const wallet = new Hono<AppEnv>()
 
 wallet.use('*', requireAuth)
 
+/** GET /api/wallet/deposit-config — datos para el apartado de depósitos
+ *  (mismo contrato que el proyecto anterior: walletAddress/network/telegram). */
+wallet.get('/deposit-config', (c) =>
+  c.json({
+    walletAddress: c.env.DEPOSIT_WALLET_ADDRESS ?? '',
+    network: c.env.DEPOSIT_NETWORK ?? '',
+    telegram: c.env.DEPOSIT_TELEGRAM ?? '',
+  }),
+)
+
 function parseAmount(body: unknown): number {
   const { amountMinor } = (body ?? {}) as { amountMinor?: unknown }
   if (typeof amountMinor !== 'number' || !Number.isInteger(amountMinor) || amountMinor <= 0) {
