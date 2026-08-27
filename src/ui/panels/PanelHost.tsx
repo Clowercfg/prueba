@@ -26,6 +26,8 @@ const VetPanel = lazy(() => import("./VetPanel"));
 const ProfilePanel = lazy(() => import("./ProfilePanel"));
 const LanguagePanel = lazy(() => import("./LanguagePanel"));
 const FarmPanel = lazy(() => import("./FarmPanel"));
+const WithdrawalsPanel = lazy(() => import("./WithdrawalsPanel"));
+const ReferralsPanel = lazy(() => import("./ReferralsPanel"));
 
 const PANEL_TITLES: Record<string, string> = {
   animals: 'Animales',
@@ -39,6 +41,8 @@ const PANEL_TITLES: Record<string, string> = {
   profile: 'Perfil',
   language: 'Idioma',
   farm: 'Mi Granja',
+  withdrawals: 'Retiros',
+  affiliates: 'Referidos',
 }
 
 export function PanelHost() {
@@ -109,6 +113,14 @@ export function PanelHost() {
           ) : section === "language" ? (
             <Suspense fallback={<p className="panel-loading">…</p>}>
               <LanguagePanel />
+            </Suspense>
+          ) : section === "withdrawals" ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <WithdrawalsPanel />
+            </Suspense>
+          ) : section === "affiliates" ? (
+            <Suspense fallback={<p className="panel-loading">…</p>}>
+              <ReferralsPanel />
             </Suspense>
           ) : (
             <p className="panel-soon">Disponible próximamente</p>

@@ -218,6 +218,25 @@ admin.post('/deposits/:id/approve', rateLimit('fin-action', 30, 60), async (c) =
     throw e
   }
 
+  // Comision de referido: si el usuario tiene un patrocinador, genera una
+  // entrada de comision (5% = 500 bps) que queda PENDING para aprobacion.
+  try {
+    const ref = await c.env.DB.prepare(
+      `SELECT referrer_id FROM referrals WHERE referred_id = ?1`,
+    ).bind(d.userId).first<{ referrer_id: number }>()
+    if (ref) {
+      const commissionMinor = Math.floor(d.amountMinor * 500 / 10000)
+      if (commissionMinor > 0) {
+        await c.env.DB.prepare(
+          `INSERT INTO referral_commissions (user_id, referred_user_id, deposit_id, deposit_minor, pct_bps, amount_minor, status, created_at)
+           VALUES (?1, ?2, ?3, ?4, 500, ?5, 'PENDING', ?6)`,
+        ).bind(ref.referrer_id, d.userId, id, d.amountMinor, commissionMinor, Date.now()).run()
+      }
+    }
+  } catch {
+    // La comision es best-effort; no debe romper el deposito.
+  }
+
   await audit(c.env, {
     adminUserId: a.id, action: 'DEPOSIT_APPROVED', targetUserId: d.userId,
     targetTransactionId: id, oldStatus: d.status, newStatus: 'COMPLETED',

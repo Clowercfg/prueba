@@ -104,6 +104,48 @@ export interface MyDepositRow {
   createdAt: number
 }
 
+/** Retiro propio (espejo de GET /api/wallet/withdrawals). */
+export interface MyWithdrawalRow {
+  id: number
+  amountMinor: number
+  currency: string
+  method: string
+  destinationMasked: string
+  status: string
+  denyReason: string | null
+  createdAt: number
+}
+
+/** Estadísticas de referidos. */
+export interface ReferralStats {
+  directReferrals: number
+  totalNetwork: number
+  totalEarned: number
+  available: number
+  pending: number
+}
+
+/** Fila del árbol de referidos. */
+export interface ReferralTreeRow {
+  referred_id: number
+  created_at: number
+  username: string | null
+  first_name: string | null
+  children: number
+}
+
+/** Fila de comisión de referido. */
+export interface ReferralCommissionRow {
+  id: number
+  deposit_minor: number
+  pct_bps: number
+  amount_minor: number
+  status: string
+  created_at: number
+  referred_username: string | null
+  referred_name: string | null
+}
+
 export interface WalletRow {
   currency: string
   availableMinor: number
@@ -227,6 +269,20 @@ export const api = {
     apiPost<{ ok: boolean; availableMinor: number }>('/wallet/debit', { amountMinor, concept }),
   creditWallet: (amountMinor: number, concept: string) =>
     apiPost<{ ok: boolean; availableMinor: number }>('/wallet/credit', { amountMinor, concept }),
+
+  // Retiros
+  createWithdrawal: (amountMinor: number, method: string, destination: string) =>
+    apiPost<{ id: number; status: string; reserved: number }>('/wallet/withdrawals', { amountMinor, method, destination }),
+  myWithdrawals: (page = 1) =>
+    apiGet<{ items: MyWithdrawalRow[]; hasMore: boolean }>(`/wallet/withdrawals?page=${page}`),
+
+  // Referidos
+  referralCode: () => apiGet<{ code: string }>('/referrals/code'),
+  registerReferral: (code: string) => apiPost<{ ok: boolean; referrerCode: string }>('/referrals/register', { code }),
+  referralStats: () => apiGet<ReferralStats>('/referrals/stats'),
+  referralTree: () => apiGet<{ items: ReferralTreeRow[] }>('/referrals/tree'),
+  referralCommissions: (page = 1) =>
+    apiGet<{ items: ReferralCommissionRow[]; hasMore: boolean }>(`/referrals/commissions?page=${page}`),
 
   admin: {
     dashboard: () => apiGet<DashboardResponse>('/admin/dashboard'),

@@ -57,11 +57,34 @@ function HealthIcon() {
   );
 }
 
+function WalletIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="2" y="6" width="20" height="14" rx="2" />
+      <path d="M2 10h20" />
+      <circle cx="17" cy="14.5" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function UsersIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="9" cy="7" r="3" />
+      <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+      <circle cx="17" cy="7" r="2.5" />
+      <path d="M19 21v-1.5a3 3 0 0 0-2.5-3" />
+    </svg>
+  );
+}
+
 const ICONS: Record<string, () => React.ReactElement> = {
   inventory: BoxIcon,
   infrastructure: CraneIcon,
   upgrades: UpIcon,
   veterinary: HealthIcon,
+  withdrawals: WalletIcon,
+  affiliates: UsersIcon,
 };
 
 const OPTIONS = [
@@ -69,6 +92,8 @@ const OPTIONS = [
   { id: "infrastructure", name: "Infraestructura", desc: "Gestiona edificios y capacidades" },
   { id: "upgrades", name: "Mejoras", desc: "Mejora tus instalaciones" },
   { id: "veterinary", name: "Veterinario", desc: "Salud y tratamiento de animales" },
+  { id: "withdrawals", name: "Retiros", desc: "Retira tu saldo USDT" },
+  { id: "affiliates", name: "Referidos", desc: "Invita amigos y gana comisiones" },
 ] as const;
 
 export default function MorePanel() {

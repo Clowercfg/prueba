@@ -13,7 +13,8 @@ export type GameSectionId =
   | "calendar"
   | "language"
   | "profile"
-  | "affiliates";
+  | "affiliates"
+  | "withdrawals";
 
 interface UiStore {
   section: GameSectionId | null;

@@ -11,6 +11,7 @@ import { requireAuth } from './middleware'
 import meRoutes from './routes/me'
 import walletRoutes from './routes/wallet'
 import userNotifications from './routes/notifications'
+import referralRoutes from './routes/referrals'
 import adminRoutes, { superAdmin } from './routes/admin'
 
 const app = new Hono<AppEnv>()
@@ -38,6 +39,7 @@ app.get('/api/health', (c) => c.json({ ok: true, ts: Date.now() }))
 app.route('/api/me', meRoutes)
 app.route('/api/wallet', walletRoutes)
 app.route('/api/notifications', userNotifications)
+app.route('/api/referrals', referralRoutes)
 
 // Grupo admin: autenticación + rol verificados server-side para TODAS las rutas.
 app.use('/api/admin/*', requireAuth)
