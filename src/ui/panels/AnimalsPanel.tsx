@@ -46,9 +46,8 @@ function AnimalRow({ a }: { a: AnimalAgent }) {
     select({ kind: "animal", id: uid });
   };
 
-  const onTreat = () => {
-    if (!treat(a.id)) {
-      // El propio store valida oro/estado; sin éxito no hay feedback extra.
+  const onTreat = async () => {
+    if (!(await treat(a.id))) {
       return;
     }
     onSelect();

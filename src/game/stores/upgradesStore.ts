@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { AnimalKind } from "../types/entities";
 import { useEconomyStore } from "./economyStore";
+import { useAuthStore } from "./authStore";
+import { useWalletStore } from "./walletStore";
 import {
   UPGRADES_ECONOMY,
   getBuildingUpgrade,
@@ -20,9 +22,9 @@ interface UpgradesStore {
   levels: Record<string, number>;
   specials: Record<string, boolean>;
   /** Compra el siguiente nivel del edificio (orden obligatorio). */
-  buyLevel: (buildingId: string) => boolean;
+  buyLevel: (buildingId: string) => Promise<boolean>;
   /** Compra una mejora especial de un solo uso. */
-  buySpecial: (specialId: string) => boolean;
+  buySpecial: (specialId: string) => Promise<boolean>;
   /** Capacidad actual del edificio. */
   capacityOf: (buildingId: string) => number;
   /** Capacidad del siguiente nivel (o la actual si está al máximo). */
@@ -42,23 +44,37 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
   levels: initial.levels,
   specials: initial.specials,
 
-  buyLevel: (buildingId) => {
+  buyLevel: async (buildingId) => {
     const def = getBuildingUpgrade(buildingId);
     if (!def) return false;
     const cur = get().levels[buildingId] ?? def.startLevel;
     const next = def.levels.find((l) => l.level === cur + 1);
     if (!next) return false;
-    if (next.price > 0 && !useEconomyStore.getState().spendGold(next.price)) return false;
+    if (next.price > 0) {
+      if (useAuthStore.getState().status === "authenticated") {
+        const err = await useWalletStore.getState().spendUSD(Math.round(next.price * 100), `upgrade:${buildingId}`);
+        if (err) return false;
+      } else if (!useEconomyStore.getState().spendGold(next.price)) {
+        return false;
+      }
+    }
     const levels = { ...get().levels, [buildingId]: next.level };
     set({ levels });
     return true;
   },
 
-  buySpecial: (specialId) => {
+  buySpecial: async (specialId) => {
     const found = findSpecial(specialId);
     if (!found || get().specials[specialId]) return false;
     const { special } = found;
-    if (special.price > 0 && !useEconomyStore.getState().spendGold(special.price)) return false;
+    if (special.price > 0) {
+      if (useAuthStore.getState().status === "authenticated") {
+        const err = await useWalletStore.getState().spendUSD(Math.round(special.price * 100), `special:${specialId}`);
+        if (err) return false;
+      } else if (!useEconomyStore.getState().spendGold(special.price)) {
+        return false;
+      }
+    }
     const specials = { ...get().specials, [specialId]: true };
     set({ specials });
     return true;

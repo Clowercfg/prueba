@@ -63,7 +63,7 @@ function SeedCard({ cropId, onResult }: { cropId: string; onResult: (r: ShopResu
       <button
         type="button"
         className="ap-buy"
-        onClick={() => onResult(buySeed(cropId, 1))}
+        onClick={() => void buySeed(cropId, 1).then(onResult)}
       >
         {tr("store.comprar")}
       </button>

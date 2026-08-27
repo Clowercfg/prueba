@@ -2,6 +2,8 @@ import { create } from "zustand";
 import type { AnimalKind } from "../types/entities";
 import { getAnimalEconomy } from "../config/economyConfig";
 import { useEconomyStore } from "./economyStore";
+import { useAuthStore } from "./authStore";
+import { useWalletStore } from "./walletStore";
 
 const HOUR_MS = 3600_000;
 
@@ -21,7 +23,7 @@ interface VetStore {
   nextSickAt: Record<number, number>;
   lastCheckAt: number;
   makeSick: (id: number, kind: AnimalKind) => void;
-  treat: (id: number) => boolean;
+  treat: (id: number) => Promise<boolean>;
   markRecovered: (id: number) => void;
   statusOf: (id: number) => VetStatus;
   /** 0 = enfermo, 0.5 = recuperándose, 1 = sano. */
@@ -38,12 +40,19 @@ export const useVetStore = create<VetStore>((set, get) => ({
       sick: { ...s.sick, [id]: { id, kind, sickAt: Date.now(), treatedAt: null, recoverAt: null } },
     })),
 
-  treat: (id) => {
+  treat: async (id) => {
     const entry = get().sick[id];
     if (!entry || entry.treatedAt !== null) return false;
     const def = getAnimalEconomy(entry.kind);
     if (!def) return false;
-    if (!useEconomyStore.getState().spendGold(def.treatmentCost)) return false;
+    if (def.treatmentCost > 0) {
+      if (useAuthStore.getState().status === "authenticated") {
+        const err = await useWalletStore.getState().spendUSD(Math.round(def.treatmentCost * 100), `vet:${entry.kind}`);
+        if (err) return false;
+      } else if (!useEconomyStore.getState().spendGold(def.treatmentCost)) {
+        return false;
+      }
+    }
     const now = Date.now();
     set((s) => ({
       sick: {

@@ -5,17 +5,20 @@ import { useAuthStore } from "./authStore";
 /**
  * Saldo USDT del wallet del backend (fuente de verdad server-side).
  * - refresh(): GET /api/wallet — se llama al autenticar, al enfocar la app,
- *   al cerrar el modal de depósitos y tras cada débito.
- * - debit(): POST /api/wallet/debit — compra server-authoritative; sin saldo
+ *   al cerrar el modal de depósitos y tras cada débito/crédito.
+ * - spendUSD(): POST /api/wallet/debit — compra server-authoritative; sin saldo
  *   suficiente el backend rechaza y NO se entrega el producto.
+ * - earnUSD(): POST /api/wallet/credit — acredita USDT por ventas del juego.
  * Sin autenticación (dev sin Telegram) todo es no-op: el juego usa su oro.
  */
 
 interface WalletStore {
   usdtMinor: number;
   refresh: () => Promise<void>;
-  /** Devuelve null si el débito fue OK, o el mensaje de error. */
-  debit: (amountMinor: number, concept: string) => Promise<string | null>;
+  /** Débito de compra. Devuelve null si OK, o el mensaje de error. */
+  spendUSD: (amountMinor: number, concept: string) => Promise<string | null>;
+  /** Crédito por venta/producción. Devuelve null si OK, o el mensaje de error. */
+  earnUSD: (amountMinor: number, concept: string) => Promise<string | null>;
 }
 
 export const useWalletStore = create<WalletStore>((set) => ({
@@ -32,7 +35,7 @@ export const useWalletStore = create<WalletStore>((set) => ({
     }
   },
 
-  async debit(amountMinor, concept) {
+  async spendUSD(amountMinor, concept) {
     if (useAuthStore.getState().status !== "authenticated") return "sin sesión";
     try {
       const r = await api.debitWallet(amountMinor, concept);
@@ -40,6 +43,17 @@ export const useWalletStore = create<WalletStore>((set) => ({
       return null;
     } catch (err) {
       return err instanceof ApiError ? err.message : "error de compra";
+    }
+  },
+
+  async earnUSD(amountMinor, concept) {
+    if (useAuthStore.getState().status !== "authenticated") return null;
+    try {
+      const r = await api.creditWallet(amountMinor, concept);
+      set({ usdtMinor: r.availableMinor });
+      return null;
+    } catch {
+      return null;
     }
   },
 }));

@@ -169,6 +169,31 @@ export async function debitPurchase(
   }
 }
 
+/**
+ * Crédito por ventas del juego (cosecha, productos, producción de animales).
+ * Atómico: crea entrada en ledger y actualiza wallet en un solo batch.
+ */
+export async function creditSale(
+  env: Env,
+  p: { userId: number; amountMinor: number; currency?: string; sourceId: number },
+): Promise<void> {
+  const ts = now()
+  try {
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO wallet_ledger (user_id, type, direction, amount_minor, currency, source_type, source_id, created_at)
+         VALUES (?1, 'GAME_SALE', 'CREDIT', ?2, ?3, 'game_sale', ?4, ?5)`,
+      ).bind(p.userId, p.amountMinor, p.currency ?? 'USD', p.sourceId, ts),
+      env.DB.prepare(
+        `UPDATE wallets SET available_minor = available_minor + ?2, updated_at = ?3
+         WHERE user_id = ?1 AND currency = ?4`,
+      ).bind(p.userId, p.amountMinor, ts, p.currency ?? 'USD'),
+    ])
+  } catch (e) {
+    mapSqliteError(e, 'GAME_SALE')
+  }
+}
+
 /** Enmascara el destino dejando cabeza y cola visibles. */
 export function maskDestination(raw: string): string {
   const t = raw.trim()

@@ -63,7 +63,7 @@ export default function InfrastructurePanel() {
                 )}
               </span>
               {next ? (
-                <button type="button" className="ap-buy" onClick={() => buyLevel(def.id)}>
+                <button type="button" className="ap-buy" onClick={() => void buyLevel(def.id)}>
                   MEJORAR
                 </button>
               ) : (

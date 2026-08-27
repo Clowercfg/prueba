@@ -78,21 +78,23 @@ function insufficient(cost: number, have?: number): ShopResult {
 }
 
 interface ShopStore {
-  buySeed: (cropId: string, qty: number) => ShopResult;
+  buySeed: (cropId: string, qty: number) => Promise<ShopResult>;
   buyAnimal: (kind: AnimalKind, qty: number) => Promise<ShopResult>;
   buyCombo: (comboId: string) => Promise<ShopResult>;
 }
 
 export const useShopStore = create<ShopStore>((_set, _get) => ({
-  buySeed: (cropId, qty) => {
+  buySeed: async (cropId, qty) => {
     if (invalidQty(qty)) {
       return { ok: false, message: tr("shop.invalid_qty"), detail: tr("shop.invalid_qty_detail") };
     }
     const def = getCropEconomy(cropId);
     if (!def) return { ok: false, message: tr("shop.unavailable") };
     const cost = def.seedPrice * qty;
-    const ok = useCropStore.getState().buySeed(cropId, qty);
-    if (!ok) return insufficient(cost);
+    const ok = await useCropStore.getState().buySeed(cropId, qty);
+    if (!ok) {
+      return insufficient(cost, useAuthStore.getState().status === "authenticated" ? useWalletStore.getState().usdtMinor / 100 : undefined);
+    }
     return {
       ok: true,
       message: tr("shop.seeds_bought"),
@@ -117,7 +119,7 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     const cost = def.price * qty;
     if (useAuthStore.getState().status === "authenticated") {
       // El wallet maneja unidades menores (centavos): convertir desde dólares.
-      const err = await useWalletStore.getState().debit(Math.round(cost * 100), `animal:${kind}`);
+      const err = await useWalletStore.getState().spendUSD(Math.round(cost * 100), `animal:${kind}`);
       if (err) {
         return insufficient(cost, useWalletStore.getState().usdtMinor / 100);
       }
@@ -148,7 +150,7 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     if (capErr) return capErr;
 
     if (useAuthStore.getState().status === "authenticated") {
-      const err = await useWalletStore.getState().debit(Math.round(sale * 100), `combo:${comboId}`);
+      const err = await useWalletStore.getState().spendUSD(Math.round(sale * 100), `combo:${comboId}`);
       if (err) {
         return insufficient(sale, useWalletStore.getState().usdtMinor / 100);
       }

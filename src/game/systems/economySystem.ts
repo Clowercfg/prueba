@@ -1,6 +1,8 @@
 import { animalRegistry } from '../stores/farmStore'
 import { useEconomyStore } from '../stores/economyStore'
 import { useGoodsStore } from '../stores/goodsStore'
+import { useAuthStore } from '../stores/authStore'
+import { useWalletStore } from '../stores/walletStore'
 import { PRODUCTION_PRICE } from '../config/economyConfig'
 
 /**
@@ -27,7 +29,7 @@ export function isEconomyPaused(): boolean {
 }
 
 /** Recoge la producción pendiente de todos los animales registrados. */
-export function collectProduction(): void {
+export async function collectProduction(): Promise<void> {
   if (paused) return
   const eco = useEconomyStore.getState()
   const goods = useGoodsStore.getState()
@@ -49,7 +51,13 @@ export function collectProduction(): void {
       }
     }
   }
-  if (income > 0) eco.addGold(income, 'producción')
+  if (income > 0) {
+    if (useAuthStore.getState().status === 'authenticated') {
+      await useWalletStore.getState().earnUSD(Math.round(income * 100), 'production')
+    } else {
+      eco.addGold(income, 'producción')
+    }
+  }
 }
 
 /**

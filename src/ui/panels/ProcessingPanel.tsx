@@ -54,7 +54,7 @@ function JobRow({ jobId }: { jobId: string }) {
         )}
       </span>
       {running && (
-        <button type="button" className="cp-harvest" onClick={() => addToJob(job.id)}>
+        <button type="button" className="cp-harvest" onClick={() => void addToJob(job.id)}>
           +1
         </button>
       )}
@@ -80,8 +80,8 @@ export default function ProcessingPanel() {
     return 0;
   };
 
-  const onStart = (recipeId: string, qty: number): void => {
-    if (!startProcess(recipeId, qty)) setNotice("No se pudo iniciar el proceso.");
+  const onStart = async (recipeId: string, qty: number): Promise<void> => {
+    if (!(await startProcess(recipeId, qty))) setNotice("No se pudo iniciar el proceso.");
     else setNotice(null);
   };
 

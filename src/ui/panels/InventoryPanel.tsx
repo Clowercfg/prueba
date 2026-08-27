@@ -31,10 +31,10 @@ function GoodRow({ goodId }: { goodId: string }) {
           ×{qty} · {money(def.sellPrice)} c/u
         </small>
       </span>
-      <button type="button" className="cp-sell" onClick={() => sellGoods(goodId, 1)}>
+      <button type="button" className="cp-sell" onClick={() => void sellGoods(goodId, 1)}>
         Vender 1
       </button>
-      <button type="button" className="cp-sell" onClick={() => sellGoods(goodId, qty)}>
+      <button type="button" className="cp-sell" onClick={() => void sellGoods(goodId, qty)}>
         Todo
       </button>
     </div>
@@ -57,10 +57,10 @@ function CropRow({ cropId }: { cropId: string }) {
       </span>
       {harvest > 0 && (
         <>
-          <button type="button" className="cp-sell" onClick={() => sellHarvest(cropId, 1)}>
+          <button type="button" className="cp-sell" onClick={() => void sellHarvest(cropId, 1)}>
             Vender 1
           </button>
-          <button type="button" className="cp-sell" onClick={() => sellHarvest(cropId, harvest)}>
+          <button type="button" className="cp-sell" onClick={() => void sellHarvest(cropId, harvest)}>
             Todo
           </button>
         </>

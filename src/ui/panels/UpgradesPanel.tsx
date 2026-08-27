@@ -31,7 +31,7 @@ export default function UpgradesPanel() {
                 {owned ? (
                   <span className="rc-max">✓</span>
                 ) : (
-                  <button type="button" className="ap-buy" onClick={() => buySpecial(sp.id)}>
+                  <button type="button" className="ap-buy" onClick={() => void buySpecial(sp.id)}>
                     {money(sp.price)}
                   </button>
                 )}

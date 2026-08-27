@@ -57,7 +57,7 @@ export default function VetPanel() {
                   )}
                 </span>
                 {status === "sick" && (
-                  <button type="button" className="ap-buy" onClick={() => treat(e.id)}>
+                  <button type="button" className="ap-buy" onClick={() => void treat(e.id)}>
                     Tratar
                   </button>
                 )}

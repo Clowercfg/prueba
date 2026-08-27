@@ -7,7 +7,7 @@ import { Hono } from 'hono'
 import type { AppEnv } from '../env'
 import { HttpError } from '../auth'
 import { requireAuth, rateLimit } from '../middleware'
-import { createWithdrawalWithReserve, debitPurchase, maskDestination } from '../services/ledger'
+import { createWithdrawalWithReserve, debitPurchase, creditSale, maskDestination } from '../services/ledger'
 
 const wallet = new Hono<AppEnv>()
 
@@ -111,6 +111,23 @@ wallet.post('/debit', rateLimit('purchase', 30, 60), async (c) => {
   const amountMinor = parseAmount(body)
   const sourceId = Date.now()
   await debitPurchase(c.env, { userId: user.id, amountMinor, sourceId })
+  const w = await c.env.DB.prepare(
+    `SELECT available_minor AS availableMinor FROM wallets WHERE user_id = ?1 AND currency = 'USD'`,
+  )
+    .bind(user.id)
+    .first<{ availableMinor: number }>()
+  return c.json({ ok: true, availableMinor: w?.availableMinor ?? 0 })
+})
+
+/** POST /api/wallet/credit — acredita USDT por ventas del juego.
+ *  Server-authoritative: el cliente informa el monto; el servidor confirma
+ *  el credito atomico y devuelve el nuevo saldo. */
+wallet.post('/credit', rateLimit('game-credit', 60, 60), async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => null)
+  const amountMinor = parseAmount(body)
+  const sourceId = Date.now()
+  await creditSale(c.env, { userId: user.id, amountMinor, sourceId })
   const w = await c.env.DB.prepare(
     `SELECT available_minor AS availableMinor FROM wallets WHERE user_id = ?1 AND currency = 'USD'`,
   )

@@ -1,13 +1,15 @@
 import { create } from "zustand";
 import { getGoodsEconomy } from "../config/economyConfig";
 import { useEconomyStore } from "./economyStore";
+import { useAuthStore } from "./authStore";
+import { useWalletStore } from "./walletStore";
 
 const DEFAULT_GOODS: Record<string, number> = { milk: 6, eggs: 8, honey: 4, cheese: 5 };
 
 interface GoodsStore {
   inventory: Record<string, number>;
-  /** Vende producto del Almacén: añade qty * sellPrice al saldo. */
-  sellGoods: (goodId: string, qty: number) => boolean;
+  /** Vende producto del Almacén: acredita USDT si autenticado, oro si no. */
+  sellGoods: (goodId: string, qty: number) => Promise<boolean>;
   /** Añade producto al inventario. */
   addGoods: (goodId: string, qty?: number) => boolean;
   /** Retira producto del inventario. Devuelve false si no hay suficiente. */
@@ -19,14 +21,18 @@ interface GoodsStore {
 export const useGoodsStore = create<GoodsStore>((set, get) => ({
   inventory: { ...DEFAULT_GOODS },
 
-  sellGoods: (goodId, qty) => {
+  sellGoods: async (goodId, qty) => {
     const econ = getGoodsEconomy(goodId);
     if (!econ || qty <= 0) return false;
     const inv = get().inventory;
     if ((inv[goodId] ?? 0) < qty) return false;
-    useEconomyStore.getState().addGold(qty * econ.sellPrice, "producto");
     const next = { ...inv, [goodId]: (inv[goodId] ?? 0) - qty };
     set({ inventory: next });
+    if (useAuthStore.getState().status === "authenticated") {
+      await useWalletStore.getState().earnUSD(Math.round(qty * econ.sellPrice * 100), `goods:${goodId}`);
+    } else {
+      useEconomyStore.getState().addGold(qty * econ.sellPrice, "producto");
+    }
     return true;
   },
 

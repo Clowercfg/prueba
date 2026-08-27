@@ -4,6 +4,8 @@ import { getProcessorLevelDef } from "../config/upgradesConfig";
 import { useEconomyStore } from "./economyStore";
 import { useGoodsStore } from "./goodsStore";
 import { useUpgradesStore } from "./upgradesStore";
+import { useAuthStore } from "./authStore";
+import { useWalletStore } from "./walletStore";
 
 export interface ProcessingJob {
   id: string;
@@ -27,10 +29,10 @@ interface ProcessingStore {
     recipeId: string,
     qty: number
   ) => { ok: boolean; reason?: string };
-  /** Inicia un ciclo de procesamiento. Descuenta gold + huevos, crea job. */
-  startProcess: (recipeId: string, qty: number) => boolean;
-  /** Añade 1 huevo a un job en curso. Descuenta egg + gold, extiende endTime. */
-  addToJob: (jobId: string) => boolean;
+  /** Inicia un ciclo de procesamiento. Descuenta saldo USDT (o gold) + huevos, crea job. */
+  startProcess: (recipeId: string, qty: number) => Promise<boolean>;
+  /** Añade 1 huevo a un job en curso. Descuenta egg + saldo USDT (o gold), extiende endTime. */
+  addToJob: (jobId: string) => Promise<boolean>;
   /** Tick: entrega productos de jobs completados. Llamar cada ~1s. */
   tick: () => void;
   /** Reinicia (debug). */
@@ -65,7 +67,7 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     return { ok: true };
   },
 
-  startProcess: (recipeId, qty) => {
+  startProcess: async (recipeId, qty) => {
     const check = get().canProcess(recipeId, qty);
     if (!check.ok) return false;
 
@@ -75,13 +77,24 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     const level = useUpgradesStore.getState().levels.processing ?? 0;
     const def = getProcessorLevelDef(level);
     const totalCost = qty * def.costPerEgg;
+    const totalCostMinor = Math.round(totalCost * 100);
 
-    const eco = useEconomyStore.getState();
-    if (!eco.spendGold(totalCost)) return false;
+    if (useAuthStore.getState().status === "authenticated") {
+      const err = await useWalletStore.getState().spendUSD(totalCostMinor, `processing:${recipeId}`);
+      if (err) return false;
+    } else {
+      const eco = useEconomyStore.getState();
+      if (!eco.spendGold(totalCost)) return false;
+    }
 
     const goods = useGoodsStore.getState();
     if (!goods.removeGoods(recipe.inputGoodId, qty)) {
-      eco.addGold(totalCost, "reembolso");
+      // Revertir el cargo
+      if (useAuthStore.getState().status === "authenticated") {
+        await useWalletStore.getState().earnUSD(totalCostMinor, `processing-refund:${recipeId}`);
+      } else {
+        useEconomyStore.getState().addGold(totalCost, "reembolso");
+      }
       return false;
     }
 
@@ -103,7 +116,7 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     return true;
   },
 
-  addToJob: (jobId) => {
+  addToJob: async (jobId) => {
     const jobs = get().jobs;
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return false;
@@ -118,12 +131,22 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     const eggs = useGoodsStore.getState().inventory[job.inputGoodId] ?? 0;
     if (eggs < 1) return false;
 
-    const eco = useEconomyStore.getState();
-    if (!eco.spendGold(def.costPerEgg)) return false;
+    const costMinor = Math.round(def.costPerEgg * 100);
+    if (useAuthStore.getState().status === "authenticated") {
+      const err = await useWalletStore.getState().spendUSD(costMinor, `processing-add:${job.recipeId}`);
+      if (err) return false;
+    } else {
+      const eco = useEconomyStore.getState();
+      if (!eco.spendGold(def.costPerEgg)) return false;
+    }
 
     const goods = useGoodsStore.getState();
     if (!goods.removeGoods(job.inputGoodId, 1)) {
-      eco.addGold(def.costPerEgg, "reembolso");
+      if (useAuthStore.getState().status === "authenticated") {
+        await useWalletStore.getState().earnUSD(costMinor, `processing-add-refund:${job.recipeId}`);
+      } else {
+        useEconomyStore.getState().addGold(def.costPerEgg, "reembolso");
+      }
       return false;
     }
 

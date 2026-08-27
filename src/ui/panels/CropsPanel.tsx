@@ -129,14 +129,14 @@ function CropGroup({ cropId }: { cropId: string }) {
         {econ.growthHours} h
       </p>
       <div className="cp-actions">
-        <button type="button" className="ap-buy" onClick={() => buySeed(cropId, 1)}>
+        <button type="button" className="ap-buy" onClick={() => void buySeed(cropId, 1)}>
           Comprar {money(econ.seedPrice)}
         </button>
         <button
           type="button"
           className="cp-sell"
           disabled={harvestQty < 1}
-          onClick={() => sellHarvest(cropId, harvestQty)}
+          onClick={() => void sellHarvest(cropId, harvestQty)}
         >
           Vender {money(econ.sellPrice * harvestQty)}
         </button>

@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { getCropEconomy } from "../config/economyConfig";
 import { useEconomyStore } from "./economyStore";
 import { useUpgradesStore } from "./upgradesStore";
+import { useAuthStore } from "./authStore";
+import { useWalletStore } from "./walletStore";
 import { PLOT_PADS } from "../config/layoutConfig";
 
 export type CropState = "growing" | "ready";
@@ -33,8 +35,8 @@ interface CropStore {
   inventory: Record<string, CropInventory>;
   planted: PlantedCrop[];
   nextId: number;
-  /** Compra semillas: descuenta qty * seedPrice del saldo y las añade al inventario. */
-  buySeed: (cropId: string, qty?: number) => boolean;
+  /** Compra semillas: descuenta qty * seedPrice (USDT si autenticado, oro si no) y las añade al inventario. */
+  buySeed: (cropId: string, qty?: number) => Promise<boolean>;
   /** Siembra todas las semillas disponibles de un cultivo en una parcela (hasta capacidad granero). */
   plantCrop: (cropId: string, plotIndex: number) => { planted: number } | false;
   /** Encuentra el primer índice de parcela vacía, o -1 si no hay ninguna libre. */
@@ -43,8 +45,8 @@ interface CropStore {
   tick: () => void;
   /** Cosecha TODAS las unidades listas de una parcela. */
   harvestCrop: (id: number) => { harvested: number } | false;
-  /** Vende cosecha del inventario: añade qty * sellPrice al saldo. */
-  sellHarvest: (cropId: string, qty: number) => boolean;
+  /** Vende cosecha del inventario: acredita USDT si autenticado, oro si no. */
+  sellHarvest: (cropId: string, qty: number) => Promise<boolean>;
   /** Añade cosecha al inventario (herramienta de prueba/depuración). */
   addHarvest: (cropId: string, qty?: number) => boolean;
 }
@@ -76,11 +78,16 @@ export const useCropStore = create<CropStore>((set, get) => ({
   planted: [],
   nextId: 1,
 
-  buySeed: (cropId, qty = 1) => {
+  buySeed: async (cropId, qty = 1) => {
     const econ = getCropEconomy(cropId);
     if (!econ || qty <= 0) return false;
     const cost = econ.seedPrice * qty;
-    if (!useEconomyStore.getState().spendGold(cost)) return false;
+    if (useAuthStore.getState().status === "authenticated") {
+      const err = await useWalletStore.getState().spendUSD(Math.round(cost * 100), `seed:${cropId}`);
+      if (err) return false;
+    } else if (!useEconomyStore.getState().spendGold(cost)) {
+      return false;
+    }
     set((s) => ({
       inventory: { ...s.inventory, [cropId]: { ...(s.inventory[cropId] ?? emptyInventory()), seeds: (s.inventory[cropId]?.seeds ?? 0) + qty } },
     }));
@@ -154,18 +161,22 @@ export const useCropStore = create<CropStore>((set, get) => ({
     return { harvested: qty };
   },
 
-  sellHarvest: (cropId, qty) => {
+  sellHarvest: async (cropId, qty) => {
     const econ = getCropEconomy(cropId);
     if (!econ || qty <= 0) return false;
     const inv = get().inventory[cropId];
     if (!inv || inv.harvest < qty) return false;
-    useEconomyStore.getState().addGold(qty * econ.sellPrice, "cosecha");
     set((s) => ({
       inventory: {
         ...s.inventory,
         [cropId]: { ...(s.inventory[cropId] ?? emptyInventory()), harvest: (s.inventory[cropId]?.harvest ?? 0) - qty },
       },
     }));
+    if (useAuthStore.getState().status === "authenticated") {
+      await useWalletStore.getState().earnUSD(Math.round(qty * econ.sellPrice * 100), `crop:${cropId}`);
+    } else {
+      useEconomyStore.getState().addGold(qty * econ.sellPrice, "cosecha");
+    }
     return true;
   },
 

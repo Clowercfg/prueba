@@ -225,6 +225,8 @@ export const api = {
     apiGet<{ items: MyDepositRow[]; hasMore: boolean }>(`/wallet/deposits?page=${page}`),
   debitWallet: (amountMinor: number, concept: string) =>
     apiPost<{ ok: boolean; availableMinor: number }>('/wallet/debit', { amountMinor, concept }),
+  creditWallet: (amountMinor: number, concept: string) =>
+    apiPost<{ ok: boolean; availableMinor: number }>('/wallet/credit', { amountMinor, concept }),
 
   admin: {
     dashboard: () => apiGet<DashboardResponse>('/admin/dashboard'),
