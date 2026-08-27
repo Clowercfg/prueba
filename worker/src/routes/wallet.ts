@@ -110,7 +110,21 @@ wallet.post('/debit', rateLimit('purchase', 30, 60), async (c) => {
   const body = await c.req.json().catch(() => null)
   const amountMinor = parseAmount(body)
   const sourceId = Date.now()
-  await debitPurchase(c.env, { userId: user.id, amountMinor, sourceId })
+  try {
+    await debitPurchase(c.env, { userId: user.id, amountMinor, sourceId })
+  } catch (e) {
+    // Si el débito falla por CHECK (saldo insuficiente), incluir el saldo real
+    // en la respuesta para que el cliente pueda mostrarlo.
+    if (e instanceof HttpError && e.status === 400) {
+      const w = await c.env.DB.prepare(
+        `SELECT available_minor AS availableMinor FROM wallets WHERE user_id = ?1 AND currency = 'USD'`,
+      )
+        .bind(user.id)
+        .first<{ availableMinor: number }>()
+      return c.json({ error: e.message, availableMinor: w?.availableMinor ?? 0 }, 400)
+    }
+    throw e
+  }
   const w = await c.env.DB.prepare(
     `SELECT available_minor AS availableMinor FROM wallets WHERE user_id = ?1 AND currency = 'USD'`,
   )

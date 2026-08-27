@@ -31,12 +31,15 @@ export function getAuthHeaders(): Record<string, string> {
   return {}
 }
 
-/** Error de API con código HTTP y mensaje del servidor. */
+/** Error de API con código HTTP, mensaje del servidor y saldo opcional. */
 export class ApiError extends Error {
   readonly status: number
-  constructor(status: number, message: string) {
+  /** Saldo real del servidor cuando el débito falla por saldo insuficiente. */
+  readonly serverBalance?: number
+  constructor(status: number, message: string, serverBalance?: number) {
     super(message)
     this.status = status
+    this.serverBalance = serverBalance
   }
 }
 
@@ -56,11 +59,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     /* respuesta sin cuerpo */
   }
   if (!res.ok) {
+    const raw = (body ?? {}) as Record<string, unknown>
     const message =
-      typeof (body as { message?: unknown })?.message === 'string'
-        ? ((body as { message: string }).message)
-        : `HTTP ${res.status}`
-    throw new ApiError(res.status, message)
+      typeof raw.message === 'string'
+        ? raw.message
+        : typeof raw.error === 'string'
+          ? raw.error
+          : `HTTP ${res.status}`
+    const serverBalance = typeof raw.availableMinor === 'number' ? raw.availableMinor : undefined
+    throw new ApiError(res.status, message, serverBalance)
   }
   return body as T
 }

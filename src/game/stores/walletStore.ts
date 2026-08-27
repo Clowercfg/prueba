@@ -42,6 +42,12 @@ export const useWalletStore = create<WalletStore>((set) => ({
       set({ usdtMinor: r.availableMinor });
       return null;
     } catch (err) {
+      // Si el servidor devolvió el saldo real, actualizar el store para que la UI sea precisa.
+      if (err instanceof ApiError && typeof err.serverBalance === "number") {
+        set({ usdtMinor: err.serverBalance });
+      } else {
+        void useWalletStore.getState().refresh();
+      }
       return err instanceof ApiError ? err.message : "error de compra";
     }
   },
