@@ -575,6 +575,14 @@
       "reversed": "Revertido",
       "cancelled": "Cancelado"
     },
+    "copy_btn": "Copiar",
+    "no_referrals": "Sin referidos todavía.",
+    "no_commissions": "Sin comisiones registradas.",
+    "deposit_of": "Depósito {v}",
+    "from_user": "de {v}",
+    "someone": "alguien",
+    "sub_referral": "sub-referido",
+    "hint": "Comparte tu código con amigos. Cuando realicen un depósito, ganas una comisión del 5% sobre el monto depositado. Las comisiones quedan pendientes hasta que el depósito sea aprobado por un administrador.",
     "error": {
       "missing_fields": "Faltan campos obligatorios",
       "invalid_code": "Código de referido no válido",
@@ -583,6 +591,33 @@
       "already_referred": "Ya tienes un patrocinador",
       "cycle_detected": "Esta relación crearía un ciclo",
       "network_error": "Error de red"
+    }
+  },
+  "withdraw": {
+    "title": "Solicitar retiro",
+    "subtitle": "Retira USDT de tu wallet a una dirección externa",
+    "need_auth": "Inicia sesión para solicitar un retiro.",
+    "balance_available": "Saldo disponible: {v}",
+    "method": "Red / Método",
+    "destination": "Dirección de wallet destino",
+    "destination_placeholder": "0x... / TX...",
+    "amount": "Monto a retirar (USD)",
+    "submitting": "Procesando...",
+    "submit_btn": "Solicitar retiro",
+    "success": "Solicitud #{n} registrada: fondos reservados. Se procesará tras verificación.",
+    "error_generic": "Error al crear la solicitud",
+    "history": "Historial de retiros",
+    "empty_history": "Sin retiros registrados.",
+    "deny_reason": "Motivo: {v}",
+    "hint": "Al solicitar un retiro se reservan los fondos automáticamente. Un administrador revisará y procesará tu solicitud. Si es denegada, los fondos reservados vuelven a tu saldo disponible.",
+    "status": {
+      "PENDING": "Pendiente",
+      "UNDER_REVIEW": "En revisión",
+      "APPROVED": "Aprobado",
+      "PROCESSING": "Procesando",
+      "COMPLETED": "Completado",
+      "DENIED": "Denegado",
+      "CANCELLED": "Cancelado"
     }
   },
   "dashboard": {

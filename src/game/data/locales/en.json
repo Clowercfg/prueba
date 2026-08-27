@@ -575,6 +575,14 @@
       "reversed": "Reversed",
       "cancelled": "Cancelled"
     },
+    "copy_btn": "Copy",
+    "no_referrals": "No referrals yet.",
+    "no_commissions": "No commissions registered.",
+    "deposit_of": "Deposit {v}",
+    "from_user": "from {v}",
+    "someone": "someone",
+    "sub_referral": "sub-referral",
+    "hint": "Share your code with friends. When they make a deposit, you earn a 5% commission on the deposited amount. Commissions remain pending until the deposit is approved by an administrator.",
     "error": {
       "missing_fields": "Missing required fields",
       "invalid_code": "Invalid referral code",
@@ -583,6 +591,33 @@
       "already_referred": "You already have a sponsor",
       "cycle_detected": "This relationship would create a cycle",
       "network_error": "Network error"
+    }
+  },
+  "withdraw": {
+    "title": "Request withdrawal",
+    "subtitle": "Withdraw USDT from your wallet to an external address",
+    "need_auth": "Log in to request a withdrawal.",
+    "balance_available": "Available balance: {v}",
+    "method": "Network / Method",
+    "destination": "Destination wallet address",
+    "destination_placeholder": "0x... / TX...",
+    "amount": "Amount to withdraw (USD)",
+    "submitting": "Processing...",
+    "submit_btn": "Request withdrawal",
+    "success": "Request #{n} registered: funds reserved. Will be processed after verification.",
+    "error_generic": "Error creating request",
+    "history": "Withdrawal history",
+    "empty_history": "No withdrawals registered.",
+    "deny_reason": "Reason: {v}",
+    "hint": "When you request a withdrawal, funds are automatically reserved. An administrator will review and process your request. If denied, the reserved funds return to your available balance.",
+    "status": {
+      "PENDING": "Pending",
+      "UNDER_REVIEW": "Under review",
+      "APPROVED": "Approved",
+      "PROCESSING": "Processing",
+      "COMPLETED": "Completed",
+      "DENIED": "Denied",
+      "CANCELLED": "Cancelled"
     }
   },
   "dashboard": {

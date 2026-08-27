@@ -10,11 +10,6 @@ import {
 import { useT } from "../../game/stores/languageStore";
 import { useAuthStore } from "../../game/stores/authStore";
 
-/**
- * Panel de REFERIDOS / AFILIADOS: codigo unico, registro de referido,
- * estadisticas de red e historial de comisiones.
- */
-
 const STATUS_CLASS: Record<string, string> = {
   PENDING: "recovering",
   AVAILABLE: "harvested",
@@ -47,14 +42,10 @@ export default function ReferralsPanel() {
       setStats(statsRes);
       setTree(treeRes.items);
       setCommissions(commRes.items);
-    } catch {
-      /* sin backend */
-    }
+    } catch { /* */ }
   }, [status]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const onRegister = async (): Promise<void> => {
     if (!refInput.trim()) return;
@@ -63,11 +54,11 @@ export default function ReferralsPanel() {
     setMsg(null);
     try {
       await api.registerReferral(refInput.trim().toUpperCase());
-      setMsg("¡Registro exitoso! Ya formas parte de la red.");
+      setMsg(t("affiliate.register_success"));
       setRefInput("");
       void load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Error al registrar");
+      setError(err instanceof ApiError ? err.message : t("affiliate.error.network_error"));
     } finally {
       setBusy(false);
     }
@@ -89,31 +80,25 @@ export default function ReferralsPanel() {
         </section>
       ) : (
         <>
-          {/* Codigo propio */}
           <section className="ap-group">
             <header className="ap-group-head">
               <span className="ap-group-icon">🔗</span>
-              <span className="ap-group-title">
-                <b>{t("affiliate.your_code")}</b>
-              </span>
+              <span className="ap-group-title"><b>{t("affiliate.your_code")}</b></span>
             </header>
             {code && (
               <div className="af-code-row">
                 <code className="af-code">{code}</code>
                 <button type="button" className="ap-buy" onClick={onCopy}>
-                  {copied ? "✓" : "Copiar"}
+                  {copied ? "✓" : t("affiliate.copy_btn")}
                 </button>
               </div>
             )}
           </section>
 
-          {/* Registrar referido */}
           <section className="ap-group">
             <header className="ap-group-head">
               <span className="ap-group-icon">➕</span>
-              <span className="ap-group-title">
-                <b>{t("affiliate.register_referral")}</b>
-              </span>
+              <span className="ap-group-title"><b>{t("affiliate.register_referral")}</b></span>
             </header>
             <div className="dp-form">
               <input
@@ -137,14 +122,11 @@ export default function ReferralsPanel() {
             </div>
           </section>
 
-          {/* Estadisticas */}
           {stats && (
             <section className="ap-group">
               <header className="ap-group-head">
                 <span className="ap-group-icon">📊</span>
-                <span className="ap-group-title">
-                  <b>{t("affiliate.stats")}</b>
-                </span>
+                <span className="ap-group-title"><b>{t("affiliate.stats")}</b></span>
               </header>
               <div className="af-stats-grid">
                 <div className="af-stat">
@@ -171,16 +153,13 @@ export default function ReferralsPanel() {
             </section>
           )}
 
-          {/* Arbol */}
           <section className="ap-group">
             <header className="ap-group-head">
               <span className="ap-group-icon">🌳</span>
-              <span className="ap-group-title">
-                <b>{t("affiliate.tree")}</b>
-              </span>
+              <span className="ap-group-title"><b>{t("affiliate.tree")}</b></span>
             </header>
             {tree.length === 0 ? (
-              <p className="ap-empty">Sin referidos todavía.</p>
+              <p className="ap-empty">{t("affiliate.no_referrals")}</p>
             ) : (
               <div className="iv-list">
                 {tree.map((r) => (
@@ -189,7 +168,7 @@ export default function ReferralsPanel() {
                     <span className="rc-main">
                       <b>{r.first_name ?? r.username ?? `#${r.referred_id}`}</b>
                       <small>
-                        @{r.username ?? "sin_usuario"} · {r.children} sub-referido{r.children !== 1 ? "s" : ""}
+                        @{r.username ?? t("affiliate.someone")} · {r.children} {t("affiliate.sub_referral")}{r.children !== 1 ? "s" : ""}
                       </small>
                     </span>
                   </div>
@@ -198,16 +177,13 @@ export default function ReferralsPanel() {
             )}
           </section>
 
-          {/* Historial de comisiones */}
           <section className="ap-group">
             <header className="ap-group-head">
               <span className="ap-group-icon">💰</span>
-              <span className="ap-group-title">
-                <b>{t("affiliate.history")}</b>
-              </span>
+              <span className="ap-group-title"><b>{t("affiliate.history")}</b></span>
             </header>
             {commissions.length === 0 ? (
-              <p className="ap-empty">Sin comisiones registradas.</p>
+              <p className="ap-empty">{t("affiliate.no_commissions")}</p>
             ) : (
               <div className="iv-list">
                 {commissions.map((c) => (
@@ -216,10 +192,10 @@ export default function ReferralsPanel() {
                     <span className="rc-main">
                       <b>{fmtMoney(c.amount_minor)}</b>
                       <small>
-                        Depósito {fmtMoney(c.deposit_minor)} de{" "}
-                        {c.referred_name ?? c.referred_username ?? "alguien"} ·{" "}
+                        {t("affiliate.deposit_of", { v: fmtMoney(c.deposit_minor) })} ·{" "}
+                        {t("affiliate.from_user", { v: c.referred_name ?? c.referred_username ?? t("affiliate.someone") })} ·{" "}
                         <span className={STATUS_CLASS[c.status] ?? ""}>
-                          {c.status}
+                          {t(`affiliate.status.${c.status}`) ?? c.status}
                         </span>
                       </small>
                     </span>
@@ -231,11 +207,7 @@ export default function ReferralsPanel() {
         </>
       )}
 
-      <p className="ap-hint">
-        Comparte tu código con amigos. Cuando realicen un depósito, ganas una
-        comisión del 5% sobre el monto depositado. Las comisiones quedan
-        pendientes hasta que el depósito sea aprobado por un administrador.
-      </p>
+      <p className="ap-hint">{t("affiliate.hint")}</p>
     </div>
   );
 }

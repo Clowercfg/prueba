@@ -4,13 +4,6 @@ import { useT } from "../../game/stores/languageStore";
 import { useAuthStore } from "../../game/stores/authStore";
 import { useWalletStore } from "../../game/stores/walletStore";
 
-/**
- * Panel de RETIROS: el usuario solicita retirar USDT del wallet.
- * La solicitud queda PENDING y un admin la aprueba/deniega.
- * Los fondos se RESERVA al crear la solicitud (no desaparecen del saldo
- * visible, pero tampoco se pueden gastar dos veces).
- */
-
 const METHODS = ["USDT (BEP20)", "USDT (ERC20)", "USDT (TRC20)"];
 
 const STATUS_CLASS: Record<string, string> = {
@@ -21,16 +14,6 @@ const STATUS_CLASS: Record<string, string> = {
   COMPLETED: "harvested",
   DENIED: "cancelled",
   CANCELLED: "cancelled",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: "Pendiente",
-  UNDER_REVIEW: "En revisión",
-  APPROVED: "Aprobado",
-  PROCESSING: "Procesando",
-  COMPLETED: "Completado",
-  DENIED: "Denegado",
-  CANCELLED: "Cancelado",
 };
 
 export default function WithdrawalsPanel() {
@@ -53,14 +36,10 @@ export default function WithdrawalsPanel() {
     try {
       const data = await api.myWithdrawals();
       setHistory(data.items);
-    } catch {
-      /* sin backend */
-    }
+    } catch { /* */ }
   }, []);
 
-  useEffect(() => {
-    void loadHistory();
-  }, [loadHistory]);
+  useEffect(() => { void loadHistory(); }, [loadHistory]);
 
   const onSubmit = async (): Promise<void> => {
     if (!canSubmit) return;
@@ -69,12 +48,12 @@ export default function WithdrawalsPanel() {
     setSuccess(null);
     try {
       const res = await api.createWithdrawal(amountMinor, method, destination);
-      setSuccess(`Solicitud #${res.id} registrada: fondos reservados. Se procesará tras verificación.`);
+      setSuccess(t("withdraw.success", { n: String(res.id) }));
       setAmount("");
       setDestination("");
       void loadHistory();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Error al crear la solicitud");
+      setError(err instanceof ApiError ? err.message : t("withdraw.error_generic"));
     } finally {
       setBusy(false);
     }
@@ -86,39 +65,33 @@ export default function WithdrawalsPanel() {
         <header className="ap-group-head">
           <span className="ap-group-icon">💸</span>
           <span className="ap-group-title">
-            <b>Solicitar retiro</b>
-            <small>Retira USDT de tu wallet a una dirección externa</small>
+            <b>{t("withdraw.title")}</b>
+            <small>{t("withdraw.subtitle")}</small>
           </span>
         </header>
 
         {status !== "authenticated" ? (
-          <p className="ap-empty">{t("deposit.need_auth")}</p>
+          <p className="ap-empty">{t("withdraw.need_auth")}</p>
         ) : (
           <>
             <p className="ap-prod">
-              Saldo disponible: <b>{fmtMoney(usdtMinor)}</b>
+              {t("withdraw.balance_available", { v: fmtMoney(usdtMinor) })}
             </p>
 
             <div className="dp-form">
               <label className="dp-label">
-                Red / Método
-                <select
-                  className="dp-input"
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value)}
-                >
-                  {METHODS.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
+                {t("withdraw.method")}
+                <select className="dp-input" value={method} onChange={(e) => setMethod(e.target.value)}>
+                  {METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </label>
 
               <label className="dp-label">
-                Dirección de wallet destino
+                {t("withdraw.destination")}
                 <input
                   className="dp-input"
                   type="text"
-                  placeholder="0x... / TX..."
+                  placeholder={t("withdraw.destination_placeholder")}
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   maxLength={200}
@@ -126,7 +99,7 @@ export default function WithdrawalsPanel() {
               </label>
 
               <label className="dp-label">
-                Monto a retirar (USD)
+                {t("withdraw.amount")}
                 <input
                   className="dp-input"
                   type="number"
@@ -147,7 +120,7 @@ export default function WithdrawalsPanel() {
                 disabled={!canSubmit}
                 onClick={() => void onSubmit()}
               >
-                {busy ? "Procesando..." : "Solicitar retiro"}
+                {busy ? t("withdraw.submitting") : t("withdraw.submit_btn")}
               </button>
             </div>
           </>
@@ -157,12 +130,10 @@ export default function WithdrawalsPanel() {
       <section className="ap-group">
         <header className="ap-group-head">
           <span className="ap-group-icon">📋</span>
-          <span className="ap-group-title">
-            <b>Historial de retiros</b>
-          </span>
+          <span className="ap-group-title"><b>{t("withdraw.history")}</b></span>
         </header>
         {history.length === 0 ? (
-          <p className="ap-empty">Sin retiros registrados.</p>
+          <p className="ap-empty">{t("withdraw.empty_history")}</p>
         ) : (
           <div className="iv-list">
             {history.map((w) => (
@@ -173,11 +144,11 @@ export default function WithdrawalsPanel() {
                   <small>
                     {w.destinationMasked} ·{" "}
                     <span className={STATUS_CLASS[w.status] ?? ""}>
-                      {STATUS_LABEL[w.status] ?? w.status}
+                      {t(`withdraw.status.${w.status}`) ?? w.status}
                     </span>
                   </small>
                   {w.denyReason && (
-                    <small className="cancelled">Motivo: {w.denyReason}</small>
+                    <small className="cancelled">{t("withdraw.deny_reason", { v: w.denyReason })}</small>
                   )}
                 </span>
               </div>
@@ -186,11 +157,7 @@ export default function WithdrawalsPanel() {
         )}
       </section>
 
-      <p className="ap-hint">
-        Al solicitar un retiro se reservan los fondos automáticamente. Un
-        administrador revisará y procesará tu solicitud. Si es denegada, los
-        fondos reservados vuelven a tu saldo disponible.
-      </p>
+      <p className="ap-hint">{t("withdraw.hint")}</p>
     </div>
   );
 }
