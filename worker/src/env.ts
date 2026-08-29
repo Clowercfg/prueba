@@ -11,6 +11,10 @@ export interface Env {
   ASSETS: Fetcher
   /** Bot token (secreto) usado para verificar la firma HMAC de initData */
   BOT_TOKEN: string
+  /** Secreto alfanumérico (A-Z a-z 0-9 _ -) que Telegram refleja en el header
+   *  X-Telegram-Bot-Api-Secret-Token del webhook. El BOT_TOKEN no sirve:
+   *  contiene ':' y Telegram lo rechaza como secret_token. */
+  BOT_WEBHOOK_SECRET?: string
   /** IDs de Telegram (csv) promovidos a ADMIN en el bootstrap inicial */
   ADMIN_TELEGRAM_IDS?: string
   /** IDs de Telegram (csv) promovidos a SUPER_ADMIN en el bootstrap inicial */

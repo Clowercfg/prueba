@@ -67,8 +67,9 @@ interface TelegramUpdate {
 
 export async function webhookHandler(c: Context<AppEnv>): Promise<Response> {
   // Firma del webhook: solo se aceptan updates del webhook registrado.
+  const expected = c.env.BOT_WEBHOOK_SECRET ?? c.env.BOT_TOKEN
   const secret = c.req.header('X-Telegram-Bot-Api-Secret-Token')
-  if (!secret || secret !== c.env.BOT_TOKEN) throw new HttpError(401, 'webhook token inválido')
+  if (!expected || !secret || secret !== expected) throw new HttpError(401, 'webhook token inválido')
 
   const body = (await c.req.json().catch(() => null)) as TelegramUpdate | null
   if (!body?.message) return c.text('ok')
