@@ -15,6 +15,7 @@ import referralRoutes from './routes/referrals'
 import adminRoutes, { superAdmin } from './routes/admin'
 import goodsRoutes from './routes/goods'
 import cropsRoutes from './routes/crops'
+import { webhookHandler } from './bot'
 
 const app = new Hono<AppEnv>()
 
@@ -37,6 +38,9 @@ app.onError((err, c) => {
 })
 
 app.get('/api/health', (c) => c.json({ ok: true, ts: Date.now() }))
+
+// Webhook del bot de Telegram: Telegram llama aquí con los updates (POST).
+app.post('/webhook', (c) => webhookHandler(c))
 
 app.route('/api/me', meRoutes)
 app.route('/api/wallet', walletRoutes)

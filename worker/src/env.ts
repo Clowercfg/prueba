@@ -23,6 +23,9 @@ export interface Env {
   DEPOSIT_WALLET_ADDRESS?: string
   DEPOSIT_NETWORK?: string
   DEPOSIT_TELEGRAM?: string
+  /** URL de la Mini App de Harvest Valley (dominio registrado en BotFather)
+   *  usada por el botón PLAY del mensaje /start del bot. */
+  MINI_APP_URL?: string
 }
 
 export interface SessionUser {

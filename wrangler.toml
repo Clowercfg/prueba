@@ -40,6 +40,9 @@ DEV_MODE = "0"
 DEPOSIT_WALLET_ADDRESS = "0xDE299f58B09Db87f3C42DEFB2f50453d2CB00f9d"
 DEPOSIT_NETWORK = "USDT (BEP20)"
 DEPOSIT_TELEGRAM = "@harvestvalleysupp"
+# URL de la Mini App de Harvest Valley para el botón PLAY del /start del bot.
+# Debe ser el dominio registrado como Web App del bot en BotFather (HTTPS).
+MINI_APP_URL = "https://pruebafinal.fernandotopito437.workers.dev"
 
 # Secretos requeridos (NO van en este archivo):
 #   BOT_TOKEN  → `wrangler secret put BOT_TOKEN`
