@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, fmtMoney, ApiError, type DepositConfig, type MyDepositRow } from "../../game/api/client";
-import { useT } from "../../game/stores/languageStore";
+import { useT, useLanguageStore, localeFor } from "../../game/stores/languageStore";
 import { useAuthStore } from "../../game/stores/authStore";
 import { useWalletStore } from "../../game/stores/walletStore";
 
@@ -22,6 +22,7 @@ const STATUS_CLASS: Record<string, string> = {
 
 export function DepositPanel({ onClose }: { onClose: () => void }) {
   const t = useT();
+  const lang = useLanguageStore((s) => s.lang);
   const status = useAuthStore((s) => s.status);
   const usdtMinor = useWalletStore((s) => s.usdtMinor);
   const [config, setConfig] = useState<DepositConfig | null>(null);
@@ -205,7 +206,7 @@ export function DepositPanel({ onClose }: { onClose: () => void }) {
                   </div>
                   <div className="deposit-item-meta">
                     <span>{d.method}</span>
-                    <span>{new Date(d.createdAt).toLocaleString("es")}</span>
+                    <span>{new Date(d.createdAt).toLocaleString(localeFor(lang))}</span>
                   </div>
                   {d.reference && (
                     <div className="deposit-item-tx" title={d.reference}>

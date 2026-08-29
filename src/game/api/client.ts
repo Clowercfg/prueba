@@ -159,6 +159,21 @@ export interface WalletRow {
   reservedMinor: number
 }
 
+/** Inventario de un cultivo en el servidor. */
+export interface CropServerInventory {
+  seeds: number
+  harvest: number
+}
+
+/** Parcela sembrada en el servidor. */
+export interface CropPlotServerRow {
+  plotIndex: number
+  cropId: string
+  quantity: number
+  plantedAt: number
+  readyAt: number
+}
+
 export interface LedgerRow {
   id: number
   type: string
@@ -272,16 +287,66 @@ export const api = {
     }),
   myDeposits: (page = 1) =>
     apiGet<{ items: MyDepositRow[]; hasMore: boolean }>(`/wallet/deposits?page=${page}`),
-  debitWallet: (amountMinor: number, concept: string) =>
-    apiPost<{ ok: boolean; availableMinor: number }>('/wallet/debit', { amountMinor, concept }),
-  creditWallet: (amountMinor: number, concept: string) =>
-    apiPost<{ ok: boolean; availableMinor: number }>('/wallet/credit', { amountMinor, concept }),
+  debitWallet: (amountMinor: number, concept: string, meta?: { qty?: number; level?: number; processorLevel?: number }) =>
+    apiPost<{ ok: boolean; availableMinor: number }>('/wallet/debit', {
+      amountMinor,
+      concept,
+      ...(meta ?? {}),
+    }),
 
   // Retiros
   createWithdrawal: (amountMinor: number, method: string, destination: string) =>
     apiPost<{ id: number; status: string; reserved: number }>('/wallet/withdrawals', { amountMinor, method, destination }),
   myWithdrawals: (page = 1) =>
     apiGet<{ items: MyWithdrawalRow[]; hasMore: boolean }>(`/wallet/withdrawals?page=${page}`),
+
+  // Productos (inventario autoritativo server-side)
+  goods: () => apiGet<{ goods: Record<string, number> }>('/goods'),
+  goodsInit: (goods: Record<string, number>, animals: Record<string, number>) =>
+    apiPost<{ ok: boolean; initialized: boolean; goods: Record<string, number> }>('/goods/init', { goods, animals }),
+  goodsRegisterAnimals: (items: { kind: string; qty: number }[]) =>
+    apiPost<{ ok: boolean }>('/goods/animals', { items }),
+  goodsProduce: (goodId: string, qty: number, via: 'animal' | 'processing', kind?: string, inputGoodId?: string) =>
+    apiPost<{ ok: boolean; credited: number; goods: Record<string, number> }>('/goods/produce', {
+      goodId,
+      qty,
+      via,
+      ...(kind ? { kind } : {}),
+      ...(inputGoodId ? { inputGoodId } : {}),
+    }),
+  goodsConsume: (goodId: string, qty: number) =>
+    apiPost<{ ok: boolean; reason?: string; goods: Record<string, number> }>('/goods/consume', { goodId, qty }),
+  goodsCancelConsume: (goodId: string, qty: number) =>
+    apiPost<{ ok: boolean; reason?: string; goods: Record<string, number> }>('/goods/consume-cancel', { goodId, qty }),
+  goodsSell: (goodId: string, qty: number) =>
+    apiPost<{ ok: boolean; availableMinor: number; creditedMinor: number; goods: Record<string, number> }>(
+      '/goods/sell',
+      { goodId, qty },
+    ),
+
+  // Cosechas (inventario + parcelas autoritativas server-side)
+  crops: () =>
+    apiGet<{ crops: Record<string, CropServerInventory>; plots: CropPlotServerRow[] }>('/crops'),
+  cropsInit: (crops: Record<string, { seeds: number; harvest: number }>, plots: Array<{ plotIndex: number; cropId: string; quantity: number; plantedAt?: number }>) =>
+    apiPost<{ ok: boolean; initialized: boolean; crops: Record<string, CropServerInventory>; plots: CropPlotServerRow[] }>('/crops/init', { crops, plots }),
+  cropsPurchase: (cropId: string, qty: number) =>
+    apiPost<{ ok: boolean; availableMinor: number; crops: Record<string, CropServerInventory> }>('/crops/purchase', { cropId, qty }),
+  cropsGrantSeeds: (cropId: string, qty: number) =>
+    apiPost<{ ok: boolean; crops: Record<string, CropServerInventory> }>('/crops/seeds', { cropId, qty }),
+  cropsPlant: (cropId: string, plotIndex: number, quantity: number, plantedAt?: number) =>
+    apiPost<{ ok: boolean; crops: Record<string, CropServerInventory>; plots: CropPlotServerRow[] }>('/crops/plant', {
+      cropId,
+      plotIndex,
+      quantity,
+      ...(plantedAt !== undefined ? { plantedAt } : {}),
+    }),
+  cropsHarvest: (plotIndex: number) =>
+    apiPost<{ ok: boolean; harvested?: number; crops: Record<string, CropServerInventory> }>('/crops/harvest', { plotIndex }),
+  cropsSell: (cropId: string, qty: number) =>
+    apiPost<{ ok: boolean; availableMinor: number; creditedMinor: number; crops: Record<string, CropServerInventory> }>(
+      '/crops/sell',
+      { cropId, qty },
+    ),
 
   // Referidos
   referralCode: () => apiGet<{ code: string }>('/referrals/code'),
@@ -306,7 +371,7 @@ export const api = {
       apiPost<{ id: number }>('/admin/notifications', payload),
     users: (q = '', page = 1) =>
       apiGet<{ items: UserAdminRow[]; hasMore: boolean }>(`/admin/users?q=${encodeURIComponent(q)}&page=${page}`),
-    setUserRole: (id: number, role: Role) => apiPost<{ id: number; role: Role }>(`/users/${id}/role`, { role }),
+    setUserRole: (id: number, role: Role) => apiPost<{ id: number; role: Role }>(`/admin/users/${id}/role`, { role }),
     audit: (action = '', page = 1) =>
       apiGet<{ items: AuditRow[]; hasMore: boolean }>(`/admin/audit?action=${encodeURIComponent(action)}&page=${page}`),
   },

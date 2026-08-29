@@ -18,6 +18,8 @@ export interface TelegramWebAppLike {
   version?: string
   ready?: () => void
   expand?: () => void
+  setBackgroundColor?: (color: string) => void
+  setHeaderColor?: (color: string) => void
 }
 
 interface TelegramWindow {

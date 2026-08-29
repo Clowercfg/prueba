@@ -5,8 +5,7 @@
  *   (claves planas separadas por puntos, interpolación {param}).
  * - Plurales: una clave puede contener "singular|plural" y se elige la parte
  *   según el parámetro `n` (n === 1 → singular).
- * - La preferencia se persiste en localStorage y por defecto se usa "en",
- *   salvo que el navegador esté en español (detectado al primer arranque).
+ * - La preferencia se persiste en localStorage y por defecto se usa "en".
  * - `useT()` devuelve una función reactiva (se re-renderiza al cambiar idioma);
  *   `t()` global sirve para código no-React (usa el estado actual).
  */
@@ -49,11 +48,16 @@ export function translateFor(lang: Lang, key: string, params?: TParams): string 
   return value;
 }
 
+/** Etiqueta de locale BCP47 para formatear fechas/números según el idioma. */
+export function localeFor(lang: Lang): string {
+  return lang === "es" ? "es-ES" : "en-US";
+}
+
 function detectInitial(): Lang {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "es" || saved === "en") return saved;
-    return navigator.language.toLowerCase().startsWith("es") ? "es" : "en";
+    return "en";
   } catch {
     return "en";
   }

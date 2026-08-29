@@ -7,7 +7,8 @@ import { Hono } from 'hono'
 import type { AppEnv } from '../env'
 import { HttpError } from '../auth'
 import { requireAuth, rateLimit } from '../middleware'
-import { createWithdrawalWithReserve, debitPurchase, creditSale, maskDestination } from '../services/ledger'
+import { createWithdrawalWithReserve, debitPurchase, maskDestination } from '../services/ledger'
+import { expectedDebitMinor } from '../services/prices'
 
 const wallet = new Hono<AppEnv>()
 
@@ -103,16 +104,25 @@ wallet.get('/withdrawals', async (c) => {
   return c.json({ items: rows.results?.slice(0, 20), hasMore: (rows.results?.length ?? 0) > 20 })
 })
 
-/** POST /api/wallet/debit — compra con saldo USDT (animales/combos).
- *  Server-authoritative: sin saldo suficiente falla y NO se entrega nada. */
+/** POST /api/wallet/debit — compra con saldo USDT (animales/combos/mejoras).
+ *  Server-authoritative: el importe enviado debe coincidir EXACTAMENTE con el
+ *  precio calculado en el servidor (ver services/prices.ts); sin saldo
+ *  suficiente falla y NO se entrega nada. */
 wallet.post('/debit', rateLimit('purchase', 30, 60), async (c) => {
   const user = c.get('user')
   const body = await c.req.json().catch(() => null)
   const amountMinor = parseAmount(body)
+  const concept = ((body as { concept?: unknown })?.concept ?? '') as string
+  if (!concept) throw new HttpError(400, 'concept es obligatorio')
+  const expected = expectedDebitMinor(concept, (body as Record<string, unknown>) ?? {})
+  if (expected === null) throw new HttpError(400, 'Concepto de compra no soportado')
+  if (amountMinor !== expected) throw new HttpError(400, `El importe no coincide con el precio del servidor (esperado ${expected})`)
   const sourceId = Date.now()
+  console.log('[DEBIT] user:', user?.id, 'amountMinor:', amountMinor, 'sourceId:', sourceId, 'telegramId:', user?.telegramId)
   try {
     await debitPurchase(c.env, { userId: user.id, amountMinor, sourceId })
   } catch (e) {
+    console.log('[DEBIT] ERROR:', e instanceof Error ? e.message : e, 'status:', e instanceof HttpError ? e.status : 'N/A')
     // Si el débito falla por CHECK (saldo insuficiente), incluir el saldo real
     // en la respuesta para que el cliente pueda mostrarlo.
     if (e instanceof HttpError && e.status === 400) {
@@ -133,21 +143,13 @@ wallet.post('/debit', rateLimit('purchase', 30, 60), async (c) => {
   return c.json({ ok: true, availableMinor: w?.availableMinor ?? 0 })
 })
 
-/** POST /api/wallet/credit — acredita USDT por ventas del juego.
- *  Server-authoritative: el cliente informa el monto; el servidor confirma
- *  el credito atomico y devuelve el nuevo saldo. */
-wallet.post('/credit', rateLimit('game-credit', 60, 60), async (c) => {
-  const user = c.get('user')
-  const body = await c.req.json().catch(() => null)
-  const amountMinor = parseAmount(body)
-  const sourceId = Date.now()
-  await creditSale(c.env, { userId: user.id, amountMinor, sourceId })
-  const w = await c.env.DB.prepare(
-    `SELECT available_minor AS availableMinor FROM wallets WHERE user_id = ?1 AND currency = 'USD'`,
-  )
-    .bind(user.id)
-    .first<{ availableMinor: number }>()
-  return c.json({ ok: true, availableMinor: w?.availableMinor ?? 0 })
+/** POST /api/wallet/credit — DESACTIVADO.
+ *  Era el money-printer: cualquier cliente podía acreditarse montos arbitrarios.
+ *  Todas las acreditaciones (ventas de productos/cosechas, depósitos,
+ *  comisiones) pasan ahora por rutas validadas server-side. Se devuelve 403
+ *  para que un cliente viejo que lo llame quede bloqueado, no ignorado. */
+wallet.post('/credit', async (c) => {
+  throw new HttpError(403, 'El credito directo esta deshabilitado: usa las ventas validadas server-side')
 })
 
 /** GET /api/wallet — saldos + últimas entradas del ledger. */

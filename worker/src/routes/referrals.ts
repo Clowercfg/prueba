@@ -23,8 +23,6 @@ function generateCode(telegramId: string): string {
   return `FARM-${suffix}`
 }
 
-const COMMISSION_BPS = 500 // 5%
-
 /* ── GET /api/referrals/code — obtener o generar codigo propio ────────────── */
 referrals.get('/code', async (c) => {
   const user = c.get('user')

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef } from 'react'
 import { ASSETS_CONFIG } from '../game/config/assetsConfig'
-import { CONTENT_VIEW, SAFE_AREA, WORLD_BOUNDS } from '../game/config/layoutConfig'
+import { CONTENT_VIEW, getSafeArea, WORLD_BOUNDS } from '../game/config/layoutConfig'
 import { GameLoop } from '../game/systems/GameLoop'
 import { Camera2D } from '../game/systems/Camera2D'
 import { Interaction } from '../game/systems/Interaction'
@@ -16,7 +16,6 @@ import { collectAnimalViews } from '../game/systems/animalViews'
 import { startCropSystem } from '../game/systems/cropSystem'
 import { startProcessingSystem } from '../game/systems/processingSystem'
 import { startEconomySystem } from '../game/systems/economySystem'
-import { startVetSystem } from '../game/systems/vetSystem'
 import { tickAnimalAI } from '../game/systems/animalAI'
 import { hydratePersistence, saveNow, startPersistence } from '../game/persistence/persistence'
 import { Canvas2DRenderer } from '../renderer/canvas2d/Canvas2DRenderer'
@@ -73,7 +72,10 @@ export function GameCanvas() {
 
     const renderer = new Canvas2DRenderer(canvas, camera, tiles, sprites, entities, hooks)
 
-    // Encuadre estÃ¡tico: granja completa centrada en el rect Ãºtil (safe areas).
+    const platform = (window as unknown as { Telegram?: { WebApp?: { platform?: string } } }).Telegram?.WebApp?.platform
+    const safeArea = getSafeArea(platform)
+
+    // Encuadre estático: granja completa centrada en el rect útil (safe areas).
     // Se recalcula en cada resize; el usuario no puede alterarlo (#25).
     const fitFarmToViewport = (viewport: { width: number; height: number }): void => {
       camera.setViewport(viewport)
@@ -81,7 +83,7 @@ export function GameCanvas() {
         spanW: CONTENT_VIEW.spanW,
         spanH: CONTENT_VIEW.spanH,
         centerIso: CONTENT_VIEW.centerIso,
-        insets: SAFE_AREA,
+        insets: safeArea,
       })
     }
 
@@ -150,8 +152,6 @@ export function GameCanvas() {
     const stopProcessingSystem = startProcessingSystem()
     // Sistema econÃ³mico migrado: recolecciÃ³n de producciÃ³n animal cada 4 s.
     const stopEconomySystem = startEconomySystem()
-    // Sistema veterinario migrado: altas mÃ©dicas + rollo de enfermedad (config).
-    const stopVetSystem = startVetSystem()
     // Persistencia local: debounce por cambios + visibilitychange/pagehide.
     const stopPersistence = startPersistence()
 
@@ -181,7 +181,6 @@ export function GameCanvas() {
       stopCropSystem()
       stopProcessingSystem()
       stopEconomySystem()
-      stopVetSystem()
       stopPersistence()
       resize.detach()
       interaction.detach()

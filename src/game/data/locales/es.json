@@ -59,8 +59,6 @@
     "store_title": "Tienda — compra todo para tu granja",
     "animals": "Animales",
     "animals_hint": "Población y estado",
-    "veterinary": "Veterinario",
-    "veterinary_hint": "Salud y tratamientos",
     "crops": "Cultivos",
     "crops_hint": "Parcelas y cosechas",
     "processing": "Procesamiento",
@@ -76,6 +74,46 @@
     "affiliates": "Afiliados",
       "affiliates_hint": "Referidos y comisiones",
       "profile": "Perfil"
+  },
+  "nav": {
+    "farm": "Granja",
+    "animals": "Animales",
+    "crops": "Cultivos",
+    "processing": "Procesar",
+    "store": "Tienda",
+    "more": "Más",
+    "infrastructure": "Infraestructura",
+    "inventory": "Inventario",
+    "upgrades": "Mejoras",
+    "profile": "Perfil",
+    "language": "Idioma",
+    "withdrawals": "Retiros",
+    "panel": "Panel",
+    "coming_soon": "Disponible próximamente",
+    "aria": "Navegación principal"
+  },
+  "more": {
+    "inventory": "Inventario",
+    "inventory_desc": "Gestiona tus productos y recursos",
+    "infrastructure": "Infraestructura",
+    "infrastructure_desc": "Gestiona edificios y capacidades",
+    "upgrades": "Mejoras",
+    "upgrades_desc": "Mejora tus instalaciones",
+    "withdrawals": "Retiros",
+    "withdrawals_desc": "Retira tu saldo USDT"
+  },
+  "blocked": {
+    "text": "Este juego solo está disponible dentro de Telegram.",
+    "sub": "Abre Harvest Valley desde Telegram para jugar.",
+    "cta": "ABRIR EN TELEGRAM"
+  },
+  "notif": {
+    "title": "Notificaciones",
+    "aria": "Notificaciones",
+    "load_error": "No se pudieron cargar.",
+    "loading": "Cargando…",
+    "empty": "Sin notificaciones.",
+    "mark_read": "Marcar leída"
   },
   "language": {
     "title": "Idioma",
@@ -105,7 +143,7 @@
       "rooster": "huevos",
       "pig": "kg carne"
     },
-    "prod_hint": "Los animales producen a lo largo del día. Su producción se vende automáticamente cada pocos segundos.",
+    "prod_hint": "Los animales producen a lo largo del día. La producción se acumula en el almacén; vende los productos desde el inventario para acreditar USDT.",
     "enter_building": "🚪 Entrar al {name}",
     "enter_hint": "Entra para inspeccionar el interior. Usa el botón «Salir» para volver a la granja.",
     "no_interior": "Edificio existente de la granja. Gestiona la infraestructura desde el panel lateral."
@@ -151,8 +189,6 @@
     "eggs": "Huevos",
     "milk": "Leche",
     "meat": "Carne",
-    "honey": "Miel",
-    "cheese": "Queso",
     "boiled-egg": "Huevo hervido",
     "boiled-eggs": "Huevos hervidos"
   },
@@ -232,6 +268,9 @@
     "deposit_button": "+ DEPOSITAR",
     "close_store": "Cerrar tienda",
     "tabs_aria": "Categorías de la tienda",
+    "seeds_title": "Semillas",
+    "animals_title": "Animales",
+    "offers_title": "Ofertas",
     "category": {
       "crops": "Cultivos",
       "animals": "Animales",
@@ -267,7 +306,7 @@
       "info_aria": "Más información de {name}",
       "info_title": "Información adicional",
       "feed": "Alimentación",
-      "info_box": "Precio de compra {price}. Tratamiento veterinario {treat}. El mantenimiento se cobra al finalizar cada ciclo.",
+      "info_box": "Precio de compra {price}. El mantenimiento se cobra al finalizar cada ciclo.",
       "building_fill": "{building}: {used}/{capacity}",
       "full": "🚧 Edificio lleno — mejóralo en INFRAESTRUCTURA."
     },
@@ -277,15 +316,13 @@
       "market": "Venta: {market}",
       "price": "Precio de venta",
       "ref": "(referencia {money})",
-      "note": "Se vende automáticamente desde la granja o el almacén."
+      "note": "La producción se acumula en el almacén. Solo al vender el producto se acredita USDT a tu saldo."
     },
     "source": {
       "egg": "Gallinas",
       "milk": "Vacas",
       "meat": "Cerdos",
-      "boiled-egg": "Procesadora",
-      "honey": "Colmenas",
-      "cheese": "Procesadora"
+      "boiled-egg": "Procesadora"
     },
     "offer": {
       "saving": "AHORRO {money}",
@@ -359,7 +396,6 @@
       "info_title": "Información del jugador",
       "info_soon": "Disponible próximamente",
       "referrals_title": "Referidos",
-      "referrals_soon": "Los referidos llegarán en una fase posterior",
       "name": "Nombre",
       "username": "Usuario",
       "tgid": "ID de Telegram",
@@ -371,25 +407,8 @@
       "subtitle": "Población y estado de tu ganado",
       "empty": "No hay animales en los corrales.",
       "mood": "{pct}% ánimo",
+      "health_aria": "Salud {pct}%",
       "hint": "Las vacas viven en su corral, los cerdos en la pocilga y las aves en el corral de aves. Durante el día pasean y pastan dentro de su área; por la noche se echan a dormir."
-    },
-    "vet": {
-      "title": "Veterinario",
-      "subtitle": "Salud de tu ganado y tratamientos",
-      "sick": "Enfermos",
-      "recovering": "Recuperándose",
-      "population": "Población",
-      "pending": "Tratamientos pend.",
-      "empty": "No hay animales enfermos.",
-      "empty_ok": "Los corrales están sanos. 🎉",
-      "sick_badge": "Enfermo",
-      "recovering_badge": "En recuperación · {time}",
-      "treatment": "Tratamiento {price} · Recuperación {hours} h",
-      "treat_btn": "⚠️ Tratar",
-      "cured": "🩹 Curado",
-      "treat": "Tratar",
-      "in_progress": "En curso",
-      "hint": "En una granja de referencia (~20 animales) enferma 1 animal cada 9 días aproximadamente; cada animal solo puede enfermar como mínimo cada 14 días. Solo pagas el tratamiento cuando lo decides, no necesitas saldo reservado, y ningún animal se elimina por estar enfermo."
     },
     "crops": {
       "title": "Cultivos",
@@ -415,7 +434,21 @@
       "plot_number": "Parcela {n}",
       "ready_short": "¡Lista!",
       "summary": "{ready} lista|{ready} listas · {growing} en crecimiento.",
-      "hint": "En 3D: clic en la parcela para sembrar, clic sobre el cultivo listo para cosechar. Semillas y cosechas en inventario no cuentan como USD hasta venderlas."
+      "hint": "En 3D: clic en la parcela para sembrar, clic sobre el cultivo listo para cosechar. Semillas y cosechas en inventario no cuentan como USD hasta venderlas.",
+      "planted": "En las parcelas",
+      "planted_count": "{n} cultivo|{n} cultivos",
+      "empty_planted": "No hay cultivos plantados.",
+      "growing_short": "Creciendo",
+      "ready_short_value": "Listo",
+      "remaining": "Falta {time}",
+      "buy_val": "Comprar {money}",
+      "sell_val": "Vender {money}",
+      "seeds_harvest": "Semillas {seeds} · Cosecha {harvest}",
+      "seed_line": "Semilla {price} · Venta {sell}/ud · {hours} h",
+      "plant_at": "Sembrar en {name}",
+      "plant_with": "Sembrar en {name} ({seeds} semillas)",
+      "no_plots": "Sin parcelas libres",
+      "action_hint": "Toca una parcela vacía de la granja o pulsa Sembrar para plantar; cuando esté listo, tócalo de nuevo o cosecha desde aquí."
     },
     "upgrades": {
       "title": "Mejoras",
@@ -455,7 +488,13 @@
       "seeds_title": "Semillas",
       "seeds_of": "Semillas de {name}",
       "resources": "Recursos",
-      "hint": "El inventario refleja en tiempo real lo que se recoge en la granja y lo que se almacena en el Almacén."
+      "hint": "El inventario refleja en tiempo real lo que se recoge en la granja y lo que se almacena en el Almacén.",
+      "goods_title": "Recursos",
+      "empty_goods": "No hay productos en el almacén.",
+      "seeds_harvests": "Semillas y cosechas",
+      "all": "Todo",
+      "each": "c/u",
+      "crop_line": "🌱 {seeds} · 🌾 {harvest} · venta {sell}"
     },
     "calendar": {
       "title": "Calendario",
@@ -503,7 +542,25 @@
       "info_cost": "Costo de procesamiento",
       "info_boiled": "Valor del huevo hervido",
       "info_profit": "Beneficio adicional",
-      "hint": "Selecciona la cantidad de huevos a procesar. El costo se descuenta al iniciar. Los huevos hervidos aparecen en el almacén para vender."
+      "hint": "Selecciona la cantidad de huevos a procesar. El costo se descuenta al iniciar. Los huevos hervidos aparecen en el almacén para vender.",
+      "not_built": "No construida",
+      "level_capacity": "Nivel {level} · Capacidad {cap} · {hours} h/ud · {price}/ud",
+      "level_short": "Nv. {level}",
+      "build_hint": "Construye la Procesadora en Más → Infraestructura.",
+      "jobs_title": "En proceso",
+      "jobs_count": "{n} trabajo|{n} trabajos",
+      "stock": "Stock: {qty} {name}",
+      "recipe": "{in} → {out}",
+      "process_1": "Procesar 1",
+      "max_qty": "Máx ({n})",
+      "remaining": "Falta {time}",
+      "start_fail": "No se pudo iniciar el proceso."
+    },
+    "infrastructure": {
+      "level_short": "Nv {level}",
+      "capacity_line": "Capacidad {cap} {unit}",
+      "in_use": "({used} en uso)",
+      "next_line": "Siguiente: Nv {level}"
     }
   },
   "crate": {
@@ -634,8 +691,6 @@
     "growing": "{n} creciendo",
     "ready_plots": "{n} listas",
     "empty_plots": "{n} vacías",
-    "sick": "{n} enfermos",
-    "recovering": "{n} recuperándose",
     "active_jobs": "{n} trabajo activo|{n} trabajos activos",
     "in_process": "{n} productos en proceso",
     "level_n": "Nivel {n}",
@@ -647,5 +702,92 @@
     "open_section": "Abrir",
     "not_built": "Sin construir",
     "empty_inv": "Sin productos todavía"
+  },
+  "admin": {
+    "title": "Panel Admin",
+    "back_to_game": "Volver al juego",
+    "tabs": {
+      "dashboard": "Inicio",
+      "withdrawals": "Retiros",
+      "deposits": "Depósitos",
+      "notifications": "Avisos",
+      "users": "Usuarios",
+      "audit": "Auditoría"
+    },
+    "loading": "Cargando…",
+    "prev": "‹ Anterior",
+    "next": "Siguiente ›",
+    "page": "Pág. {page}",
+    "cancel": "Cancelar",
+    "processing": "Procesando…",
+    "reason_placeholder": "Motivo obligatorio (mínimo 3 caracteres)",
+    "dashboard": {
+      "pendingWithdrawals": "Retiros pendientes",
+      "pendingDeposits": "Depósitos por revisar",
+      "totalUsers": "Usuarios",
+      "totalAvailable": "Disponible total",
+      "totalReserved": "Reservado total",
+      "recentOps": "Operaciones recientes",
+      "withdrawal": "RETIRO",
+      "deposit": "DEPÓSITO",
+      "empty": "Sin operaciones todavía."
+    },
+    "withdrawal": {
+      "approve_title": "Aprobar retiro",
+      "approve_body": "Retiro #{id} de {amount} de @{user}. El dinero sigue reservado hasta completar el envío.",
+      "approve": "Aprobar",
+      "deny_title": "Denegar retiro",
+      "deny_body": "Retiro #{id} de {amount}. Los fondos reservados volverán al saldo del usuario.",
+      "deny": "Denegar",
+      "reason": "Motivo: {reason}",
+      "complete_title": "Completar retiro",
+      "complete_body": "Confirma que el pago real del retiro #{id} ({amount}) fue enviado a {dest}. Esto liquida los fondos reservados.",
+      "complete_confirm": "Pago enviado",
+      "complete_btn": "Completar envío",
+      "empty": "Nada aquí."
+    },
+    "deposit": {
+      "approve_title": "Aprobar depósito",
+      "approve_body": "¿Verificaste la transferencia {ref}? Se acreditarán {amount} a @{user}.",
+      "approve_confirm": "Acreditar",
+      "approve": "Aprobar",
+      "cancel_title": "Cancelar depósito",
+      "cancel_body": "El depósito #{id} quedará cancelado sin acreditar.",
+      "cancel_confirm": "Cancelar depósito",
+      "cancel": "Cancelar",
+      "empty": "Nada aquí."
+    },
+    "notif": {
+      "sent": "Notificación #{id} enviada a todos los usuarios activos.",
+      "title": "Título",
+      "message": "Mensaje",
+      "type": "Tipo",
+      "priority": "Prioridad",
+      "starts": "Publicar desde (opcional)",
+      "expires": "Expira (opcional)",
+      "preview": "Vista previa",
+      "preview_hint": "Se enviará a TODOS los usuarios activos. Revisa el texto antes de confirmar.",
+      "edit": "Editar",
+      "sending": "Enviando…",
+      "send_now": "Enviar ahora",
+      "from": "desde {date}",
+      "until": "expira {date}"
+    },
+    "users": {
+      "search_placeholder": "Buscar por usuario o ID…",
+      "search": "Buscar",
+      "created": "alta {date}",
+      "lastSeen": "última vez {date}",
+      "balance": "saldo",
+      "change_role_title": "Cambiar rol a {role}",
+      "change_role_body": "@{user} pasará de {from} a {to}. Queda registrado en auditoría.",
+      "confirm_role": "Confirmar rol",
+      "make_role": "Hacer {role}",
+      "empty": "Sin resultados."
+    },
+    "audit": {
+      "by": "por @{user} sobre {target}",
+      "empty": "Sin registros."
+    }
   }
 }

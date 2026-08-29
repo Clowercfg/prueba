@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useT } from "../../game/stores/languageStore";
 import { useAuthStore } from "../../game/stores/authStore";
+import { ReferralsContent } from "./ReferralsPanel";
 
 const ICON_PROPS = {
   width: 20,
@@ -24,22 +25,11 @@ function PlayerIcon() {
   );
 }
 
-function ReferralsIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <circle cx="8.5" cy="8.5" r="3" />
-      <path d="M3 19c.6-3 2.7-4.5 5.5-4.5s4.9 1.5 5.5 4.5" />
-      <circle cx="16.5" cy="9.5" r="2.4" />
-      <path d="M15.5 14.6c2.9-.3 5 .1 5.9 2.9" />
-    </svg>
-  );
-}
-
 /**
  * Panel PERFIL (esquina superior derecha → acceso).
  *   Perfil
  *   ├── Información del jugador (nombre y ID de Telegram, datos del backend)
- *   └── Referidos (próximamente)
+ *   └── Referidos (contenido embebido bajo la información personal)
  */
 export default function ProfilePanel() {
   const t = useT();
@@ -102,17 +92,10 @@ export default function ProfilePanel() {
             )}
           </div>
         )}
-
-        <div className="mp-item pp-row" role="group">
-          <span className="mp-icon mp-icon-svg">
-            <ReferralsIcon />
-          </span>
-          <span className="mp-text">
-            <b>{t("panel.profile.referrals_title")}</b>
-            <small>{t("panel.profile.referrals_soon")}</small>
-          </span>
-        </div>
       </div>
+
+      <h3 className="st-section">{t("panel.profile.referrals_title")}</h3>
+      <ReferralsContent />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   UPGRADE_BUILDINGS,
 } from "../../game/config/upgradesConfig";
 import type { AnimalKind } from "../../game/types/entities";
+import { useT } from "../../game/stores/languageStore";
 
 /**
  * Infraestructura real: niveles/capacidades de UPGRADES_ECONOMY vía
@@ -21,6 +22,7 @@ const KIND_BY_BUILDING: Record<string, AnimalKind[]> = {
 };
 
 export default function InfrastructurePanel() {
+  const t = useT();
   const levels = useUpgradesStore((s) => s.levels);
   const buyLevel = useUpgradesStore((s) => s.buyLevel);
   const capacityOf = useUpgradesStore((s) => s.capacityOf);
@@ -48,15 +50,15 @@ export default function InfrastructurePanel() {
               <span className="rc-icon">{def.icon}</span>
               <span className="rc-main">
                 <b>
-                  {def.name} · Nv {level}
+                  {def.name} · {t("panel.infrastructure.level_short", { level: String(level) })}
                 </b>
                 <small>
-                  Capacidad {capacity} {def.unit}
-                  {used !== null ? ` (${used} en uso)` : ""}
+                  {t("panel.infrastructure.capacity_line", { cap: String(capacity), unit: def.unit })}
+                  {used !== null ? ` ${t("panel.infrastructure.in_use", { used: String(used) })}` : ""}
                 </small>
                 {next && (
                   <small>
-                    Siguiente: Nv {next.level}
+                    {t("panel.infrastructure.next_line", { level: String(next.level) })}
                     {next.capacity !== undefined ? ` → ${next.capacity} ${def.unit}` : ""} ·{" "}
                     {money(next.price)}
                   </small>
@@ -64,10 +66,10 @@ export default function InfrastructurePanel() {
               </span>
               {next ? (
                 <button type="button" className="ap-buy" onClick={() => void buyLevel(def.id)}>
-                  MEJORAR
+                  {t("panel.upgrades.buy")}
                 </button>
               ) : (
-                <span className="rc-max">MÁX</span>
+                <span className="rc-max">{t("panel.upgrades.max")}</span>
               )}
             </div>
           );

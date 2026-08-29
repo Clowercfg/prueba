@@ -27,6 +27,7 @@ import { useWalletStore } from "./walletStore";
 import { useFarmStore } from "./farmStore";
 import { useCropStore } from "./cropStore";
 import { useLanguageStore } from "./languageStore";
+import { useGoodsStore } from "./goodsStore";
 import { createAnimalAgent } from "../utils/animalSpawn";
 import {
   capacityFor,
@@ -90,10 +91,9 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     }
     const def = getCropEconomy(cropId);
     if (!def) return { ok: false, message: tr("shop.unavailable") };
-    const cost = def.seedPrice * qty;
-    const ok = await useCropStore.getState().buySeed(cropId, qty);
-    if (!ok) {
-      return insufficient(cost, useAuthStore.getState().status === "authenticated" ? useWalletStore.getState().usdtMinor / 100 : undefined);
+    const err = await useCropStore.getState().buySeed(cropId, qty);
+    if (err) {
+      return { ok: false, message: tr("shop.insufficient"), detail: err };
     }
     return {
       ok: true,
@@ -119,7 +119,7 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     const cost = def.price * qty;
     if (useAuthStore.getState().status === "authenticated") {
       // El wallet maneja unidades menores (centavos): convertir desde dólares.
-      const err = await useWalletStore.getState().spendUSD(Math.round(cost * 100), `animal:${kind}`);
+      const err = await useWalletStore.getState().spendUSD(Math.round(cost * 100), `animal:${kind}`, { qty });
       if (err) {
         return insufficient(cost, useWalletStore.getState().usdtMinor / 100);
       }
@@ -128,6 +128,8 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     }
     const farm = useFarmStore.getState();
     for (let i = 0; i < qty; i++) farm.registerAnimal(createAnimalAgent(kind, animalName(kind)));
+    // Autenticado: el backend registra el conteo para validar producción server-side.
+    void useGoodsStore.getState().registerAnimals([{ kind, qty }]);
     return {
       ok: true,
       message: tr("shop.animal_bought", {
@@ -159,9 +161,12 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     }
 
     const farm = useFarmStore.getState();
+    const animalItems: { kind: AnimalKind; qty: number }[] = [];
+    const seedItems: { cropId: string; qty: number }[] = [];
     for (const item of def.items) {
       if (item.qty <= 0) continue;
       if (item.type === "seed") {
+        seedItems.push({ cropId: item.cropId, qty: item.qty });
         useCropStore.setState((s) => {
           const cur = s.inventory[item.cropId] ?? { seeds: 0, harvest: 0 };
           return {
@@ -172,10 +177,17 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
           };
         });
       } else {
+        animalItems.push({ kind: item.kind, qty: item.qty });
         for (let i = 0; i < item.qty; i++) {
           farm.registerAnimal(createAnimalAgent(item.kind, animalName(item.kind)));
         }
       }
+    }
+    if (animalItems.length > 0) {
+      void useGoodsStore.getState().registerAnimals(animalItems);
+    }
+    if (seedItems.length > 0) {
+      void useCropStore.getState().grantSeeds(seedItems);
     }
     const saved = normal - sale;
     return {

@@ -1,5 +1,6 @@
 import { useUpgradesStore } from "../../game/stores/upgradesStore";
 import { UPGRADE_BUILDINGS } from "../../game/config/upgradesConfig";
+import { useT } from "../../game/stores/languageStore";
 
 /**
  * Mejoras especiales (one-shot) de upgradesConfig: stable-speed y engordes
@@ -10,6 +11,7 @@ import { UPGRADE_BUILDINGS } from "../../game/config/upgradesConfig";
 const money = (n: number) => `$${n.toFixed(2)}`;
 
 export default function UpgradesPanel() {
+  const t = useT();
   const specials = useUpgradesStore((s) => s.specials);
   const buySpecial = useUpgradesStore((s) => s.buySpecial);
 
@@ -40,9 +42,7 @@ export default function UpgradesPanel() {
           }),
         )}
       </div>
-      <p className="ap-hint">
-        Las mejoras no generan dinero directamente: aumentan capacidad, velocidad o eficiencia.
-      </p>
+      <p className="ap-hint">{t("panel.upgrades.hint_1")}</p>
     </div>
   );
 }

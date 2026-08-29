@@ -31,8 +31,14 @@ export function isBandActive(i: number, j: number): boolean {
 /**
  * Área segura: hueco arriba para Top UI / notch / Dynamic Island y abajo para
  * Bottom Navigation / barra del navegador / UI de Telegram Mini App.
+ * En Telegram Desktop (tdesktop) no hay safe-area inferior.
  */
-export const SAFE_AREA = { top: 56, bottom: 86 } as const
+export function getSafeArea(platform?: string): { top: number; bottom: number } {
+  if (platform === 'tdesktop') return { top: 56, bottom: 0 }
+  return { top: 56, bottom: 86 }
+}
+
+export const SAFE_AREA = getSafeArea()
 
 /**
  * Límites REALES del terreno jugable (#25), derivados de la banda activa:

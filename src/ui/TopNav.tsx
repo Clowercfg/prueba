@@ -4,7 +4,7 @@ import { useEconomyStore } from '../game/stores/economyStore'
 import { useUiStore } from '../game/stores/uiStore'
 import { useWalletStore } from '../game/stores/walletStore'
 import { useAuthStore } from '../game/stores/authStore'
-import { useT } from '../game/stores/languageStore'
+import { useT, useLanguageStore, localeFor } from '../game/stores/languageStore'
 
 /**
  * Franja superior única: navegación permanente + estado del juego.
@@ -69,6 +69,7 @@ function GemIcon() {
 
 export function TopNav() {
   const t = useT()
+  const lang = useLanguageStore((s) => s.lang)
   const diamonds = useEconomyStore((s) => s.diamonds)
   const usdtMinor = useWalletStore((s) => s.usdtMinor)
   const fps = useGameStore((s) => s.fps)
@@ -116,7 +117,7 @@ export function TopNav() {
       </button>
       <span className="hud-chip hud-gems" aria-label="Diamantes">
         <GemIcon />
-        <b>{diamonds.toLocaleString('es')}</b>
+        <b>{diamonds.toLocaleString(localeFor(lang))}</b>
       </span>
       <button
         type="button"

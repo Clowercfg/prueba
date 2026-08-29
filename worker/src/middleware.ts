@@ -40,6 +40,7 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   }
 
   if (!user) throw new HttpError(401, 'No autenticado')
+  console.log('[AUTH] resolved user:', user.id, 'telegramId:', user.telegramId, 'role:', user.role)
   c.set('user', user)
   await next()
 })

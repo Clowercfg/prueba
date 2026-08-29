@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCropStore, growthMsOf, type PlantedCrop } from "../../game/stores/cropStore";
 import { CROP_ECONOMY, getCropEconomy } from "../../game/config/economyConfig";
-import { useT } from "../../game/stores/languageStore";
+import { useT, t as tr } from "../../game/stores/languageStore";
 import { PLOT_KEYS } from "../../game/stores/gameStore";
 
 /**
@@ -23,11 +23,11 @@ const CROP_ICON: Record<string, string> = {
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 
-const PLOT_LABEL: Record<string, string> = {
-  plotA: "Parcela A",
-  plotB: "Parcela B",
-  plotC: "Parcela C",
-  plotD: "Parcela D",
+const plotName = (index: number): string => {
+  const key = PLOT_KEYS[index];
+  if (!key) return tr("panel.crops.plot_number", { n: index + 1 });
+  const letter = key.replace("plot", "");
+  return tr("panel.crops.plot_number", { n: letter || index + 1 });
 };
 
 /** Reloj de UI: refresca cada segundo mientras haya cultivos en curso. */
@@ -52,6 +52,7 @@ function fmtRemaining(planted: PlantedCrop, now: number): string {
 }
 
 function PlantedRow({ p, now }: { p: PlantedCrop; now: number }) {
+  const t = useT();
   const harvestCrop = useCropStore((s) => s.harvestCrop);
   const econ = getCropEconomy(p.cropId);
   const ready = p.state === "ready";
@@ -63,10 +64,10 @@ function PlantedRow({ p, now }: { p: PlantedCrop; now: number }) {
       <span className="ap-row-icon">{(econ && CROP_ICON[p.cropId]) || "🌱"}</span>
       <span className="ap-row-main">
         <span className="ap-name">
-          {econ?.name ?? p.cropId} · {PLOT_LABEL[PLOT_KEYS[p.plotIndex] ?? ""] ?? `Parcela ${p.plotIndex + 1}`}
+          {econ?.name ?? p.cropId} · {plotName(p.plotIndex)}
         </span>
         <span className={`ap-chip ${ready ? "harvested" : "recovering"}`}>
-          {ready ? "Listo" : "Creciendo"}
+          {ready ? t("panel.crops.ready_short_value") : t("panel.crops.growing_short")}
         </span>
         <div className="ap-bar">
           <div
@@ -75,16 +76,16 @@ function PlantedRow({ p, now }: { p: PlantedCrop; now: number }) {
           />
         </div>
         {!ready && (
-          <span className="cp-remaining">Falta {fmtRemaining(p, now)}</span>
+          <span className="cp-remaining">{t("panel.crops.remaining", { time: fmtRemaining(p, now) })}</span>
         )}
       </span>
       {ready && (
         <button
           type="button"
           className="cp-harvest"
-          onClick={() => harvestCrop(p.id)}
+          onClick={() => void harvestCrop(p.id)}
         >
-          Cosechar
+          {t("panel.crops.harvest_btn")}
         </button>
       )}
     </div>
@@ -110,7 +111,7 @@ function CropGroup({ cropId }: { cropId: string }) {
   const plantNext = (): void => {
     const idx = emptyPlot !== -1 ? emptyPlot : useCropStore.getState().findEmptyPlot();
     if (idx === -1) return;
-    plantCrop(cropId, idx);
+    void plantCrop(cropId, idx);
   };
 
   return (
@@ -119,18 +120,19 @@ function CropGroup({ cropId }: { cropId: string }) {
         <span className="ap-group-icon">{CROP_ICON[cropId] ?? "🌱"}</span>
         <span className="ap-group-title">
           <b>{t(`crop.${cropId}`)}</b>
-          <small>
-            Semillas {seeds} · Cosecha {harvestQty}
-          </small>
+          <small>{t("panel.crops.seeds_harvest", { seeds, harvest: harvestQty })}</small>
         </span>
       </header>
       <p className="ap-prod">
-        Semilla {money(econ.seedPrice)} · Venta {money(econ.sellPrice)}/ud ·{" "}
-        {econ.growthHours} h
+        {t("panel.crops.seed_line", {
+          price: money(econ.seedPrice),
+          sell: money(econ.sellPrice),
+          hours: String(econ.growthHours),
+        })}
       </p>
       <div className="cp-actions">
         <button type="button" className="ap-buy" onClick={() => void buySeed(cropId, 1)}>
-          Comprar {money(econ.seedPrice)}
+          {t("panel.crops.buy_val", { money: money(econ.seedPrice) })}
         </button>
         <button
           type="button"
@@ -138,7 +140,7 @@ function CropGroup({ cropId }: { cropId: string }) {
           disabled={harvestQty < 1}
           onClick={() => void sellHarvest(cropId, harvestQty)}
         >
-          Vender {money(econ.sellPrice * harvestQty)}
+          {t("panel.crops.sell_val", { money: money(econ.sellPrice * harvestQty) })}
         </button>
       </div>
       <button
@@ -148,14 +150,18 @@ function CropGroup({ cropId }: { cropId: string }) {
         onClick={plantNext}
       >
         {emptyPlot === -1
-          ? "Sin parcelas libres"
-          : `Sembrar en ${PLOT_LABEL[PLOT_KEYS[emptyPlot] ?? ""] ?? `parcela ${emptyPlot + 1}`}${seeds > 1 ? ` (${seeds} semillas)` : ""}`}
+          ? t("panel.crops.no_plots")
+          : t(seeds > 1 ? "panel.crops.plant_with" : "panel.crops.plant_at", {
+              name: plotName(emptyPlot),
+              seeds: String(seeds),
+            })}
       </button>
     </section>
   );
 }
 
 export default function CropsPanel() {
+  const t = useT();
   const planted = useCropStore((s) => s.planted);
   const now = useUiClock(planted.some((p) => p.state !== "ready"));
 
@@ -163,21 +169,18 @@ export default function CropsPanel() {
 
   return (
     <div className="ap-scroll">
-      <p className="ap-hint">
-        Toca una parcela vacía de la granja o pulsa Sembrar para plantar; cuando
-        esté listo, tócalo de nuevo o cosecha desde aquí.
-      </p>
+      <p className="ap-hint">{t("panel.crops.action_hint")}</p>
 
       <section className="ap-group">
         <header className="ap-group-head">
           <span className="ap-group-icon">🟫</span>
           <span className="ap-group-title">
-            <b>En las parcelas</b>
-            <small>{planted.length} cultivo(s)</small>
+            <b>{t("panel.crops.planted")}</b>
+            <small>{t("panel.crops.planted_count", { n: planted.length })}</small>
           </span>
         </header>
         {planted.length === 0 ? (
-          <p className="ap-none">No hay cultivos plantados.</p>
+          <p className="ap-none">{t("panel.crops.empty_planted")}</p>
         ) : (
           <div className="ap-list">
             {[...planted]

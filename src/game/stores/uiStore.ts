@@ -3,7 +3,6 @@ import { create } from "zustand";
 export type GameSectionId =
   | "farm"
   | "animals"
-  | "veterinary"
   | "crops"
   | "processing"
   | "infrastructure"
@@ -13,7 +12,6 @@ export type GameSectionId =
   | "calendar"
   | "language"
   | "profile"
-  | "affiliates"
   | "withdrawals";
 
 interface UiStore {

@@ -6,9 +6,8 @@ import { useFarmStore } from "../../game/stores/farmStore";
 import { useGoodsStore } from "../../game/stores/goodsStore";
 import { useProcessingStore } from "../../game/stores/processingStore";
 import { useUpgradesStore } from "../../game/stores/upgradesStore";
-import { useVetStore } from "../../game/stores/vetStore";
 import { useUiStore, type GameSectionId } from "../../game/stores/uiStore";
-import { useT } from "../../game/stores/languageStore";
+import { useT, useLanguageStore, localeFor } from "../../game/stores/languageStore";
 
 /**
  * Centro de Gestión de la Granja (dashboard de solo lectura).
@@ -24,8 +23,7 @@ const BUILDINGS = ["granary", "processing", "coop", "stable", "pigPen", "incubat
 const GOOD_LABEL: Record<string, string> = {
   eggs: "product.eggs",
   milk: "product.milk",
-  honey: "product.honey",
-  cheese: "product.cheese",
+  meat: "product.meat",
   "boiled-eggs": "product.boiled-eggs",
 };
 
@@ -72,22 +70,6 @@ export function summarizeAnimals(animals: Array<{ kind: string }>): AnimalsSumma
   const byKind: Record<string, number> = {};
   for (const a of animals) byKind[a.kind] = (byKind[a.kind] ?? 0) + 1;
   return { total: animals.length, byKind };
-}
-
-export interface VetSummary {
-  sick: number;
-  recovering: number;
-}
-
-/** Selector puro: estado sanitario desde vetStore.sick. */
-export function summarizeVet(sick: Record<string, { treatedAt: number | null }>): VetSummary {
-  let ill = 0;
-  let recovering = 0;
-  for (const id in sick) {
-    if (sick[id].treatedAt == null) ill++;
-    else recovering++;
-  }
-  return { sick: ill, recovering };
 }
 
 const ICON_PROPS = {
@@ -209,6 +191,7 @@ function Chip({ children }: { children: ReactNode }) {
 
 export default function FarmPanel() {
   const t = useT();
+  const lang = useLanguageStore((s) => s.lang);
   const planted = useCropStore((s) => s.planted);
   const cropInv = useCropStore((s) => s.inventory);
   const animals = useFarmStore((s) => s.animals);
@@ -220,11 +203,9 @@ export default function FarmPanel() {
   const jobs = useProcessingStore((s) => s.jobs);
   const levels = useUpgradesStore((s) => s.levels);
   const capacityOf = useUpgradesStore((s) => s.capacityOf);
-  const vetSick = useVetStore((s) => s.sick);
 
   const crops = summarizeCrops(planted);
   const herd = summarizeAnimals(animals);
-  const vet = summarizeVet(vetSick);
 
   const procLevel = levels["processing"] ?? 0;
   const procCapacity = capacityOf("processing");
@@ -234,7 +215,7 @@ export default function FarmPanel() {
   const seedsTotal = Object.values(cropInv).reduce((n, i) => n + i.seeds, 0);
   const harvestTotal = Object.values(cropInv).reduce((n, i) => n + i.harvest, 0);
 
-  const money = (v: number) => Math.floor(v).toLocaleString("es");
+  const money = (v: number) => Math.floor(v).toLocaleString(localeFor(lang));
 
   return (
     <div className="ap-scroll">
@@ -268,14 +249,6 @@ export default function FarmPanel() {
             <Chip key={k}>{`${t(`species.${k}`)}: ${herd.byKind[k]}`}</Chip>
           ))}
         </div>
-        {vet.sick > 0 || vet.recovering > 0 ? (
-          <div className="db-chips db-chips-warn">
-            {vet.sick > 0 ? <Chip>{t("dashboard.sick", { n: vet.sick })}</Chip> : null}
-            {vet.recovering > 0 ? (
-              <Chip>{t("dashboard.recovering", { n: vet.recovering })}</Chip>
-            ) : null}
-          </div>
-        ) : null}
       </Card>
 
       <Card icon={<GearIcon />} title={t("dashboard.production")} target="processing">

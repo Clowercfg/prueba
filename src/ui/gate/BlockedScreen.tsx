@@ -1,26 +1,28 @@
 import { TELEGRAM_APP_URL } from './telegramEnvironment'
+import { useT } from '../../game/stores/languageStore'
 
 /**
  * Pantalla de bloqueo fuera de Telegram: único render permitido cuando el
  * entorno no es Mini App. Sin canvas, sin HUD, sin barra, sin sistemas.
  */
 export function BlockedScreen() {
+  const t = useT()
   return (
     <div className="blocked-screen">
       <div className="blocked-card">
         <span className="blocked-title">Harvest Valley</span>
         <p className="blocked-text">
-          Este juego solo está disponible dentro de Telegram.
+          {t('blocked.text')}
           <br />
-          Abre Harvest Valley desde Telegram para jugar.
+          {t('blocked.sub')}
         </p>
         {TELEGRAM_APP_URL ? (
           <a className="blocked-cta" href={TELEGRAM_APP_URL} target="_blank" rel="noreferrer">
-            ABRIR EN TELEGRAM
+            {t('blocked.cta')}
           </a>
         ) : (
-          <button type="button" className="blocked-cta blocked-cta-disabled" disabled title="Configura la URL oficial del Mini App">
-            ABRIR EN TELEGRAM
+          <button type="button" className="blocked-cta blocked-cta-disabled" disabled title={t('blocked.text')}>
+            {t('blocked.cta')}
           </button>
         )}
       </div>

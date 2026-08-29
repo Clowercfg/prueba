@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import type { MeResponse } from '../../game/api/client'
+import { useT } from '../../game/stores/languageStore'
 import {
   AuditView,
   DashboardView,
@@ -17,26 +18,27 @@ import {
 
 type Tab = 'dashboard' | 'withdrawals' | 'deposits' | 'notifications' | 'users' | 'audit'
 
-const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'dashboard', label: 'Inicio' },
-  { id: 'withdrawals', label: 'Retiros' },
-  { id: 'deposits', label: 'Depósitos' },
-  { id: 'notifications', label: 'Avisos' },
-  { id: 'users', label: 'Usuarios' },
-  { id: 'audit', label: 'Auditoría' },
-]
+const TAB_KEYS: Record<Tab, string> = {
+  dashboard: 'admin.tabs.dashboard',
+  withdrawals: 'admin.tabs.withdrawals',
+  deposits: 'admin.tabs.deposits',
+  notifications: 'admin.tabs.notifications',
+  users: 'admin.tabs.users',
+  audit: 'admin.tabs.audit',
+}
 
 export function AdminApp({ me, onBackToGame }: { me: MeResponse; onBackToGame: () => void }) {
+  const t = useT()
   const [tab, setTab] = useState<Tab>('dashboard')
 
   return (
     <div className="admin-root">
       <header className="admin-header">
         <div>
-          <h2>Panel Admin</h2>
+          <h2>{t('admin.title')}</h2>
           <span className={`badge role-${me.user.role.toLowerCase()}`}>{me.user.role}</span>
         </div>
-        <button onClick={onBackToGame}>Volver al juego</button>
+        <button onClick={onBackToGame}>{t('admin.back_to_game')}</button>
       </header>
 
       <main className="admin-main">
@@ -49,9 +51,9 @@ export function AdminApp({ me, onBackToGame }: { me: MeResponse; onBackToGame: (
       </main>
 
       <nav className="admin-tabs">
-        {TABS.map((t) => (
-          <button key={t.id} className={t.id === tab ? 'active' : ''} onClick={() => setTab(t.id)}>
-            {t.label}
+        {(Object.keys(TAB_KEYS) as Tab[]).map((id) => (
+          <button key={id} className={id === tab ? 'active' : ''} onClick={() => setTab(id)}>
+            {t(TAB_KEYS[id])}
           </button>
         ))}
       </nav>

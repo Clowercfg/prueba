@@ -5,10 +5,11 @@ import { useAuthStore } from "./authStore";
 /**
  * Saldo USDT del wallet del backend (fuente de verdad server-side).
  * - refresh(): GET /api/wallet — se llama al autenticar, al enfocar la app,
- *   al cerrar el modal de depósitos y tras cada débito/crédito.
+ *   al cerrar el modal de depósitos y tras cada débito.
  * - spendUSD(): POST /api/wallet/debit — compra server-authoritative; sin saldo
  *   suficiente el backend rechaza y NO se entrega el producto.
- * - earnUSD(): POST /api/wallet/credit — acredita USDT por ventas del juego.
+ * No hay créditos client-side: todas las acreditaciones (ventas de productos,
+ * cosechas, depósitos, comisiones) pasan por rutas validadas server-side.
  * Sin autenticación (dev sin Telegram) todo es no-op: el juego usa su oro.
  */
 
@@ -16,9 +17,11 @@ interface WalletStore {
   usdtMinor: number;
   refresh: () => Promise<void>;
   /** Débito de compra. Devuelve null si OK, o el mensaje de error. */
-  spendUSD: (amountMinor: number, concept: string) => Promise<string | null>;
-  /** Crédito por venta/producción. Devuelve null si OK, o el mensaje de error. */
-  earnUSD: (amountMinor: number, concept: string) => Promise<string | null>;
+  spendUSD: (
+    amountMinor: number,
+    concept: string,
+    meta?: { qty?: number; level?: number; processorLevel?: number }
+  ) => Promise<string | null>;
 }
 
 export const useWalletStore = create<WalletStore>((set) => ({
@@ -35,31 +38,22 @@ export const useWalletStore = create<WalletStore>((set) => ({
     }
   },
 
-  async spendUSD(amountMinor, concept) {
+  async spendUSD(amountMinor, concept, meta) {
     if (useAuthStore.getState().status !== "authenticated") return "sin sesión";
     try {
-      const r = await api.debitWallet(amountMinor, concept);
+      console.log('[spendUSD] POST /wallet/debit', { amountMinor, concept, meta });
+      const r = await api.debitWallet(amountMinor, concept, meta);
+      console.log('[spendUSD] OK', r);
       set({ usdtMinor: r.availableMinor });
       return null;
     } catch (err) {
-      // Si el servidor devolvió el saldo real, actualizar el store para que la UI sea precisa.
+      console.error('[spendUSD] ERROR', err);
       if (err instanceof ApiError && typeof err.serverBalance === "number") {
         set({ usdtMinor: err.serverBalance });
       } else {
         void useWalletStore.getState().refresh();
       }
       return err instanceof ApiError ? err.message : "error de compra";
-    }
-  },
-
-  async earnUSD(amountMinor, concept) {
-    if (useAuthStore.getState().status !== "authenticated") return null;
-    try {
-      const r = await api.creditWallet(amountMinor, concept);
-      set({ usdtMinor: r.availableMinor });
-      return null;
-    } catch {
-      return null;
     }
   },
 }));

@@ -1,21 +1,22 @@
 import { animalRegistry } from '../stores/farmStore'
-import { useEconomyStore } from '../stores/economyStore'
 import { useGoodsStore } from '../stores/goodsStore'
+import { useCropStore } from '../stores/cropStore'
 import { useAuthStore } from '../stores/authStore'
-import { useWalletStore } from '../stores/walletStore'
-import { PRODUCTION_PRICE } from '../config/economyConfig'
 
 /**
- * Sistema económico migrado del proyecto anterior
- * (systems/economy/EconomySystem.tsx).
- * La versión original era un componente React con un setInterval de 4 s que
- * recogía la producción pendiente de los animales: las aves depositan huevos
- * en goodsStore y el resto genera ingreso según PRODUCTION_PRICE.
- * Misma cadencia y mismo gate de pausa, sin dependencias de React ni del
- * worldStore pendiente de migrar.
+ * Sistema económico de animales: recoge la producción pendiente de todos los
+ * animales y la deposita como PRODUCTOS en el almacén (goodsStore).
+ * NUNCA acredita USDT automáticamente: el jugador vende los productos en el
+ * almacén (goodsStore.sellGoods) y ahí el SERVIDOR valida stock y precio.
  */
 
-const EGG_PRODUCERS = new Set(['chicken', 'rooster'])
+/** Mapea cada especie al producto de su categoría en goodsStore. */
+const GOOD_BY_ANIMAL: Record<string, string> = {
+  chicken: 'eggs',
+  rooster: 'eggs',
+  cow: 'milk',
+  pig: 'meat',
+}
 
 /** Gate de pausa (equivalente a worldStore.paused del proyecto anterior). */
 let paused = false
@@ -31,40 +32,51 @@ export function isEconomyPaused(): boolean {
 /** Recoge la producción pendiente de todos los animales registrados. */
 export async function collectProduction(): Promise<void> {
   if (paused) return
-  const eco = useEconomyStore.getState()
   const goods = useGoodsStore.getState()
-  let income = 0
   for (const a of animalRegistry.values()) {
     if (a.pendingProduction > 0) {
-      if (EGG_PRODUCERS.has(a.kind)) {
-        // Las aves entregan huevos ENTEROS: la fracción (<1) se retiene en
-        // pendingProduction hasta acumular 1. Resetearla aquí perdía esa
-        // producción con cada ciclo del collector (intervalos < periodo).
-        const delivered = Math.floor(a.pendingProduction)
-        if (delivered > 0) {
-          goods.addGoods('eggs', delivered)
-          a.pendingProduction -= delivered
-        }
-      } else {
-        income += a.pendingProduction * PRODUCTION_PRICE[a.kind as keyof typeof PRODUCTION_PRICE]
-        a.pendingProduction = 0
+      // Se entregan unidades ENTERAS: la fracción (<1) se retiene en
+      // pendingProduction hasta acumular 1 unidad.
+      const delivered = Math.floor(a.pendingProduction)
+      if (delivered > 0) {
+        const goodId = GOOD_BY_ANIMAL[a.kind]
+        // El servidor valida contra su propio contador de animales y el tiempo
+        // transcurrido: devuelve lo realmente acreditado (puede ser < entregado).
+        const credited = await goods.addGoods(goodId, delivered, { via: 'animal', kind: a.kind })
+        if (credited > 0) a.pendingProduction -= credited
       }
-    }
-  }
-  if (income > 0) {
-    if (useAuthStore.getState().status === 'authenticated') {
-      await useWalletStore.getState().earnUSD(Math.round(income * 100), 'production')
-    } else {
-      eco.addGold(income, 'producción')
     }
   }
 }
 
+let authUnsub: (() => void) | null = null
+let syncedThisSession = false
+
 /**
- * Arranca el ciclo de recolección (intervalo de 4 s, igual que el original).
- * Devuelve la función de parada para el cleanup del montaje.
+ * Arranca el ciclo de recolección (intervalo de 4 s, igual que el original)
+ * y, al autenticarse, sincroniza el inventario con el backend (import una vez
+ * + GET autoritativo). Devuelve la función de parada para el cleanup del montaje.
  */
 export function startEconomySystem(intervalMs = 4000): () => void {
-  const iv = setInterval(collectProduction, intervalMs)
-  return () => clearInterval(iv)
+  const iv = setInterval(() => {
+    void collectProduction()
+  }, intervalMs)
+
+  if (!authUnsub) {
+    authUnsub = useAuthStore.subscribe((s) => {
+      if (s.status === 'authenticated' && !syncedThisSession) {
+        syncedThisSession = true
+        void useGoodsStore.getState().syncServer()
+        void useCropStore.getState().syncCropsServer()
+      }
+    })
+  }
+
+  return () => {
+    clearInterval(iv)
+    if (authUnsub) {
+      authUnsub()
+      authUnsub = null
+    }
+  }
 }

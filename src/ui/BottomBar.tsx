@@ -1,4 +1,5 @@
 import { useUiStore } from '../game/stores/uiStore'
+import { t } from '../game/stores/languageStore'
 
 /**
  * Navegación principal (capa React pura): ninguna regla de negocio vive aquí,
@@ -73,14 +74,14 @@ function Icon({ id }: { id: TabId }) {
   }
 }
 
-const TABS: Array<{ id: TabId; label: string }> = [
-  { id: 'farm', label: 'Granja' },
-  { id: 'animals', label: 'Animales' },
-  { id: 'crops', label: 'Cultivos' },
-  { id: 'processing', label: 'Procesar' },
-  { id: 'store', label: 'Tienda' },
-  { id: 'more', label: 'Más' },
-]
+const TAB_KEYS: Record<TabId, string> = {
+  farm: 'nav.farm',
+  animals: 'nav.animals',
+  crops: 'nav.crops',
+  processing: 'nav.processing',
+  store: 'nav.store',
+  more: 'nav.more',
+}
 
 export function BottomBar() {
   const section = useUiStore((s) => s.section)
@@ -107,18 +108,18 @@ export function BottomBar() {
   }
 
   return (
-    <nav className="bottom-bar" aria-label="Navegación principal">
+    <nav className="bottom-bar" aria-label={t('nav.aria')}>
       <div className="bb-tabs">
-        {TABS.map((t) => (
+        {(Object.keys(TAB_KEYS) as TabId[]).map((id) => (
           <button
-            key={t.id}
+            key={id}
             type="button"
-            className={`bb-tab${activeTab === t.id ? ' is-active' : ''}`}
-            aria-pressed={activeTab === t.id}
-            onClick={() => onTab(t.id)}
+            className={`bb-tab${activeTab === id ? ' is-active' : ''}`}
+            aria-pressed={activeTab === id}
+            onClick={() => onTab(id)}
           >
-            <Icon id={t.id} />
-            <span className="bb-label">{t.label}</span>
+            <Icon id={id} />
+            <span className="bb-label">{t(TAB_KEYS[id])}</span>
           </button>
         ))}
       </div>

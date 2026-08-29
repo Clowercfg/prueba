@@ -6,7 +6,7 @@ import { detectTelegramEnvironment } from './ui/gate/telegramEnvironment'
  * Gate raíz: la decisión de entorno ocurre ANTES de instanciar cualquier
  * parte del juego. Fuera de Telegram no se crea GameCanvas, por lo que su
  * effect nunca corre y con él ni GameLoop.start() ni los timers de
- * CropSystem/ProcessingSystem/EconomySystem/VetSystem llegan a existir.
+ * CropSystem/ProcessingSystem/EconomySystem llegan a existir.
  */
 export default function App() {
   const env = detectTelegramEnvironment()

@@ -13,6 +13,8 @@ import walletRoutes from './routes/wallet'
 import userNotifications from './routes/notifications'
 import referralRoutes from './routes/referrals'
 import adminRoutes, { superAdmin } from './routes/admin'
+import goodsRoutes from './routes/goods'
+import cropsRoutes from './routes/crops'
 
 const app = new Hono<AppEnv>()
 
@@ -40,6 +42,8 @@ app.route('/api/me', meRoutes)
 app.route('/api/wallet', walletRoutes)
 app.route('/api/notifications', userNotifications)
 app.route('/api/referrals', referralRoutes)
+app.route('/api/goods', goodsRoutes)
+app.route('/api/crops', cropsRoutes)
 
 // Grupo admin: autenticación + rol verificados server-side para TODAS las rutas.
 app.use('/api/admin/*', requireAuth)

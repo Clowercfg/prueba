@@ -2,7 +2,6 @@ import { useEconomyStore } from "../stores/economyStore";
 import { useCropStore, type CropInventory, type PlantedCrop } from "../stores/cropStore";
 import { useFarmStore, animalRegistry } from "../stores/farmStore";
 import { useUpgradesStore } from "../stores/upgradesStore";
-import { useVetStore, type VetEntry } from "../stores/vetStore";
 import { useGoodsStore } from "../stores/goodsStore";
 import { useProcessingStore, type ProcessingJob } from "../stores/processingStore";
 import { createAnimalAgent, ensureAnimalIdFloor } from "../utils/animalSpawn";
@@ -67,11 +66,6 @@ export interface SaveState {
   upgrades: {
     levels: Record<string, number>;
     specials: Record<string, boolean>;
-  };
-  vet: {
-    sick: Record<number, VetEntry>;
-    nextSickAt: Record<number, number>;
-    lastCheckAt: number;
   };
   goods: { inventory: Record<string, number> };
   processing: { jobs: ProcessingJob[] };
@@ -207,32 +201,6 @@ function buildValidatedState(s: Record<string, unknown>): SaveState {
   for (const v of Object.values(u.levels)) if (!isInt(v) || v < 0) throw new Error("upgrades.levels");
   for (const v of Object.values(u.specials)) if (v !== true) throw new Error("upgrades.specials");
 
-  // --- veterinario
-  if (!isRecord(s.vet)) throw new Error("vet");
-  const vt = s.vet as Record<string, unknown>;
-  if (!isRecord(vt.sick) || !isRecord(vt.nextSickAt) || !isFiniteNum(vt.lastCheckAt)) {
-    throw new Error("vet.fields");
-  }
-  const sick: Record<number, VetEntry> = {};
-  for (const [k, v] of Object.entries(vt.sick)) {
-    if (
-      !isRecord(v) ||
-      !isInt(v.id) ||
-      !ANIMAL_KINDS.includes(v.kind as AnimalKind) ||
-      !isFiniteNum(v.sickAt) ||
-      !(v.treatedAt === null || isFiniteNum(v.treatedAt)) ||
-      !(v.recoverAt === null || isFiniteNum(v.recoverAt))
-    ) {
-      throw new Error("vet.sick.item");
-    }
-    sick[Number(k)] = v as unknown as VetEntry;
-  }
-  const nextSickAt: Record<number, number> = {};
-  for (const [k, v] of Object.entries(vt.nextSickAt)) {
-    if (!isFiniteNum(v)) throw new Error("vet.nextSickAt");
-    nextSickAt[Number(k)] = v;
-  }
-
   // --- almacén
   if (!isRecord(s.goods)) throw new Error("goods");
   const g = s.goods as Record<string, unknown>;
@@ -271,7 +239,6 @@ function buildValidatedState(s: Record<string, unknown>): SaveState {
     crops: { inventory, planted, nextId: c.nextId },
     animals,
     upgrades: u as unknown as SaveState["upgrades"],
-    vet: { sick, nextSickAt, lastCheckAt: vt.lastCheckAt },
     goods: { inventory: g.inventory as unknown as Record<string, number> },
     processing: { jobs },
   };
@@ -285,7 +252,6 @@ function snapshot(): SaveState {
   const eco = useEconomyStore.getState();
   const crop = useCropStore.getState();
   const up = useUpgradesStore.getState();
-  const vet = useVetStore.getState();
   return {
     economy: {
       gold: eco.gold,
@@ -305,7 +271,6 @@ function snapshot(): SaveState {
       nextHarvestAt: a.nextHarvestAt,
     })),
     upgrades: { levels: up.levels, specials: up.specials },
-    vet: { sick: vet.sick, nextSickAt: vet.nextSickAt, lastCheckAt: vet.lastCheckAt },
     goods: { inventory: useGoodsStore.getState().inventory },
     processing: { jobs: useProcessingStore.getState().jobs },
   };
@@ -344,11 +309,6 @@ function applyState(st: SaveState): void {
   }
 
   useUpgradesStore.setState({ levels: st.upgrades.levels, specials: st.upgrades.specials });
-  useVetStore.setState({
-    sick: st.vet.sick,
-    nextSickAt: st.vet.nextSickAt,
-    lastCheckAt: st.vet.lastCheckAt,
-  });
   useGoodsStore.setState({ inventory: st.goods.inventory });
   useProcessingStore.setState({ jobs: st.processing.jobs });
 }
@@ -463,7 +423,6 @@ export function startPersistence(): () => void {
     useEconomyStore.subscribe(queueSave),
     useCropStore.subscribe(queueSave),
     useUpgradesStore.subscribe(queueSave),
-    useVetStore.subscribe(queueSave),
     useGoodsStore.subscribe(queueSave),
     useProcessingStore.subscribe(queueSave),
     // farmStore cambia solo al comprar/vender animales (las IA mutan agentes

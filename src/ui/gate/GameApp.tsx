@@ -26,6 +26,8 @@ function notifyTelegramReady(webApp: TelegramWebAppLike | null): void {
   try {
     webApp.ready?.()
     webApp.expand?.()
+    webApp.setBackgroundColor?.('#79b356')
+    webApp.setHeaderColor?.('#79b356')
   } catch {
     /* el cliente puede no soportarlas; nunca rompe el juego */
   }

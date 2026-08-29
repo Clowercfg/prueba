@@ -1,4 +1,5 @@
 import { useUiStore } from "../../game/stores/uiStore";
+import { useT } from "../../game/stores/languageStore";
 
 /**
  * Menú secundario "Más": navegación pura hacia paneles ya migrados.
@@ -49,14 +50,6 @@ function UpIcon() {
   );
 }
 
-function HealthIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z" />
-    </svg>
-  );
-}
-
 function WalletIcon() {
   return (
     <svg {...ICON_PROPS}>
@@ -67,37 +60,23 @@ function WalletIcon() {
   );
 }
 
-function UsersIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <circle cx="9" cy="7" r="3" />
-      <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
-      <circle cx="17" cy="7" r="2.5" />
-      <path d="M19 21v-1.5a3 3 0 0 0-2.5-3" />
-    </svg>
-  );
-}
-
 const ICONS: Record<string, () => React.ReactElement> = {
   inventory: BoxIcon,
   infrastructure: CraneIcon,
   upgrades: UpIcon,
-  veterinary: HealthIcon,
   withdrawals: WalletIcon,
-  affiliates: UsersIcon,
 };
 
 const OPTIONS = [
-  { id: "inventory", name: "Inventario", desc: "Gestiona tus productos y recursos" },
-  { id: "infrastructure", name: "Infraestructura", desc: "Gestiona edificios y capacidades" },
-  { id: "upgrades", name: "Mejoras", desc: "Mejora tus instalaciones" },
-  { id: "veterinary", name: "Veterinario", desc: "Salud y tratamiento de animales" },
-  { id: "withdrawals", name: "Retiros", desc: "Retira tu saldo USDT" },
-  { id: "affiliates", name: "Referidos", desc: "Invita amigos y gana comisiones" },
+  { id: "inventory", nameKey: "more.inventory", descKey: "more.inventory_desc" },
+  { id: "infrastructure", nameKey: "more.infrastructure", descKey: "more.infrastructure_desc" },
+  { id: "upgrades", nameKey: "more.upgrades", descKey: "more.upgrades_desc" },
+  { id: "withdrawals", nameKey: "more.withdrawals", descKey: "more.withdrawals_desc" },
 ] as const;
 
 export default function MorePanel() {
   const openSection = useUiStore((s) => s.openSection);
+  const t = useT();
   return (
     <div className="ap-scroll">
       <div className="mp-list">
@@ -112,8 +91,8 @@ export default function MorePanel() {
             >
               <span className="mp-icon mp-icon-svg">{Icon && <Icon />}</span>
               <span className="mp-text">
-                <b>{o.name}</b>
-                <small>{o.desc}</small>
+                <b>{t(o.nameKey)}</b>
+                <small>{t(o.descKey)}</small>
               </span>
               <span className="mp-arrow">›</span>
             </button>

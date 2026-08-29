@@ -40,7 +40,10 @@ export function plantFirstAvailable(plotIndex: number): boolean {
   const crop = useCropStore.getState()
   for (const cropId of CROP_IDS) {
     const inv = crop.inventory[cropId]
-    if ((inv?.seeds ?? 0) >= 1 && crop.plantCrop(cropId, plotIndex)) return true
+    if ((inv?.seeds ?? 0) >= 1) {
+      void crop.plantCrop(cropId, plotIndex)
+      return true
+    }
   }
   return false
 }
@@ -66,7 +69,7 @@ export function tapPlot(index: number): void {
     return
   }
   if (planted.state === 'ready') {
-    store.harvestCrop(planted.id)
+    void store.harvestCrop(planted.id)
   }
   selectPlot()
 }

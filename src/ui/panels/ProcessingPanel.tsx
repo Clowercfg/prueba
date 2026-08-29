@@ -5,6 +5,7 @@ import { useUpgradesStore } from "../../game/stores/upgradesStore";
 import { PROCESS_LIST } from "../../game/config/processingConfig";
 import { getGoodsEconomy } from "../../game/config/economyConfig";
 import { getProcessorLevelDef } from "../../game/config/upgradesConfig";
+import { useT } from "../../game/stores/languageStore";
 
 /**
  * Panel de Procesamiento (contenido). Sólo consume estado real
@@ -26,6 +27,7 @@ function fmtRemaining(endTime: number): string {
 }
 
 function JobRow({ jobId }: { jobId: string }) {
+  const t = useT();
   const addToJob = useProcessingStore((s) => s.addToJob);
   const jobs = useProcessingStore((s) => s.jobs);
   const job = jobs.find((j) => j.id === jobId);
@@ -50,7 +52,9 @@ function JobRow({ jobId }: { jobId: string }) {
           />
         </div>
         {running && (
-          <span className="cp-remaining">Falta {fmtRemaining(job.endTime)}</span>
+          <span className="cp-remaining">
+            {t("panel.processing.remaining", { time: fmtRemaining(job.endTime) })}
+          </span>
         )}
       </span>
       {running && (
@@ -63,6 +67,7 @@ function JobRow({ jobId }: { jobId: string }) {
 }
 
 export default function ProcessingPanel() {
+  const t = useT();
   const [notice, setNotice] = useState<string | null>(null);
   const level = useUpgradesStore((s) => s.levels.processing);
   const jobs = useProcessingStore((s) => s.jobs);
@@ -81,7 +86,7 @@ export default function ProcessingPanel() {
   };
 
   const onStart = async (recipeId: string, qty: number): Promise<void> => {
-    if (!(await startProcess(recipeId, qty))) setNotice("No se pudo iniciar el proceso.");
+    if (!(await startProcess(recipeId, qty))) setNotice(t("panel.processing.start_fail"));
     else setNotice(null);
   };
 
@@ -91,18 +96,25 @@ export default function ProcessingPanel() {
         <header className="ap-group-head">
           <span className="ap-group-icon">⚙️</span>
           <span className="ap-group-title">
-            <b>Procesadora</b>
+            <b>{t("panel.processing.title")}</b>
             <small>
               {locked
-                ? "No construida"
-                : `Nivel ${level} · Capacidad ${def!.capacity} · ${def!.processHours} h/ud · ${money(def!.costPerEgg)}/ud`}
+                ? t("panel.processing.not_built")
+                : t("panel.processing.level_capacity", {
+                    level: String(level),
+                    cap: String(def!.capacity),
+                    hours: String(def!.processHours),
+                    price: money(def!.costPerEgg),
+                  })}
             </small>
           </span>
-          {!locked && <span className="ap-chip recovering">Nv. {level}</span>}
+          {!locked && (
+            <span className="ap-chip recovering">
+              {t("panel.processing.level_short", { level: String(level) })}
+            </span>
+          )}
         </header>
-        {locked && (
-          <p className="ap-notice">Construye la Procesadora en Más → Infraestructura.</p>
-        )}
+        {locked && <p className="ap-notice">{t("panel.processing.build_hint")}</p>}
       </section>
 
       {jobs.length > 0 && (
@@ -110,8 +122,8 @@ export default function ProcessingPanel() {
           <header className="ap-group-head">
             <span className="ap-group-icon">⏳</span>
             <span className="ap-group-title">
-              <b>En proceso</b>
-              <small>{jobs.length} trabajo(s)</small>
+              <b>{t("panel.processing.jobs_title")}</b>
+              <small>{t("panel.processing.jobs_count", { n: jobs.length })}</small>
             </span>
           </header>
           <div className="ap-list">
@@ -137,13 +149,15 @@ export default function ProcessingPanel() {
                 <b>
                   {inp?.name ?? r.input.productId} → {out?.name ?? r.output.productId}
                 </b>
-                <small>
-                  Stock: {inputStock} {r.machine}
-                </small>
+                <small>{t("panel.processing.stock", { qty: inputStock, name: r.machine })}</small>
               </span>
             </header>
             <p className="ap-prod">
-              {r.input.qty} huevo por {r.output.qty} producto · {def ? `${def.processHours} h/ud · ${money(def.costPerEgg)}/ud` : "—"}
+              {t("panel.processing.recipe", {
+                in: `${r.input.qty} × ${inp?.name ?? r.input.productId}`,
+                out: `${r.output.qty} × ${out?.name ?? r.output.productId}`,
+              })}
+              {def ? ` · ${def.processHours} h/ud · ${money(def.costPerEgg)}/ud` : " · —"}
             </p>
             <div className="cp-actions">
               <button
@@ -152,7 +166,7 @@ export default function ProcessingPanel() {
                 disabled={locked || maxQty < 1}
                 onClick={() => onStart(r.id, 1)}
               >
-                Procesar 1
+                {t("panel.processing.process_1")}
               </button>
               <button
                 type="button"
@@ -160,7 +174,7 @@ export default function ProcessingPanel() {
                 disabled={maxQty < 2}
                 onClick={() => onStart(r.id, maxQty)}
               >
-                Máx ({maxQty})
+                {t("panel.processing.max_qty", { n: maxQty })}
               </button>
             </div>
           </section>

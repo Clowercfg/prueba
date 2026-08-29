@@ -78,24 +78,28 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     const def = getProcessorLevelDef(level);
     const totalCost = qty * def.costPerEgg;
     const totalCostMinor = Math.round(totalCost * 100);
+    const authed = useAuthStore.getState().status === "authenticated";
+    const goods = useGoodsStore.getState();
 
-    if (useAuthStore.getState().status === "authenticated") {
-      const err = await useWalletStore.getState().spendUSD(totalCostMinor, `processing:${recipeId}`);
-      if (err) return false;
+    // 1) Consumir el insumo PRIMERO (server-side): si no hay stock, no se cobra nada.
+    if (!(await goods.removeGoods(recipe.inputGoodId, qty))) return false;
+
+    // 2) Pagar después; si el pago falla, devolver el insumo consumido (pool).
+    if (authed) {
+      const err = await useWalletStore.getState().spendUSD(totalCostMinor, `processing:${recipeId}`, {
+        qty,
+        processorLevel: level,
+      });
+      if (err) {
+        await goods.cancelConsume(recipe.inputGoodId, qty);
+        return false;
+      }
     } else {
       const eco = useEconomyStore.getState();
-      if (!eco.spendGold(totalCost)) return false;
-    }
-
-    const goods = useGoodsStore.getState();
-    if (!goods.removeGoods(recipe.inputGoodId, qty)) {
-      // Revertir el cargo
-      if (useAuthStore.getState().status === "authenticated") {
-        await useWalletStore.getState().earnUSD(totalCostMinor, `processing-refund:${recipeId}`);
-      } else {
-        useEconomyStore.getState().addGold(totalCost, "reembolso");
+      if (!eco.spendGold(totalCost)) {
+        await goods.cancelConsume(recipe.inputGoodId, qty);
+        return false;
       }
-      return false;
     }
 
     const now = Date.now();
@@ -132,22 +136,26 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
     if (eggs < 1) return false;
 
     const costMinor = Math.round(def.costPerEgg * 100);
-    if (useAuthStore.getState().status === "authenticated") {
-      const err = await useWalletStore.getState().spendUSD(costMinor, `processing-add:${job.recipeId}`);
-      if (err) return false;
+    const authed = useAuthStore.getState().status === "authenticated";
+    const goods = useGoodsStore.getState();
+
+    // 1) Consumir el insumo PRIMERO (server-side); 2) pagar; si el pago
+    // falla, devolver el insumo consumido (pool) — sin créditos client-side.
+    if (!(await goods.removeGoods(job.inputGoodId, 1))) return false;
+    if (authed) {
+      const err = await useWalletStore.getState().spendUSD(costMinor, `processing-add:${job.recipeId}`, {
+        processorLevel: level,
+      });
+      if (err) {
+        await goods.cancelConsume(job.inputGoodId, 1);
+        return false;
+      }
     } else {
       const eco = useEconomyStore.getState();
-      if (!eco.spendGold(def.costPerEgg)) return false;
-    }
-
-    const goods = useGoodsStore.getState();
-    if (!goods.removeGoods(job.inputGoodId, 1)) {
-      if (useAuthStore.getState().status === "authenticated") {
-        await useWalletStore.getState().earnUSD(costMinor, `processing-add-refund:${job.recipeId}`);
-      } else {
-        useEconomyStore.getState().addGold(def.costPerEgg, "reembolso");
+      if (!eco.spendGold(def.costPerEgg)) {
+        await goods.cancelConsume(job.inputGoodId, 1);
+        return false;
       }
-      return false;
     }
 
     const updated = jobs.map((j) =>
@@ -181,7 +189,12 @@ export const useProcessingStore = create<ProcessingStore>((set, get) => ({
 
     const goods = useGoodsStore.getState();
     for (const job of completed) {
-      goods.addGoods(job.outputGoodId, job.qty);
+      // La entrega depende del pool de insumos reservados en el servidor (1:1);
+      // tick es síncrono: se dispara y el store ajusta el inventario al volver.
+      void goods.addGoods(job.outputGoodId, job.qty, {
+        via: 'processing',
+        inputGoodId: job.inputGoodId,
+      });
     }
 
     set({ jobs: remaining });

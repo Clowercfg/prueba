@@ -52,7 +52,7 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
     if (!next) return false;
     if (next.price > 0) {
       if (useAuthStore.getState().status === "authenticated") {
-        const err = await useWalletStore.getState().spendUSD(Math.round(next.price * 100), `upgrade:${buildingId}`);
+        const err = await useWalletStore.getState().spendUSD(Math.round(next.price * 100), `upgrade:${buildingId}`, { level: next.level });
         if (err) return false;
       } else if (!useEconomyStore.getState().spendGold(next.price)) {
         return false;

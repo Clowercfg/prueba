@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
 import { useUiStore } from "../../game/stores/uiStore";
+import { useT } from "../../game/stores/languageStore";
 
 /**
  * Punto de entrada único de paneles. La cabecera (título + ✕) vive aquí y el
@@ -10,7 +11,6 @@ import { useUiStore } from "../../game/stores/uiStore";
  *   crops        → panels/CropsPanel      (cropStore + CropSystem)
  *   processing   → panels/ProcessingPanel (processingStore/goodsStore)
  *   store        → panels/Store           (shopStore/economyStore/ofertas)
- *   veterinary   → panels/VetPanel        (vetStore)
  *   infrastructure→ panels/Infrastructure (buildingState/upgradesStore)
  */
 
@@ -22,38 +22,39 @@ const MorePanel = lazy(() => import("./MorePanel"));
 const InventoryPanel = lazy(() => import("./InventoryPanel"));
 const InfrastructurePanel = lazy(() => import("./InfrastructurePanel"));
 const UpgradesPanel = lazy(() => import("./UpgradesPanel"));
-const VetPanel = lazy(() => import("./VetPanel"));
 const ProfilePanel = lazy(() => import("./ProfilePanel"));
 const LanguagePanel = lazy(() => import("./LanguagePanel"));
 const FarmPanel = lazy(() => import("./FarmPanel"));
 const WithdrawalsPanel = lazy(() => import("./WithdrawalsPanel"));
-const ReferralsPanel = lazy(() => import("./ReferralsPanel"));
 
-const PANEL_TITLES: Record<string, string> = {
-  animals: 'Animales',
-  crops: 'Cultivos',
-  processing: 'Procesar',
-  veterinary: 'Veterinario',
-  infrastructure: 'Infraestructura',
-  inventory: 'Inventario',
-  upgrades: 'Mejoras',
-  more: 'Más',
-  profile: 'Perfil',
-  language: 'Idioma',
-  farm: 'Mi Granja',
-  withdrawals: 'Retiros',
-  affiliates: 'Referidos',
+const PANEL_TITLE_KEYS: Record<string, string> = {
+  animals: 'nav.animals',
+  crops: 'nav.crops',
+  processing: 'nav.processing',
+  infrastructure: 'nav.infrastructure',
+  inventory: 'nav.inventory',
+  upgrades: 'nav.upgrades',
+  more: 'nav.more',
+  profile: 'nav.profile',
+  language: 'nav.language',
+  farm: 'nav.farm',
+  withdrawals: 'nav.withdrawals',
 }
 
 export function PanelHost() {
   const section = useUiStore((s) => s.section)
   const storeOpen = useUiStore((s) => s.storeOpen)
   const closeOverlays = useUiStore((s) => s.closeOverlays)
+  const t = useT()
 
   if (!section && !storeOpen) return null
 
   const title =
-    storeOpen ? 'Tienda' : section && PANEL_TITLES[section] ? PANEL_TITLES[section] : 'Panel'
+    storeOpen
+      ? t('nav.store')
+      : section && PANEL_TITLE_KEYS[section]
+        ? t(PANEL_TITLE_KEYS[section])
+        : t('nav.panel')
 
   return (
     <div className="panel-layer">
@@ -61,7 +62,7 @@ export function PanelHost() {
         <div className="panel-card" role="dialog" aria-label={title}>
           <header className="panel-head">
             <span className="panel-title">{title}</span>
-            <button type="button" className="panel-close" aria-label="Cerrar" onClick={closeOverlays}>
+            <button type="button" className="panel-close" aria-label={t("panel.close_aria")} onClick={closeOverlays}>
               ✕
             </button>
           </header>
@@ -102,10 +103,6 @@ export function PanelHost() {
             <Suspense fallback={<p className="panel-loading">…</p>}>
               <UpgradesPanel />
             </Suspense>
-          ) : section === "veterinary" ? (
-            <Suspense fallback={<p className="panel-loading">…</p>}>
-              <VetPanel />
-            </Suspense>
           ) : section === "profile" ? (
             <Suspense fallback={<p className="panel-loading">…</p>}>
               <ProfilePanel />
@@ -118,12 +115,8 @@ export function PanelHost() {
             <Suspense fallback={<p className="panel-loading">…</p>}>
               <WithdrawalsPanel />
             </Suspense>
-          ) : section === "affiliates" ? (
-            <Suspense fallback={<p className="panel-loading">…</p>}>
-              <ReferralsPanel />
-            </Suspense>
           ) : (
-            <p className="panel-soon">Disponible próximamente</p>
+            <p className="panel-soon">{t("nav.coming_soon")}</p>
           )}
         </div>
       ) : null}

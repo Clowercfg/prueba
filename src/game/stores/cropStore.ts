@@ -4,6 +4,7 @@ import { useEconomyStore } from "./economyStore";
 import { useUpgradesStore } from "./upgradesStore";
 import { useAuthStore } from "./authStore";
 import { useWalletStore } from "./walletStore";
+import { api, ApiError } from "../api/client";
 import { PLOT_PADS } from "../config/layoutConfig";
 
 export type CropState = "growing" | "ready";
@@ -24,27 +25,34 @@ export interface CropInventory {
 
 /**
  * Economía de cultivos. Reglas:
- * - Comprar semillas descuenta su precio del saldo del jugador.
- * - La semilla se consume al sembrar (sin coste adicional).
- * - Al sembrar se plantan TODAS las semillas disponibles de golpe (hasta capacidad del granero).
- * - Tras `growthHours` el cultivo queda listo para cosechar.
+ * - Comprar semillas descuenta su precio del saldo del jugador (y, autenticado,
+ *   el backend da de alta las semillas server-side de forma atomica).
+ * - La semilla se consume al sembrar (sin coste adicional). Autenticado, la
+ *   parcela vive en el servidor con ready_at calculado por él (tiempo real).
  * - Al cosechar se recogen TODAS las unidades listas de golpe.
- * - Al vender se añade el precio de venta por unidad al saldo.
+ * - Al vender se añade el precio de venta por unidad al saldo, VALIDADO por el
+ *   servidor (stock y precio server-side; nunca se confia en el monto).
+ * - Sin autenticación (dev sin Telegram) todo es local y usa el oro.
  */
 interface CropStore {
   inventory: Record<string, CropInventory>;
   planted: PlantedCrop[];
   nextId: number;
-  /** Compra semillas: descuenta qty * seedPrice (USDT si autenticado, oro si no) y las añade al inventario. */
-  buySeed: (cropId: string, qty?: number) => Promise<boolean>;
+  serverReady: boolean;
+  /** Import (una vez) + GET autoritativo de inventario y parcelas. */
+  syncCropsServer: () => Promise<void>;
+  /** Da de alta semillas por bundle/combos (pago global previo server-side). */
+  grantSeeds: (items: { cropId: string; qty: number }[]) => Promise<void>;
+  /** Compra semillas: descuenta qty * seedPrice (USDT si autenticado, oro si no) y las añade al inventario. Devuelve null si OK, o el mensaje de error. */
+  buySeed: (cropId: string, qty?: number) => Promise<string | null>;
   /** Siembra todas las semillas disponibles de un cultivo en una parcela (hasta capacidad granero). */
-  plantCrop: (cropId: string, plotIndex: number) => { planted: number } | false;
+  plantCrop: (cropId: string, plotIndex: number) => Promise<{ planted: number } | false>;
   /** Encuentra el primer índice de parcela vacía, o -1 si no hay ninguna libre. */
   findEmptyPlot: () => number;
   /** Actualiza el estado de los cultivos según el tiempo transcurrido. */
   tick: () => void;
   /** Cosecha TODAS las unidades listas de una parcela. */
-  harvestCrop: (id: number) => { harvested: number } | false;
+  harvestCrop: (id: number) => Promise<{ harvested: number } | false>;
   /** Vende cosecha del inventario: acredita USDT si autenticado, oro si no. */
   sellHarvest: (cropId: string, qty: number) => Promise<boolean>;
   /** Añade cosecha al inventario (herramienta de prueba/depuración). */
@@ -52,12 +60,6 @@ interface CropStore {
 }
 
 const emptyInventory = (): CropInventory => ({ seeds: 0, harvest: 0 });
-
-/** Semillas iniciales por cultivo (configurable). */
-const STARTING_SEEDS: Record<string, number> = { wheat: 3, carrot: 3, potato: 3 };
-
-/** Cosecha inicial por cultivo (configurable). Solo para pruebas/ajustes. */
-const STARTING_HARVEST: Record<string, number> = { wheat: 5, carrot: 4, potato: 3 };
 
 /** Milisegundos totales de crecimiento de un cultivo. */
 export function growthMsOf(planted: Pick<PlantedCrop, "cropId">): number {
@@ -71,30 +73,84 @@ export function growthProgressOf(planted: PlantedCrop): number {
   return ms > 0 ? Math.min(1, (Date.now() - planted.plantedAt) / ms) : 1;
 }
 
+const serverAuthed = () => useAuthStore.getState().status === "authenticated";
+let cropsSyncInFlight = false;
+
 export const useCropStore = create<CropStore>((set, get) => ({
-  inventory: Object.fromEntries(
-    Object.entries(STARTING_SEEDS).map(([id, seeds]) => [id, { seeds, harvest: STARTING_HARVEST[id] ?? 0 }])
-  ),
+  inventory: {},
   planted: [],
   nextId: 1,
+  serverReady: false,
+
+  syncCropsServer: async () => {
+    if (!serverAuthed()) return;
+    if (cropsSyncInFlight) return;
+    cropsSyncInFlight = true;
+    try {
+      const localPlots = get().planted.map((p) => ({
+        plotIndex: p.plotIndex,
+        cropId: p.cropId,
+        quantity: p.quantity,
+        plantedAt: p.plantedAt,
+      }));
+      await api.cropsInit(get().inventory, localPlots);
+      const r = await api.crops();
+      set({
+        inventory: r.crops,
+        planted: r.plots.map((p) => ({
+          id: p.plotIndex,
+          cropId: p.cropId,
+          plotIndex: p.plotIndex,
+          plantedAt: p.plantedAt,
+          state: Date.now() >= p.readyAt ? "ready" : "growing",
+          quantity: p.quantity,
+        })),
+        serverReady: true,
+      });
+    } catch {
+      /* sin backend: se conserva el estado local */
+    } finally {
+      cropsSyncInFlight = false;
+    }
+  },
+
+  grantSeeds: async (items) => {
+    if (!serverAuthed()) return;
+    try {
+      for (const it of items) {
+        await api.cropsGrantSeeds(it.cropId, it.qty);
+      }
+    } catch {
+      /* el pago del bundle ya se hizo; el alta no bloquea */
+    }
+  },
 
   buySeed: async (cropId, qty = 1) => {
     const econ = getCropEconomy(cropId);
-    if (!econ || qty <= 0) return false;
+    if (!econ || qty <= 0) return "error";
     const cost = econ.seedPrice * qty;
-    if (useAuthStore.getState().status === "authenticated") {
-      const err = await useWalletStore.getState().spendUSD(Math.round(cost * 100), `seed:${cropId}`);
-      if (err) return false;
-    } else if (!useEconomyStore.getState().spendGold(cost)) {
-      return false;
+
+    if (serverAuthed()) {
+      try {
+        const r = await api.cropsPurchase(cropId, qty);
+        set({ inventory: r.crops });
+        useWalletStore.setState({ usdtMinor: r.availableMinor });
+        return null;
+      } catch (err) {
+        return err instanceof ApiError ? err.message : "error de compra";
+      }
+    }
+
+    if (!useEconomyStore.getState().spendGold(cost)) {
+      return "sin saldo";
     }
     set((s) => ({
       inventory: { ...s.inventory, [cropId]: { ...(s.inventory[cropId] ?? emptyInventory()), seeds: (s.inventory[cropId]?.seeds ?? 0) + qty } },
     }));
-    return true;
+    return null;
   },
 
-  plantCrop: (cropId, plotIndex) => {
+  plantCrop: async (cropId, plotIndex) => {
     const econ = getCropEconomy(cropId);
     if (!econ) return false;
     if (plotIndex < 0 || plotIndex >= PLOT_PADS.length) return false;
@@ -106,6 +162,28 @@ export const useCropStore = create<CropStore>((set, get) => ({
     const availableSpace = Math.max(0, granaryCapacity - currentPlanted);
     const qtyToPlant = Math.min(inv.seeds, availableSpace);
     if (qtyToPlant <= 0) return false;
+
+    if (serverAuthed()) {
+      try {
+        const r = await api.cropsPlant(cropId, plotIndex, qtyToPlant, Date.now());
+        set({
+          inventory: r.crops,
+          planted: r.plots.map((p) => ({
+            id: p.plotIndex,
+            cropId: p.cropId,
+            plotIndex: p.plotIndex,
+            plantedAt: p.plantedAt,
+            state: Date.now() >= p.readyAt ? "ready" : "growing",
+            quantity: p.quantity,
+          })),
+        });
+        return { planted: qtyToPlant };
+      } catch (err) {
+        if (err instanceof ApiError) await get().syncCropsServer();
+        return false;
+      }
+    }
+
     set((s) => ({
       inventory: {
         ...s.inventory,
@@ -113,9 +191,8 @@ export const useCropStore = create<CropStore>((set, get) => ({
       },
       planted: [
         ...s.planted,
-        { id: s.nextId, cropId, plotIndex, plantedAt: Date.now(), state: "growing", quantity: qtyToPlant },
+        { id: plotIndex, cropId, plotIndex, plantedAt: Date.now(), state: "growing", quantity: qtyToPlant },
       ],
-      nextId: s.nextId + 1,
     }));
     return { planted: qtyToPlant };
   },
@@ -146,11 +223,27 @@ export const useCropStore = create<CropStore>((set, get) => ({
     }));
   },
 
-  harvestCrop: (id) => {
+  harvestCrop: async (id) => {
     const planted = get().planted;
     const crop = planted.find((p) => p.id === id);
     if (!crop || crop.state !== "ready") return false;
     const qty = crop.quantity;
+
+    if (serverAuthed()) {
+      try {
+        const r = await api.cropsHarvest(crop.plotIndex);
+        if (r.ok !== true) return false;
+        set((s) => ({
+          inventory: r.crops,
+          planted: s.planted.filter((p) => p.id !== id),
+        }));
+        return { harvested: r.harvested ?? qty };
+      } catch (err) {
+        if (err instanceof ApiError) await get().syncCropsServer();
+        return false;
+      }
+    }
+
     set((s) => ({
       planted: s.planted.filter((p) => p.id !== id),
       inventory: {
@@ -166,17 +259,26 @@ export const useCropStore = create<CropStore>((set, get) => ({
     if (!econ || qty <= 0) return false;
     const inv = get().inventory[cropId];
     if (!inv || inv.harvest < qty) return false;
+
+    if (serverAuthed()) {
+      try {
+        const r = await api.cropsSell(cropId, qty);
+        set({ inventory: r.crops });
+        useWalletStore.setState({ usdtMinor: r.availableMinor });
+        return true;
+      } catch {
+        await get().syncCropsServer();
+        return false;
+      }
+    }
+
     set((s) => ({
       inventory: {
         ...s.inventory,
         [cropId]: { ...(s.inventory[cropId] ?? emptyInventory()), harvest: (s.inventory[cropId]?.harvest ?? 0) - qty },
       },
     }));
-    if (useAuthStore.getState().status === "authenticated") {
-      await useWalletStore.getState().earnUSD(Math.round(qty * econ.sellPrice * 100), `crop:${cropId}`);
-    } else {
-      useEconomyStore.getState().addGold(qty * econ.sellPrice, "cosecha");
-    }
+    useEconomyStore.getState().addGold(qty * econ.sellPrice, "cosecha");
     return true;
   },
 

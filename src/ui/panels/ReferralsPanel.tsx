@@ -16,7 +16,10 @@ const STATUS_CLASS: Record<string, string> = {
   REVERSED: "cancelled",
 };
 
-export default function ReferralsPanel() {
+/** Contenido de referidos (reutilizable). Sin wrapper de scroll, para
+ *  embeberlo en el panel de Perfil bajo la información personal o como
+ *  panel independiente (ReferralsPanel). */
+export function ReferralsContent() {
   const t = useT();
   const status = useAuthStore((s) => s.status);
   const [code, setCode] = useState<string | null>(null);
@@ -73,7 +76,7 @@ export default function ReferralsPanel() {
   };
 
   return (
-    <div className="ap-scroll">
+    <>
       {status !== "authenticated" ? (
         <section className="ap-group">
           <p className="ap-empty">{t("affiliate.login_required")}</p>
@@ -208,6 +211,14 @@ export default function ReferralsPanel() {
       )}
 
       <p className="ap-hint">{t("affiliate.hint")}</p>
+    </>
+  );
+}
+
+export default function ReferralsPanel() {
+  return (
+    <div className="ap-scroll">
+      <ReferralsContent />
     </div>
   );
 }

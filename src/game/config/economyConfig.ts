@@ -66,8 +66,7 @@ export interface GoodsEconomyDef {
 export const GOODS_ECONOMY: Record<string, GoodsEconomyDef> = {
   milk: { name: "Leche", icon: "🥛", sellPrice: 0.9 },
   eggs: { name: "Huevos", icon: "🥚", sellPrice: 0.05 },
-  honey: { name: "Miel", icon: "🍯", sellPrice: 1.4 },
-  cheese: { name: "Queso", icon: "🧀", sellPrice: 1.8 },
+  meat: { name: "Carne", icon: "🍖", sellPrice: 0.6 },
   "boiled-eggs": { name: "Huevos hervidos", icon: "🍳", sellPrice: 0.07 },
 };
 
@@ -133,17 +132,6 @@ export const PRODUCT_ECONOMY: Record<string, ProductEconomyDef> = {
 export function getProductEconomy(productId: string): ProductEconomyDef | null {
   return PRODUCT_ECONOMY[productId] ?? null;
 }
-
-/**
- * Precio de venta por unidad de producción de cada animal (referencia única,
- * usado por EconomySystem y la HUD). Coincide con los precios de producto.
- */
-export const PRODUCTION_PRICE = {
-  cow: PRODUCT_ECONOMY.milk.price,
-  chicken: PRODUCT_ECONOMY.egg.price,
-  rooster: PRODUCT_ECONOMY.egg.price,
-  pig: PRODUCT_ECONOMY.meat.price,
-} as const;
 
 /**
  * Frecuencia de enfermedad. Granja de referencia = 20 animales.

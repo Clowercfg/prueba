@@ -15,6 +15,7 @@ import {
   type UserAdminRow,
   type WithdrawalRow,
 } from '../../game/api/client'
+import { useT, useLanguageStore, localeFor } from '../../game/stores/languageStore'
 
 /* ── Componentes compartidos ─────────────────────────────────────────────── */
 
@@ -36,14 +37,15 @@ export function ErrorBox({ error }: { error: unknown }) {
 }
 
 export function Pager({ page, hasMore, onPage }: { page: number; hasMore: boolean; onPage: (p: number) => void }) {
+  const t = useT()
   return (
     <div className="pager">
       <button disabled={page <= 1} onClick={() => onPage(page - 1)}>
-        ‹ Anterior
+        {t('admin.prev')}
       </button>
-      <span>Pág. {page}</span>
+      <span>{t('admin.page', { page: String(page) })}</span>
       <button disabled={!hasMore} onClick={() => onPage(page + 1)}>
-        Siguiente ›
+        {t('admin.next')}
       </button>
     </div>
   )
@@ -59,6 +61,7 @@ export interface ConfirmState {
 }
 
 export function ConfirmDialog({ state, onClose }: { state: ConfirmState | null; onClose: () => void }) {
+  const t = useT()
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
   useEffect(() => setReason(''), [state])
@@ -85,7 +88,7 @@ export function ConfirmDialog({ state, onClose }: { state: ConfirmState | null; 
         {state.requireReason && (
           <textarea
             className="field-input"
-            placeholder="Motivo obligatorio (mínimo 3 caracteres)"
+            placeholder={t('admin.reason_placeholder')}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
@@ -93,10 +96,10 @@ export function ConfirmDialog({ state, onClose }: { state: ConfirmState | null; 
         )}
         <div className="modal-actions">
           <button onClick={onClose} disabled={busy}>
-            Cancelar
+            {t('admin.cancel')}
           </button>
           <button className={state.danger ? 'btn-danger' : 'btn-ok'} disabled={!canRun || busy} onClick={go}>
-            {busy ? 'Procesando…' : state.confirmLabel}
+            {busy ? t('admin.processing') : state.confirmLabel}
           </button>
         </div>
       </div>
@@ -155,7 +158,9 @@ function useAction(reload: () => void) {
 
 export function DashboardView() {
   const { data, error, loading } = useReload(() => api.admin.dashboard(), [])
-  if (loading) return <p className="muted">Cargando…</p>
+  const t = useT()
+  const lang = useLanguageStore((s) => s.lang)
+  if (loading) return <p className="muted">{t('admin.loading')}</p>
   return (
     <div>
       <ErrorBox error={error} />
@@ -164,38 +169,40 @@ export function DashboardView() {
           <div className="cards">
             <div className="card">
               <span className="card-num warn">{data.totals.pendingWithdrawals}</span>
-              <span>Retiros pendientes</span>
+              <span>{t('admin.dashboard.pendingWithdrawals')}</span>
             </div>
             <div className="card">
               <span className="card-num warn">{data.totals.pendingDeposits}</span>
-              <span>Depósitos por revisar</span>
+              <span>{t('admin.dashboard.pendingDeposits')}</span>
             </div>
             <div className="card">
               <span className="card-num">{data.totals.totalUsers}</span>
-              <span>Usuarios</span>
+              <span>{t('admin.dashboard.totalUsers')}</span>
             </div>
             <div className="card">
               <span className="card-num">{fmtMoney(data.totals.totalAvailableMinor)}</span>
-              <span>Disponible total</span>
+              <span>{t('admin.dashboard.totalAvailable')}</span>
             </div>
             <div className="card">
               <span className="card-num">{fmtMoney(data.totals.totalReservedMinor)}</span>
-              <span>Reservado total</span>
+              <span>{t('admin.dashboard.totalReserved')}</span>
             </div>
           </div>
-          <h4>Operaciones recientes</h4>
+          <h4>{t('admin.dashboard.recentOps')}</h4>
           <ul className="rows">
             {data.recentOps.map((op) => (
               <li key={`${op.kind}-${op.id}`} className="row">
-                <span className={`kind kind-${op.kind}`}>{op.kind === 'withdrawal' ? 'RETIRO' : 'DEPÓSITO'}</span>
+                <span className={`kind kind-${op.kind}`}>
+                  {op.kind === 'withdrawal' ? t('admin.dashboard.withdrawal') : t('admin.dashboard.deposit')}
+                </span>
                 <span className="grow">
-                  @{op.username ?? op.telegramId} · {new Date(op.createdAt).toLocaleString('es')}
+                  @{op.username ?? op.telegramId} · {new Date(op.createdAt).toLocaleString(localeFor(lang))}
                 </span>
                 <b>{fmtMoney(op.amountMinor)}</b>
                 <Badge status={op.status} />
               </li>
             ))}
-            {data.recentOps.length === 0 && <li className="muted">Sin operaciones todavía.</li>}
+            {data.recentOps.length === 0 && <li className="muted">{t('admin.dashboard.empty')}</li>}
           </ul>
         </>
       )}
@@ -212,6 +219,8 @@ export function WithdrawalsView() {
   const [page, setPage] = useState(1)
   const { data, error, loading, reload } = useReload(() => api.admin.withdrawals(status, page), [status, page])
   const { ask, dialog } = useAction(reload)
+  const t = useT()
+  const lang = useLanguageStore((s) => s.lang)
 
   return (
     <div>
@@ -224,7 +233,7 @@ export function WithdrawalsView() {
       </div>
       <ErrorBox error={error} />
       {dialog}
-      {loading && <p className="muted">Cargando…</p>}
+      {loading && <p className="muted">{t('admin.loading')}</p>}
       {data && (
         <>
           <ul className="rows">
@@ -236,9 +245,9 @@ export function WithdrawalsView() {
                 </div>
                 <span className="muted">
                   #{w.id} · @{w.username ?? w.telegramId} · {w.method} → {w.destinationMasked} ·{' '}
-                  {new Date(w.createdAt).toLocaleString('es')}
+                  {new Date(w.createdAt).toLocaleString(localeFor(lang))}
                 </span>
-                {w.denyReason && <span className="danger-text">Motivo: {w.denyReason}</span>}
+                {w.denyReason && <span className="danger-text">{t('admin.withdrawal.reason', { reason: w.denyReason })}</span>}
                 <div className="actions">
                   {w.status === 'PENDING' && (
                     <>
@@ -246,29 +255,36 @@ export function WithdrawalsView() {
                         className="btn-ok"
                         onClick={() =>
                           ask({
-                            title: 'Aprobar retiro',
-                            body: `Retiro #${w.id} de ${fmtMoney(w.amountMinor)} de @${w.username ?? w.telegramId}. El dinero sigue reservado hasta completar el envío.`,
-                            confirmLabel: 'Aprobar',
+                            title: t('admin.withdrawal.approve_title'),
+                            body: t('admin.withdrawal.approve_body', {
+                              id: String(w.id),
+                              amount: fmtMoney(w.amountMinor),
+                              user: w.username ?? String(w.telegramId),
+                            }),
+                            confirmLabel: t('admin.withdrawal.approve'),
                             run: () => api.admin.approveWithdrawal(w.id),
                           })
                         }
                       >
-                        Aprobar
+                        {t('admin.withdrawal.approve')}
                       </button>
                       <button
                         className="btn-danger"
                         onClick={() =>
                           ask({
-                            title: 'Denegar retiro',
-                            body: `Retiro #${w.id} de ${fmtMoney(w.amountMinor)}. Los fondos reservados volverán al saldo del usuario.`,
-                            confirmLabel: 'Denegar',
+                            title: t('admin.withdrawal.deny_title'),
+                            body: t('admin.withdrawal.deny_body', {
+                              id: String(w.id),
+                              amount: fmtMoney(w.amountMinor),
+                            }),
+                            confirmLabel: t('admin.withdrawal.deny'),
                             danger: true,
                             requireReason: true,
                             run: (reason) => api.admin.denyWithdrawal(w.id, reason),
                           })
                         }
                       >
-                        Denegar
+                        {t('admin.withdrawal.deny')}
                       </button>
                     </>
                   )}
@@ -277,20 +293,24 @@ export function WithdrawalsView() {
                       className="btn-ok"
                       onClick={() =>
                         ask({
-                          title: 'Completar retiro',
-                          body: `Confirma que el pago real del retiro #${w.id} (${fmtMoney(w.amountMinor)}) fue enviado a ${w.destinationMasked}. Esto liquida los fondos reservados.`,
-                          confirmLabel: 'Pago enviado',
+                          title: t('admin.withdrawal.complete_title'),
+                          body: t('admin.withdrawal.complete_body', {
+                            id: String(w.id),
+                            amount: fmtMoney(w.amountMinor),
+                            dest: w.destinationMasked,
+                          }),
+                          confirmLabel: t('admin.withdrawal.complete_confirm'),
                           run: () => api.admin.completeWithdrawal(w.id),
                         })
                       }
                     >
-                      Completar envío
+                      {t('admin.withdrawal.complete_btn')}
                     </button>
                   )}
                 </div>
               </li>
             ))}
-            {data.items.length === 0 && <li className="muted">Nada aquí.</li>}
+            {data.items.length === 0 && <li className="muted">{t('admin.withdrawal.empty')}</li>}
           </ul>
           <Pager page={page} hasMore={data.hasMore} onPage={setPage} />
         </>
@@ -306,6 +326,8 @@ export function DepositsView() {
   const [page, setPage] = useState(1)
   const { data, error, loading, reload } = useReload(() => api.admin.deposits(status, page), [status, page])
   const { ask, dialog } = useAction(reload)
+  const t = useT()
+  const lang = useLanguageStore((s) => s.lang)
 
   return (
     <div>
@@ -318,7 +340,7 @@ export function DepositsView() {
       </div>
       <ErrorBox error={error} />
       {dialog}
-      {loading && <p className="muted">Cargando…</p>}
+      {loading && <p className="muted">{t('admin.loading')}</p>}
       {data && (
         <>
           <ul className="rows">
@@ -329,7 +351,7 @@ export function DepositsView() {
                   <Badge status={d.status} />
                 </div>
                 <span className="muted">
-                  #{d.id} · @{d.username ?? d.telegramId} · ref: {d.reference ?? '—'} · {new Date(d.createdAt).toLocaleString('es')}
+                  #{d.id} · @{d.username ?? d.telegramId} · ref: {d.reference ?? '—'} · {new Date(d.createdAt).toLocaleString(localeFor(lang))}
                 </span>
                 {d.status === 'PENDING' && (
                   <div className="actions">
@@ -337,35 +359,39 @@ export function DepositsView() {
                       className="btn-ok"
                       onClick={() =>
                         ask({
-                          title: 'Aprobar depósito',
-                          body: `¿Verificaste la transferencia ${d.reference ?? ''}? Se acreditarán ${fmtMoney(d.amountMinor)} a @${d.username ?? d.telegramId}.`,
-                          confirmLabel: 'Acreditar',
+                          title: t('admin.deposit.approve_title'),
+                          body: t('admin.deposit.approve_body', {
+                            ref: d.reference ?? '',
+                            amount: fmtMoney(d.amountMinor),
+                            user: d.username ?? String(d.telegramId),
+                          }),
+                          confirmLabel: t('admin.deposit.approve_confirm'),
                           run: () => api.admin.approveDeposit(d.id),
                         })
                       }
                     >
-                      Aprobar
+                      {t('admin.deposit.approve')}
                     </button>
                     <button
                       className="btn-danger"
                       onClick={() =>
                         ask({
-                          title: 'Cancelar depósito',
-                          body: `El depósito #${d.id} quedará cancelado sin acreditar.`,
-                          confirmLabel: 'Cancelar depósito',
+                          title: t('admin.deposit.cancel_title'),
+                          body: t('admin.deposit.cancel_body', { id: String(d.id) }),
+                          confirmLabel: t('admin.deposit.cancel_confirm'),
                           danger: true,
                           requireReason: true,
                           run: (reason) => api.admin.cancelDeposit(d.id, reason),
                         })
                       }
                     >
-                      Cancelar
+                      {t('admin.deposit.cancel')}
                     </button>
                   </div>
                 )}
               </li>
             ))}
-            {data.items.length === 0 && <li className="muted">Nada aquí.</li>}
+            {data.items.length === 0 && <li className="muted">{t('admin.deposit.empty')}</li>}
           </ul>
           <Pager page={page} hasMore={data.hasMore} onPage={setPage} />
         </>
@@ -387,6 +413,8 @@ export function NotificationsView() {
   const [sent, setSent] = useState<number | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
+  const t = useT()
+  const lang = useLanguageStore((s) => s.lang)
 
   const startsMs = startsAt ? new Date(startsAt).getTime() : undefined
   const expiresMs = expiresAt ? new Date(expiresAt).getTime() : undefined
@@ -425,21 +453,21 @@ export function NotificationsView() {
 
   return (
     <div className="form">
-      {sent !== null && <div className="ok-box">Notificación #{sent} enviada a todos los usuarios activos.</div>}
+      {sent !== null && <div className="ok-box">{t('admin.notif.sent', { id: String(sent) })}</div>}
       <ErrorBox error={error} />
       {!preview ? (
         <>
           <label className="field">
-            Título
+            {t('admin.notif.title')}
             <input className="field-input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
           </label>
           <label className="field">
-            Mensaje
+            {t('admin.notif.message')}
             <textarea className="field-input" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} rows={5} />
           </label>
           <div className="form-grid">
             <label className="field">
-              Tipo
+              {t('admin.notif.type')}
               <select className="field-input" value={type} onChange={(e) => setType(e.target.value)}>
                 {['GENERAL', 'MAINTENANCE', 'EVENT', 'FINANCIAL'].map((t) => (
                   <option key={t}>{t}</option>
@@ -447,7 +475,7 @@ export function NotificationsView() {
               </select>
             </label>
             <label className="field">
-              Prioridad
+              {t('admin.notif.priority')}
               <select className="field-input" value={priority} onChange={(e) => setPriority(e.target.value)}>
                 {['LOW', 'NORMAL', 'HIGH', 'CRITICAL'].map((t) => (
                   <option key={t}>{t}</option>
@@ -457,16 +485,16 @@ export function NotificationsView() {
           </div>
           <div className="form-grid">
             <label className="field">
-              Publicar desde (opcional)
+              {t('admin.notif.starts')}
               <input type="datetime-local" className="field-input" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
             </label>
             <label className="field">
-              Expira (opcional)
+              {t('admin.notif.expires')}
               <input type="datetime-local" className="field-input" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
             </label>
           </div>
           <button disabled={!valid} onClick={() => setPreview(true)}>
-            Vista previa
+            {t('admin.notif.preview')}
           </button>
         </>
       ) : (
@@ -476,15 +504,15 @@ export function NotificationsView() {
             <p>{message}</p>
             <span className="muted">
               {type} · {priority}
-              {startsMs ? ` · desde ${new Date(startsMs).toLocaleString('es')}` : ''}
-              {expiresMs ? ` · expira ${new Date(expiresMs).toLocaleString('es')}` : ''}
+              {startsMs ? ` · ${t('admin.notif.from', { date: new Date(startsMs).toLocaleString(localeFor(lang)) })}` : ''}
+              {expiresMs ? ` · ${t('admin.notif.until', { date: new Date(expiresMs).toLocaleString(localeFor(lang)) })}` : ''}
             </span>
           </div>
-          <p className="muted">Se enviará a TODOS los usuarios activos. Revisa el texto antes de confirmar.</p>
+          <p className="muted">{t('admin.notif.preview_hint')}</p>
           <div className="actions">
-            <button onClick={() => setPreview(false)}>Editar</button>
+            <button onClick={() => setPreview(false)}>{t('admin.notif.edit')}</button>
             <button className="btn-ok" disabled={busy} onClick={send}>
-              {busy ? 'Enviando…' : 'Enviar ahora'}
+              {busy ? t('admin.notif.sending') : t('admin.notif.send_now')}
             </button>
           </div>
         </>
@@ -501,6 +529,8 @@ export function UsersView({ myRole }: { myRole: Role }) {
   const [page, setPage] = useState(1)
   const { data, error, loading, reload } = useReload(() => api.admin.users(query, page), [query, page])
   const { ask, dialog } = useAction(reload)
+  const t = useT()
+  const lang = useLanguageStore((s) => s.lang)
 
   return (
     <div>
@@ -512,12 +542,12 @@ export function UsersView({ myRole }: { myRole: Role }) {
           setQuery(q.trim())
         }}
       >
-        <input className="field-input" placeholder="Buscar por usuario o ID…" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button type="submit">Buscar</button>
+        <input className="field-input" placeholder={t('admin.users.search_placeholder')} value={q} onChange={(e) => setQ(e.target.value)} />
+        <button type="submit">{t('admin.users.search')}</button>
       </form>
       <ErrorBox error={error} />
       {dialog}
-      {loading && <p className="muted">Cargando…</p>}
+      {loading && <p className="muted">{t('admin.loading')}</p>}
       {data && (
         <>
           <ul className="rows">
@@ -528,9 +558,11 @@ export function UsersView({ myRole }: { myRole: Role }) {
                   <RoleBadge role={u.role} />
                 </div>
                 <span className="muted">
-                  ID {u.telegramId} · alta {new Date(u.createdAt).toLocaleDateString('es')} · última vez{' '}
-                  {u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString('es') : '—'} · saldo{' '}
-                  {fmtMoney(u.availableMinor ?? 0)}
+                  ID {u.telegramId} · {t('admin.users.created', { date: new Date(u.createdAt).toLocaleDateString(localeFor(lang)) })} ·{' '}
+                  {t('admin.users.lastSeen', {
+                    date: u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString(localeFor(lang)) : '—',
+                  })}{' '}
+                  · {t('admin.users.balance')} {fmtMoney(u.availableMinor ?? 0)}
                 </span>
                 {myRole === 'SUPER_ADMIN' && u.role !== myRole && (
                   <div className="actions">
@@ -542,21 +574,25 @@ export function UsersView({ myRole }: { myRole: Role }) {
                         key={r}
                         onClick={() =>
                           ask({
-                            title: `Cambiar rol a ${r}`,
-                            body: `@${u.username ?? u.telegramId} pasará de ${u.role} a ${r}. Queda registrado en auditoría.`,
-                            confirmLabel: 'Confirmar rol',
+                            title: t('admin.users.change_role_title', { role: r }),
+                            body: t('admin.users.change_role_body', {
+                              user: u.username ?? String(u.telegramId),
+                              from: u.role,
+                              to: r,
+                            }),
+                            confirmLabel: t('admin.users.confirm_role'),
                             run: () => api.admin.setUserRole(u.id, r),
                           })
                         }
                       >
-                        Hacer {r}
+                        {t('admin.users.make_role', { role: r })}
                       </button>
                     ))}
                   </div>
                 )}
               </li>
             ))}
-            {data.items.length === 0 && <li className="muted">Sin resultados.</li>}
+            {data.items.length === 0 && <li className="muted">{t('admin.users.empty')}</li>}
           </ul>
           <Pager page={page} hasMore={data.hasMore} onPage={setPage} />
         </>
@@ -570,7 +606,9 @@ export function UsersView({ myRole }: { myRole: Role }) {
 export function AuditView() {
   const [page, setPage] = useState(1)
   const { data, error, loading } = useReload(() => api.admin.audit('', page), [page])
-  if (loading) return <p className="muted">Cargando…</p>
+  const t = useT()
+  const lang = useLanguageStore((s) => s.lang)
+  if (loading) return <p className="muted">{t('admin.loading')}</p>
   return (
     <div>
       <ErrorBox error={error} />
@@ -581,15 +619,18 @@ export function AuditView() {
               <li key={a.id} className="row col">
                 <div className="row-head">
                   <b>{a.action}</b>
-                  <span className="muted">{new Date(a.createdAt).toLocaleString('es')}</span>
+                  <span className="muted">{new Date(a.createdAt).toLocaleString(localeFor(lang))}</span>
                 </div>
                 <span className="muted">
-                  por @{a.actorUsername ?? a.actorTelegramId} sobre {a.targetType}#{a.targetId}
+                  {t('admin.audit.by', {
+                    user: a.actorUsername ?? String(a.actorTelegramId),
+                    target: `${a.targetType}#${a.targetId}`,
+                  })}
                   {a.reason ? ` · "${a.reason}"` : ''}
                 </span>
               </li>
             ))}
-            {data.items.length === 0 && <li className="muted">Sin registros.</li>}
+            {data.items.length === 0 && <li className="muted">{t('admin.audit.empty')}</li>}
           </ul>
           <Pager page={page} hasMore={data.hasMore} onPage={setPage} />
         </>

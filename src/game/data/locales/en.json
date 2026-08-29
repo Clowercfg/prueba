@@ -59,8 +59,6 @@
     "store_title": "Shop — buy everything for your farm",
     "animals": "Animals",
     "animals_hint": "Population and status",
-    "veterinary": "Veterinary",
-    "veterinary_hint": "Health and treatments",
     "crops": "Crops",
     "crops_hint": "Plots and harvests",
     "processing": "Processing",
@@ -76,6 +74,46 @@
     "affiliates": "Affiliates",
       "affiliates_hint": "Referrals and commissions",
       "profile": "Profile"
+  },
+  "nav": {
+    "farm": "Farm",
+    "animals": "Animals",
+    "crops": "Crops",
+    "processing": "Process",
+    "store": "Shop",
+    "more": "More",
+    "infrastructure": "Infrastructure",
+    "inventory": "Inventory",
+    "upgrades": "Upgrades",
+    "profile": "Profile",
+    "language": "Language",
+    "withdrawals": "Withdrawals",
+    "panel": "Panel",
+    "coming_soon": "Coming soon",
+    "aria": "Main navigation"
+  },
+  "more": {
+    "inventory": "Inventory",
+    "inventory_desc": "Manage your goods and resources",
+    "infrastructure": "Infrastructure",
+    "infrastructure_desc": "Manage buildings and capacities",
+    "upgrades": "Upgrades",
+    "upgrades_desc": "Upgrade your facilities",
+    "withdrawals": "Withdrawals",
+    "withdrawals_desc": "Withdraw your USDT balance"
+  },
+  "blocked": {
+    "text": "This game is only available inside Telegram.",
+    "sub": "Open Harvest Valley from Telegram to play.",
+    "cta": "OPEN IN TELEGRAM"
+  },
+  "notif": {
+    "title": "Notifications",
+    "aria": "Notifications",
+    "load_error": "Couldn't load.",
+    "loading": "Loading…",
+    "empty": "No notifications.",
+    "mark_read": "Mark as read"
   },
   "language": {
     "title": "Language",
@@ -105,7 +143,7 @@
       "rooster": "eggs",
       "pig": "kg meat"
     },
-    "prod_hint": "Animals produce throughout the day. Their production is sold automatically every few seconds.",
+    "prod_hint": "Animals produce throughout the day. Production accumulates in the warehouse; sell the products from the inventory to credit USDT.",
     "enter_building": "🚪 Enter the {name}",
     "enter_hint": "Enter to inspect the interior. Use the “Leave” button to return to the farm.",
     "no_interior": "Existing farm building. Manage infrastructure from the side panel."
@@ -151,8 +189,6 @@
     "eggs": "Eggs",
     "milk": "Milk",
     "meat": "Meat",
-    "honey": "Honey",
-    "cheese": "Cheese",
     "boiled-egg": "Boiled egg",
     "boiled-eggs": "Boiled eggs"
   },
@@ -232,6 +268,9 @@
     "deposit_button": "+ DEPOSIT",
     "close_store": "Close store",
     "tabs_aria": "Store categories",
+    "seeds_title": "Seeds",
+    "animals_title": "Animals",
+    "offers_title": "Offers",
     "category": {
       "crops": "Crops",
       "animals": "Animals",
@@ -267,7 +306,7 @@
       "info_aria": "More info about {name}",
       "info_title": "Additional info",
       "feed": "Feed",
-      "info_box": "Purchase price {price}. Veterinary treatment {treat}. Maintenance is charged at the end of each cycle.",
+      "info_box": "Purchase price {price}. Maintenance is charged at the end of each cycle.",
       "building_fill": "{building}: {used}/{capacity}",
       "full": "🚧 Building full — upgrade it in INFRASTRUCTURE."
     },
@@ -277,15 +316,13 @@
       "market": "Sale: {market}",
       "price": "Sale price",
       "ref": "(reference {money})",
-      "note": "Sold automatically from the farm or the warehouse."
+      "note": "Production accumulates in the warehouse. Only when you sell the product is USDT credited to your balance."
     },
     "source": {
       "egg": "Chickens",
       "milk": "Cows",
       "meat": "Pigs",
-      "boiled-egg": "Processor",
-      "honey": "Hives",
-      "cheese": "Processor"
+      "boiled-egg": "Processor"
     },
     "offer": {
       "saving": "SAVING {money}",
@@ -359,7 +396,6 @@
       "info_title": "Player information",
       "info_soon": "Coming soon",
       "referrals_title": "Referrals",
-      "referrals_soon": "Referrals will arrive in a later phase",
       "name": "Name",
       "username": "Username",
       "tgid": "Telegram ID",
@@ -371,25 +407,8 @@
       "subtitle": "Population and status of your livestock",
       "empty": "There are no animals in the pens.",
       "mood": "{pct}% mood",
+      "health_aria": "Health {pct}%",
       "hint": "Cows live in their corral, pigs in the pigsty and poultry in the poultry corral. During the day they wander and graze within their area; at night they lie down to sleep."
-    },
-    "vet": {
-      "title": "Veterinary",
-      "subtitle": "Livestock health and treatments",
-      "sick": "Sick",
-      "recovering": "Recovering",
-      "population": "Population",
-      "pending": "Pending treatments",
-      "empty": "There are no sick animals.",
-      "empty_ok": "The corrals are healthy. 🎉",
-      "sick_badge": "Sick",
-      "recovering_badge": "Recovering · {time}",
-      "treatment": "Treatment {price} · Recovery {hours} h",
-      "treat_btn": "⚠️ Treat",
-      "cured": "🩹 Cured",
-      "treat": "Treat",
-      "in_progress": "In progress",
-      "hint": "In a reference farm (~20 animals) about 1 animal gets sick every 9 days; each animal can only get sick at most every 14 days. You only pay for treatment when you decide, you don't need reserved balance, and no animal is removed for being sick."
     },
     "crops": {
       "title": "Crops",
@@ -415,7 +434,21 @@
       "plot_number": "Plot {n}",
       "ready_short": "Ready!",
       "summary": "{ready} ready|{ready} ready · {growing} growing.",
-      "hint": "In 3D: click the plot to plant, click the ready crop to harvest. Seeds and harvests in inventory don't count as USD until sold."
+      "hint": "In 3D: click the plot to plant, click the ready crop to harvest. Seeds and harvests in inventory don't count as USD until sold.",
+      "planted": "In the plots",
+      "planted_count": "{n} crop|{n} crops",
+      "empty_planted": "No crops planted yet.",
+      "growing_short": "Growing",
+      "ready_short_value": "Ready",
+      "remaining": "{time} left",
+      "buy_val": "Buy {money}",
+      "sell_val": "Sell {money}",
+      "seeds_harvest": "Seeds {seeds} · Harvest {harvest}",
+      "seed_line": "Seed {price} · Sale {sell}/u · {hours} h",
+      "plant_at": "Plant in {name}",
+      "plant_with": "Plant in {name} ({seeds} seeds)",
+      "no_plots": "No free plots",
+      "action_hint": "Tap an empty plot on the farm or press Plant to sow; when it's ready, tap it again or harvest from here."
     },
     "upgrades": {
       "title": "Upgrades",
@@ -455,7 +488,13 @@
       "seeds_title": "Seeds",
       "seeds_of": "{name} seeds",
       "resources": "Resources",
-      "hint": "The inventory reflects in real time what is collected on the farm and what is stored in the Warehouse."
+      "hint": "The inventory reflects in real time what is collected on the farm and what is stored in the Warehouse.",
+      "goods_title": "Resources",
+      "empty_goods": "No goods in the warehouse.",
+      "seeds_harvests": "Seeds and harvests",
+      "all": "All",
+      "each": "each",
+      "crop_line": "🌱 {seeds} · 🌾 {harvest} · sale {sell}"
     },
     "calendar": {
       "title": "Calendar",
@@ -503,7 +542,25 @@
       "info_cost": "Processing cost",
       "info_boiled": "Boiled egg value",
       "info_profit": "Additional profit",
-      "hint": "Select the number of eggs to process. Cost is deducted when starting. Boiled eggs appear in the warehouse for selling."
+      "hint": "Select the number of eggs to process. Cost is deducted when starting. Boiled eggs appear in the warehouse for selling.",
+      "not_built": "Not built",
+      "level_capacity": "Level {level} · Capacity {cap} · {hours} h/u · {price}/u",
+      "level_short": "Lv. {level}",
+      "build_hint": "Build the Processor in More → Infrastructure.",
+      "jobs_title": "In progress",
+      "jobs_count": "{n} job|{n} jobs",
+      "stock": "Stock: {qty} {name}",
+      "recipe": "{in} → {out}",
+      "process_1": "Process 1",
+      "max_qty": "Max ({n})",
+      "remaining": "{time} left",
+      "start_fail": "Couldn't start the process."
+    },
+    "infrastructure": {
+      "level_short": "Lv {level}",
+      "capacity_line": "Capacity {cap} {unit}",
+      "in_use": "({used} in use)",
+      "next_line": "Next: Lv {level}"
     }
   },
   "crate": {
@@ -634,8 +691,6 @@
     "growing": "{n} growing",
     "ready_plots": "{n} ready",
     "empty_plots": "{n} empty",
-    "sick": "{n} sick",
-    "recovering": "{n} recovering",
     "active_jobs": "{n} active job|{n} active jobs",
     "in_process": "{n} goods in process",
     "level_n": "Level {n}",
@@ -647,5 +702,92 @@
     "open_section": "Open",
     "not_built": "Not built",
     "empty_inv": "No products yet"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "back_to_game": "Back to game",
+    "tabs": {
+      "dashboard": "Dashboard",
+      "withdrawals": "Withdrawals",
+      "deposits": "Deposits",
+      "notifications": "Broadcasts",
+      "users": "Users",
+      "audit": "Audit"
+    },
+    "loading": "Loading…",
+    "prev": "‹ Previous",
+    "next": "Next ›",
+    "page": "Page {page}",
+    "cancel": "Cancel",
+    "processing": "Processing…",
+    "reason_placeholder": "Required reason (min 3 characters)",
+    "dashboard": {
+      "pendingWithdrawals": "Pending withdrawals",
+      "pendingDeposits": "Deposits to review",
+      "totalUsers": "Users",
+      "totalAvailable": "Total available",
+      "totalReserved": "Total reserved",
+      "recentOps": "Recent operations",
+      "withdrawal": "WITHDRAWAL",
+      "deposit": "DEPOSIT",
+      "empty": "No operations yet."
+    },
+    "withdrawal": {
+      "approve_title": "Approve withdrawal",
+      "approve_body": "Withdrawal #{id} of {amount} from @{user}. The money stays reserved until the transfer is completed.",
+      "approve": "Approve",
+      "deny_title": "Deny withdrawal",
+      "deny_body": "Withdrawal #{id} of {amount}. The reserved funds will return to the user's balance.",
+      "deny": "Deny",
+      "reason": "Reason: {reason}",
+      "complete_title": "Complete withdrawal",
+      "complete_body": "Confirm the real payment for withdrawal #{id} ({amount}) was sent to {dest}. This settles the reserved funds.",
+      "complete_confirm": "Payment sent",
+      "complete_btn": "Complete transfer",
+      "empty": "Nothing here."
+    },
+    "deposit": {
+      "approve_title": "Approve deposit",
+      "approve_body": "Did you verify the transfer {ref}? {amount} will be credited to @{user}.",
+      "approve_confirm": "Credit",
+      "approve": "Approve",
+      "cancel_title": "Cancel deposit",
+      "cancel_body": "Deposit #{id} will be cancelled without crediting.",
+      "cancel_confirm": "Cancel deposit",
+      "cancel": "Cancel",
+      "empty": "Nothing here."
+    },
+    "notif": {
+      "sent": "Notification #{id} sent to all active users.",
+      "title": "Title",
+      "message": "Message",
+      "type": "Type",
+      "priority": "Priority",
+      "starts": "Publish from (optional)",
+      "expires": "Expires (optional)",
+      "preview": "Preview",
+      "preview_hint": "It will be sent to ALL active users. Review the text before confirming.",
+      "edit": "Edit",
+      "sending": "Sending…",
+      "send_now": "Send now",
+      "from": "from {date}",
+      "until": "expires {date}"
+    },
+    "users": {
+      "search_placeholder": "Search by username or ID…",
+      "search": "Search",
+      "created": "created {date}",
+      "lastSeen": "last seen {date}",
+      "balance": "balance",
+      "change_role_title": "Change role to {role}",
+      "change_role_body": "@{user} will change from {from} to {to}. This is recorded in the audit.",
+      "confirm_role": "Confirm role",
+      "make_role": "Make {role}",
+      "empty": "No results."
+    },
+    "audit": {
+      "by": "by @{user} over {target}",
+      "empty": "No records."
+    }
   }
 }

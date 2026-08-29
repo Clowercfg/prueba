@@ -12,7 +12,7 @@ import {
   effectiveDiscount,
 } from "../../game/config/offersConfig";
 import type { AnimalKind } from "../../game/types/entities";
-import { useT, t as tr } from "../../game/stores/languageStore";
+import { useT, t as tr, useLanguageStore, localeFor } from "../../game/stores/languageStore";
 import { useUiStore } from "../../game/stores/uiStore";
 import { useWalletStore } from "../../game/stores/walletStore";
 import { DepositPanel } from "./DepositPanel";
@@ -130,11 +130,12 @@ export default function StorePanel() {
   const openDeposits = useUiStore((s) => s.openDeposits);
   const usdtMinor = useWalletStore((s) => s.usdtMinor);
   const diamonds = useEconomyStore((s) => s.diamonds);
+  const lang = useLanguageStore((s) => s.lang);
 
   return (
     <div className="ap-scroll">
       <div className="st-balance">
-        <span>💎 {diamonds.toLocaleString("es")}</span>
+        <span>💎 {diamonds.toLocaleString(localeFor(lang))}</span>
         <span className="st-usdt">
           <UsdIcon /> ${(usdtMinor / 100).toFixed(2)}
         </span>
@@ -145,21 +146,21 @@ export default function StorePanel() {
 
       <Notice result={result} />
 
-      <h3 className="st-section">Semillas</h3>
+      <h3 className="st-section">{tr("store.seeds_title")}</h3>
       <div className="st-grid">
         {Object.keys(CROP_ECONOMY).map((id) => (
           <SeedCard key={id} cropId={id} onResult={setResult} />
         ))}
       </div>
 
-      <h3 className="st-section">Animales</h3>
+      <h3 className="st-section">{tr("store.animals_title")}</h3>
       <div className="st-grid">
         {(Object.keys(ANIMAL_ECONOMY) as AnimalKind[]).map((kind) => (
           <AnimalCard key={kind} kind={kind} onResult={setResult} />
         ))}
       </div>
 
-      <h3 className="st-section">Ofertas</h3>
+      <h3 className="st-section">{tr("store.offers_title")}</h3>
       <div className="st-offers">
         {OFFERS.map((o) => (
           <OfferCard key={o.id} offerId={o.id} onResult={setResult} />

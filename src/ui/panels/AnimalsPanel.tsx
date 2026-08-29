@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useFarmStore } from "../../game/stores/farmStore";
-import { useVetStore } from "../../game/stores/vetStore";
 import { useShopStore } from "../../game/stores/shopStore";
 import { useGameStore } from "../../game/stores/gameStore";
 import { ANIMAL_ECONOMY, getAnimalEconomy } from "../../game/config/economyConfig";
@@ -19,8 +18,9 @@ const KINDS = Object.keys(ANIMAL_ECONOMY) as AnimalKind[];
 const money = (n: number) => `$${n.toFixed(2)}`;
 
 function HealthBar({ value }: { value: number }) {
+  const t = useT();
   return (
-    <div className="ap-bar" role="img" aria-label={`Salud ${Math.round(value)}%`}>
+    <div className="ap-bar" role="img" aria-label={t("panel.animals.health_aria", { pct: String(Math.round(value)) })}>
       <div
         className={`ap-bar-fill ${value > 60 ? "good" : value > 30 ? "warn" : "bad"}`}
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
@@ -31,26 +31,17 @@ function HealthBar({ value }: { value: number }) {
 
 function AnimalRow({ a }: { a: AnimalAgent }) {
   const t = useT();
-  const treat = useVetStore((s) => s.treat);
   const select = useGameStore((s) => s.select);
   // Selection.id es string (uid); los agentes usan id numérico.
   const uid = String(a.id);
   const selectedId = useGameStore((s) =>
     s.selection && s.selection.kind === "animal" ? s.selection.id : null,
   );
-  const status = useVetStore.getState().statusOf(a.id);
   const def = getAnimalEconomy(a.kind);
 
   const onSelect = () => {
     // Mismo seam que GameCanvas.handleFarmTap → estado compartido de selección.
     select({ kind: "animal", id: uid });
-  };
-
-  const onTreat = async () => {
-    if (!(await treat(a.id))) {
-      return;
-    }
-    onSelect();
   };
 
   return (
@@ -62,37 +53,7 @@ function AnimalRow({ a }: { a: AnimalAgent }) {
           {t(`animalState.${a.state}`)} · {t(`enclosure.${ENCLOSURE_BY_KIND[a.kind].id}`)}
         </span>
         <HealthBar value={a.health} />
-        {status !== "healthy" && (
-          <span className={`ap-chip ${status}`}>
-            {status === "sick"
-              ? tr("panel.vet.sick_badge")
-              : tr("panel.vet.recovering_badge", { time: "" })
-                  .replace(/[—-]\s*$/, "")
-                  .trim()}
-          </span>
-        )}
       </span>
-      {status === "sick" && def && (
-        <span
-          className="ap-treat"
-          role="button"
-          tabIndex={0}
-          aria-label={`${tr("panel.vet.treat_btn")} ${money(def.treatmentCost)}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onTreat();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              e.stopPropagation();
-              onTreat();
-            }
-          }}
-        >
-          💊
-        </span>
-      )}
     </button>
   );
 }

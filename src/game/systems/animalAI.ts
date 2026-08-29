@@ -4,7 +4,6 @@ import { OBSTACLES } from "../config/buildingsLayout";
 import { WORLD_BOUNDS } from "../config/layoutConfig";
 import { getTreeColliders } from "../utils/treeColliders";
 import { angLerp, clamp, lerp } from "../utils/math";
-import { useVetStore } from "../stores/vetStore";
 import { useUpgradesStore } from "../stores/upgradesStore";
 import { animalRegistry } from "../stores/farmStore";
 
@@ -22,6 +21,19 @@ const cowSpeed = 1.5;
 const chickenSpeed = 1.05;
 const roosterSpeed = 1.1;
 const pigSpeed = 1.2;
+
+/**
+ * Producción por PERIODO REAL de cada especie (segundos → unidades enteras).
+ * Coincide con ANIMAL_ECONOMY.production: la vaca entrega 1 leche por cada 8 h,
+ * la gallina 1 huevo por 5 h, el gallo 1 huevo por 24 h y el cerdo 60 kg de
+ * carne al completar su engorde de 7 días.
+ */
+const PRODUCTION_PERIOD: Record<string, { periodSec: number; units: number }> = {
+  chicken: { periodSec: 5 * 3600, units: 1 },
+  rooster: { periodSec: 24 * 3600, units: 1 },
+  cow: { periodSec: 8 * 3600, units: 1 },
+  pig: { periodSec: 7 * 24 * 3600, units: 60 },
+};
 
 interface Collider {
   x: number;
@@ -194,16 +206,16 @@ export function updateAgent(a: AnimalAgent, dt: number, rng: () => number, now: 
   }
 
   if (a.nextHarvestAt > 0 && now >= a.nextHarvestAt) {
-    const factor = useVetStore.getState().productionFactor(a.id);
-    if (factor > 0) {
-      const eatBoost = a.state === "eating" ? 1.6 : 1;
-      const rate =
-        a.kind === "cow" ? 1.2 : a.kind === "pig" ? 1.1 : a.kind === "rooster" ? 0.4 : 0.35;
-      a.pendingProduction += rate * eatBoost * factor;
-    }
+    // Producción por periodo REAL según ANIMAL_ECONOMY.production:
+    //   gallina 1 huevo/5h, gallo 1 huevo/24h, vaca 1 leche/8h,
+    //   cerdo 60 kg de carne al completar el engorde (7 días).
+    // Entrega unidades ENTERAS al terminar el periodo (sin fracciones por tick).
     const speedFactor = useUpgradesStore.getState().intervalFactor(a.kind);
-    const interval = a.kind === "cow" || a.kind === "pig" ? 45 : 30;
-    a.nextHarvestAt = now + interval * speedFactor;
+    const def = PRODUCTION_PERIOD[a.kind as keyof typeof PRODUCTION_PERIOD];
+    if (def) {
+      a.pendingProduction += def.units;
+      a.nextHarvestAt = now + def.periodSec * speedFactor;
+    }
   }
 }
 
