@@ -71,7 +71,7 @@ export function DepositPanel({ onClose }: { onClose: () => void }) {
   const openTelegram = () => {
     if (config?.telegram) {
       const username = config.telegram.replace("@", "");
-      window.open(`https://t.me/${username}`, "_blank", "noopener,noreferrer");
+      window.open(`https://web.telegram.org/k/#@${username}`, "_blank", "noopener,noreferrer");
     }
   };
 

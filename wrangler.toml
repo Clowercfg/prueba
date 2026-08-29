@@ -39,7 +39,7 @@ DEV_MODE = "0"
 # PLACEHOLDER: sustituir por la wallet real antes de operar con dinero.
 DEPOSIT_WALLET_ADDRESS = "0xDE299f58B09Db87f3C42DEFB2f50453d2CB00f9d"
 DEPOSIT_NETWORK = "USDT (BEP20)"
-DEPOSIT_TELEGRAM = "@SerebryakovCuba"
+DEPOSIT_TELEGRAM = "@harvestvalleysupp"
 
 # Secretos requeridos (NO van en este archivo):
 #   BOT_TOKEN  → `wrangler secret put BOT_TOKEN`
