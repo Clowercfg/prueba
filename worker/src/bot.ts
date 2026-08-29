@@ -19,7 +19,7 @@ import { HttpError } from './auth'
 const TG_API_URL = 'https://api.telegram.org'
 
 export const WELCOME_MESSAGE =
-  '🌾 Welcome to Harvest Valley!\n\nBuild your farm, grow crops, raise animals, process goods, and grow your empire. 🚜🐄\n\nReady to start your farm?'
+  '🌾 Welcome to Harvest Valley!\n\nBuild your farm, grow crops, raise animals and start your journey. 🚜🐄\n\n🎮 Tap the button below to play!'
 
 export const PLAY_BUTTON_TEXT = '🌾 PLAY HARVEST VALLEY'
 
