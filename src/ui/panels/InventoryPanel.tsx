@@ -11,6 +11,9 @@ import { useT } from "../../game/stores/languageStore";
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 
+/** Precio completo (hasta 4 decimales) para montos < 1 USDT; 2 decimales en totales. */
+const moneyFull = (n: number) => (n < 1 ? `$${Number(n.toFixed(4)).toString()}` : money(n));
+
 const CROP_ICON: Record<string, string> = {
   wheat: "🌾",
   corn: "🌽",
@@ -54,7 +57,7 @@ function CropRow({ cropId }: { cropId: string }) {
       <span className="rc-icon">{CROP_ICON[cropId] ?? "🌱"}</span>
       <span className="rc-main">
         <b>{def.name}</b>
-        <small>{t("panel.inventory.crop_line", { seeds, harvest, sell: money(def.sellPrice) })}</small>
+        <small>{t("panel.inventory.crop_line", { seeds, harvest, sell: moneyFull(def.sellPrice) })}</small>
       </span>
       {harvest > 0 && (
         <>

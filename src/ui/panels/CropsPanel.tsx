@@ -23,6 +23,9 @@ const CROP_ICON: Record<string, string> = {
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 
+/** Precio completo (hasta 4 decimales) para montos < 1 USDT; 2 decimales en totales. */
+const moneyFull = (n: number) => (n < 1 ? `$${Number(n.toFixed(4)).toString()}` : money(n));
+
 const plotName = (index: number): string => {
   const key = PLOT_KEYS[index];
   if (!key) return tr("panel.crops.plot_number", { n: index + 1 });
@@ -126,7 +129,7 @@ function CropGroup({ cropId }: { cropId: string }) {
       <p className="ap-prod">
         {t("panel.crops.seed_line", {
           price: money(econ.seedPrice),
-          sell: money(econ.sellPrice),
+          sell: moneyFull(econ.sellPrice),
           hours: String(econ.growthHours),
         })}
       </p>
@@ -140,7 +143,7 @@ function CropGroup({ cropId }: { cropId: string }) {
           disabled={harvestQty < 1}
           onClick={() => void sellHarvest(cropId, harvestQty)}
         >
-          {t("panel.crops.sell_val", { money: money(econ.sellPrice * harvestQty) })}
+          {t("panel.crops.sell_val", { money: moneyFull(econ.sellPrice * harvestQty) })}
         </button>
       </div>
       <button
