@@ -789,5 +789,13 @@
       "by": "por @{user} sobre {target}",
       "empty": "Sin registros."
     }
+  },
+  "welcome": {
+    "title": "🎁 BONO DE BIENVENIDA",
+    "subtitle": "¡Arranca tu granja con una gallina gratis! 🐔",
+    "claim": "RECLAMAR GALLINA",
+    "claiming": "Reclamando…",
+    "claimed": "✓ ¡Gallina reclamada! Ya está paseando por tu corral.",
+    "dismiss": "CERRAR"
   }
 }

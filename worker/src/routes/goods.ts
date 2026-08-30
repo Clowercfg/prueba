@@ -38,6 +38,9 @@ const KIND_PRODUCTION: Record<string, { goodId: string; periodSec: number; units
 
 const MINUTE = 60
 const SELL_MAX_QTY = 100_000
+/** Bono de bienvenida: 1 gallina gratis, una sola vez por cuenta. */
+const WELCOME_BONUS_KIND = 'chicken'
+const WELCOME_BONUS_QTY = 1
 
 const goods = new Hono<AppEnv>()
 goods.use('*', requireAuth)
@@ -348,6 +351,43 @@ goods.post('/sell', rateLimit('goods-sell', 30, MINUTE), async (c) => {
 goods.get('/', async (c) => {
   const user = c.get('user')
   return c.json({ goods: await getInventory(c.env, user.id) })
+})
+
+/**
+ * GET /api/goods/welcome-bonus — si el usuario aun puede reclamar el bono
+ * de bienvenida (1 gallina gratis, una sola vez por cuenta).
+ */
+goods.get('/welcome-bonus', async (c) => {
+  const user = c.get('user')
+  const row = await c.env.DB.prepare(
+    `SELECT welcome_bonus_claimed AS claimed FROM users WHERE id = ?1`,
+  )
+    .bind(user.id)
+    .first<{ claimed: number }>()
+  return c.json({ available: (row?.claimed ?? 1) === 0 })
+})
+
+/**
+ * POST /api/goods/welcome-bonus/claim — reclama la gallina gratis.
+ * Idempotente: si el flag ya estaba en 1 no vuelve a conceder (granted=false).
+ */
+goods.post('/welcome-bonus/claim', rateLimit('goods-welcome', 5, MINUTE), async (c) => {
+  const user = c.get('user')
+  const now = Date.now()
+  const res = await c.env.DB.prepare(
+    `UPDATE users SET welcome_bonus_claimed = 1, updated_at = ?2 WHERE id = ?1 AND welcome_bonus_claimed = 0`,
+  )
+    .bind(user.id, now)
+    .run()
+  if ((res.meta.changes ?? 0) === 0) return c.json({ ok: true, granted: false })
+  await c.env.DB.prepare(
+    `INSERT INTO player_animals (user_id, kind, count, last_produce_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?5)
+     ON CONFLICT(user_id, kind) DO UPDATE SET count = count + excluded.count, updated_at = excluded.updated_at`,
+  )
+    .bind(user.id, WELCOME_BONUS_KIND, WELCOME_BONUS_QTY, now, now)
+    .run()
+  return c.json({ ok: true, granted: true })
 })
 
 export default goods

@@ -789,5 +789,13 @@
       "by": "by @{user} over {target}",
       "empty": "No records."
     }
+  },
+  "welcome": {
+    "title": "🎁 WELCOME BONUS",
+    "subtitle": "Start your farm with a free chicken! 🐔",
+    "claim": "CLAIM CHICKEN",
+    "claiming": "Claiming…",
+    "claimed": "✓ Chicken claimed! It's already strolling around your coop.",
+    "dismiss": "CLOSE"
   }
 }

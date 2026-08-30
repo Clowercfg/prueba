@@ -324,6 +324,10 @@ export const api = {
       { goodId, qty },
     ),
 
+  // Bono de bienvenida (1 gallina gratis por cuenta)
+  welcomeBonus: () => apiGet<{ available: boolean }>('/goods/welcome-bonus'),
+  welcomeBonusClaim: () => apiPost<{ ok: boolean; granted: boolean }>('/goods/welcome-bonus/claim'),
+
   // Cosechas (inventario + parcelas autoritativas server-side)
   crops: () =>
     apiGet<{ crops: Record<string, CropServerInventory>; plots: CropPlotServerRow[] }>('/crops'),

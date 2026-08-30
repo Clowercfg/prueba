@@ -57,7 +57,7 @@ const KIND_NAME: Record<AnimalKind, string> = {
 
 const counters: Record<AnimalKind, number> = { cow: 0, chicken: 0, rooster: 0, pig: 0 };
 
-function animalName(kind: AnimalKind): string {
+export function animalName(kind: AnimalKind): string {
   counters[kind] += 1;
   return `${KIND_NAME[kind]} #${String(counters[kind]).padStart(3, "0")}`;
 }
