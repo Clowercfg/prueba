@@ -88,7 +88,7 @@ function KindGroup({
           <b>{tr(`animal.${kind}`)}</b>
           <small>
             {used}/{enclosure.capacity} · {tr(`feedPeriod.${def.feedPeriod === "día" ? "day" : "cycle"}`)}{" "}
-            {money(def.feedCost)}
+            {money(def.feedCost ?? 0)}
           </small>
         </span>
         <button type="button" className="ap-buy" onClick={onBuy}>

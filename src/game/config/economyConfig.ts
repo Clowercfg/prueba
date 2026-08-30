@@ -92,14 +92,14 @@ export interface AnimalEconomyDef {
   /** Descripción informativa de producción (se muestra en la tienda). */
   production: string;
   /** Coste de alimentación por periodo (día o ciclo de engorde). */
-  feedCost: number;
+  feedCost?: number;
   /** Periodo al que aplica el coste de alimentación. */
   feedPeriod: "día" | "ciclo";
 }
 
 export const ANIMAL_ECONOMY: Record<string, AnimalEconomyDef> = {
   chicken: { name: "Gallina", icon: "🐔", price: 10, treatmentCost: 0.4, recoveryHours: 6, production: "1 huevo cada 5 h", feedCost: 0.06, feedPeriod: "día" },
-  rooster: { name: "Gallo", icon: "🐓", price: 35, treatmentCost: 1.25, recoveryHours: 6, production: "1 huevo fertilizado cada 24 h", feedCost: 0.08, feedPeriod: "día" },
+  rooster: { name: "Gallo", icon: "🐓", price: 35, treatmentCost: 1.25, recoveryHours: 6, production: "1 huevo fertilizado cada 24 h", feedPeriod: "día" },
   cow: { name: "Vaca", icon: "🐄", price: 50, treatmentCost: 2.5, recoveryHours: 12, production: "1 leche cada 8 h", feedCost: 0.15, feedPeriod: "día" },
   pig: { name: "Cerdo", icon: "🐖", price: 30, treatmentCost: 1.5, recoveryHours: 24, production: "Engorde 7 días · 60 kg de carne", feedCost: 0.03, feedPeriod: "ciclo" },
 };
