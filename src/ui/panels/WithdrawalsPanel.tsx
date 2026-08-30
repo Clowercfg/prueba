@@ -4,7 +4,7 @@ import { useT } from "../../game/stores/languageStore";
 import { useAuthStore } from "../../game/stores/authStore";
 import { useWalletStore } from "../../game/stores/walletStore";
 
-const METHODS = ["USDT (BEP20)", "USDT (ERC20)", "USDT (TRC20)"];
+const METHODS = ["USDT (BEP20)"];
 
 const STATUS_CLASS: Record<string, string> = {
   PENDING: "recovering",
