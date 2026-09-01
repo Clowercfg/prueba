@@ -6,6 +6,9 @@ import { useWalletStore } from "../../game/stores/walletStore";
 
 const METHODS = ["USDT (BEP20)"];
 
+/** Monto mínimo de retiro (unidades menores). 10 USDT = 1000 cents. */
+const MIN_WITHDRAWAL_MINOR = 1000;
+
 const STATUS_CLASS: Record<string, string> = {
   PENDING: "recovering",
   UNDER_REVIEW: "recovering",
@@ -30,7 +33,8 @@ export default function WithdrawalsPanel() {
 
   const usd = Number(amount.replace(",", "."));
   const amountMinor = Number.isFinite(usd) && usd > 0 ? Math.round(usd * 100) : 0;
-  const canSubmit = status === "authenticated" && amountMinor > 0 && destination.length >= 8 && !busy;
+  const belowMin = amountMinor > 0 && amountMinor < MIN_WITHDRAWAL_MINOR;
+  const canSubmit = status === "authenticated" && amountMinor >= MIN_WITHDRAWAL_MINOR && destination.length >= 8 && !busy;
 
   const loadHistory = useCallback(async () => {
     try {
@@ -110,6 +114,13 @@ export default function WithdrawalsPanel() {
                   onChange={(e) => setAmount(e.target.value)}
                 />
               </label>
+
+              <p className="ap-hint">
+                {t("withdraw.min_amount", { v: String(MIN_WITHDRAWAL_MINOR / 100) })}
+              </p>
+              {belowMin && (
+                <p className="dp-error">{t("withdraw.min_amount", { v: String(MIN_WITHDRAWAL_MINOR / 100) })}</p>
+              )}
 
               {error && <p className="dp-error">{error}</p>}
               {success && <p className="dp-success">{success}</p>}

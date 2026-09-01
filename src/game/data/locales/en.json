@@ -659,6 +659,7 @@
     "destination": "Destination wallet address",
     "destination_placeholder": "0x... / TX...",
     "amount": "Amount to withdraw (USD)",
+    "min_amount": "Minimum withdrawal: {v} USDT",
     "submitting": "Processing...",
     "submit_btn": "Request withdrawal",
     "success": "Request #{n} registered: funds reserved. Will be processed after verification.",

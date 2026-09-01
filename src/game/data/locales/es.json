@@ -659,6 +659,7 @@
     "destination": "Dirección de wallet destino",
     "destination_placeholder": "0x... / TX...",
     "amount": "Monto a retirar (USD)",
+    "min_amount": "Monto mínimo de retiro: {v} USDT",
     "submitting": "Procesando...",
     "submit_btn": "Solicitar retiro",
     "success": "Solicitud #{n} registrada: fondos reservados. Se procesará tras verificación.",

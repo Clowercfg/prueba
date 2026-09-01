@@ -12,6 +12,9 @@ import { expectedDebitMinor } from '../services/prices'
 
 const wallet = new Hono<AppEnv>()
 
+/** Monto mínimo de retiro (unidades menores). 10 USDT = 1000 cents. */
+const MIN_WITHDRAWAL_MINOR = 1000
+
 wallet.use('*', requireAuth)
 
 /** GET /api/wallet/deposit-config — datos para el apartado de depósitos
@@ -77,6 +80,9 @@ wallet.post('/withdrawals', rateLimit('withdrawal-create', 10, 60), async (c) =>
   const destination = typeof raw.destination === 'string' ? raw.destination.trim() : ''
   if (!method || destination.length < 8 || destination.length > 200) {
     throw new HttpError(400, 'method y destination (8-200 chars) son obligatorios')
+  }
+  if (amountMinor < MIN_WITHDRAWAL_MINOR) {
+    throw new HttpError(400, `El monto mínimo de retiro es ${MIN_WITHDRAWAL_MINOR / 100} USDT`)
   }
 
   const id = await createWithdrawalWithReserve(c.env, {
