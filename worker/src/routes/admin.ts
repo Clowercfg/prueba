@@ -9,7 +9,7 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../auth'
 import { adminGuard, rateLimit, requireAuth } from '../middleware'
 import { audit, transitionStatus } from '../services/audit'
-import { creditDeposit, releaseWithdrawal, settleWithdrawal } from '../services/ledger'
+import { creditDeposit, creditReferralCommission, releaseWithdrawal, settleWithdrawal } from '../services/ledger'
 
 const admin = new Hono<AppEnv>()
 
@@ -219,7 +219,8 @@ admin.post('/deposits/:id/approve', rateLimit('fin-action', 30, 60), async (c) =
   }
 
   // Comision de referido: si el usuario tiene un patrocinador, genera una
-  // entrada de comision (5% = 500 bps) que queda PENDING para aprobacion.
+  // comision (5% = 500 bps) AVAILABLE: se acredita al instante al wallet del
+  // referente, ya disponible sin pasar por aprobacion extra.
   try {
     const ref = await c.env.DB.prepare(
       `SELECT referrer_id FROM referrals WHERE referred_id = ?1`,
@@ -227,10 +228,13 @@ admin.post('/deposits/:id/approve', rateLimit('fin-action', 30, 60), async (c) =
     if (ref) {
       const commissionMinor = Math.floor(d.amountMinor * 500 / 10000)
       if (commissionMinor > 0) {
-        await c.env.DB.prepare(
+        const inserted = await c.env.DB.prepare(
           `INSERT INTO referral_commissions (user_id, referred_user_id, deposit_id, deposit_minor, pct_bps, amount_minor, status, created_at)
-           VALUES (?1, ?2, ?3, ?4, 500, ?5, 'PENDING', ?6)`,
-        ).bind(ref.referrer_id, d.userId, id, d.amountMinor, commissionMinor, Date.now()).run()
+           VALUES (?1, ?2, ?3, ?4, 500, ?5, 'AVAILABLE', ?6) RETURNING id`,
+        ).bind(ref.referrer_id, d.userId, id, d.amountMinor, commissionMinor, Date.now()).first<{ id: number }>()
+        if (inserted) {
+          await creditReferralCommission(c.env, { userId: ref.referrer_id, amountMinor: commissionMinor, commissionId: Number(inserted.id) })
+        }
       }
     }
   } catch {
@@ -335,17 +339,18 @@ admin.get('/users', async (c) => {
   const page = pageOf(c)
   let sql: string
   let bind: unknown[]
+  const base = `u.id, u.telegram_id AS telegramId, u.username, u.first_name AS firstName, u.role, u.status, u.created_at AS createdAt`
+  const balance = `(SELECT COALESCE(SUM(w.available_minor),0) FROM wallets w WHERE w.user_id = u.id) AS availableMinor`
+  const col = `SELECT ${base}, ${balance} FROM users u`
   if (/^\d+$/.test(q)) {
-    sql = `${'SELECT id, telegram_id AS telegramId, username, first_name AS firstName, role, status, created_at AS createdAt FROM users'} WHERE telegram_id = ?1 OR CAST(id AS TEXT) = ?1 ORDER BY created_at DESC LIMIT 21 OFFSET ?2`
+    sql = `${col} WHERE u.telegram_id = ?1 OR CAST(u.id AS TEXT) = ?1 ORDER BY u.created_at DESC LIMIT 21 OFFSET ?2`
     bind = [q, (page - 1) * PAGE]
   } else if (q) {
-    sql = `SELECT id, telegram_id AS telegramId, username, first_name AS firstName, role, status, created_at AS createdAt
-             FROM users WHERE username LIKE '%' || ?1 || '%' OR first_name LIKE '%' || ?1 || '%'
-            ORDER BY created_at DESC LIMIT 21 OFFSET ?2`
+    sql = `${col} WHERE u.username LIKE '%' || ?1 || '%' OR u.first_name LIKE '%' || ?1 || '%'
+            ORDER BY u.created_at DESC LIMIT 21 OFFSET ?2`
     bind = [q, (page - 1) * PAGE]
   } else {
-    sql = `SELECT id, telegram_id AS telegramId, username, first_name AS firstName, role, status, created_at AS createdAt
-             FROM users ORDER BY created_at DESC LIMIT 21 OFFSET ?1`
+    sql = `${col} ORDER BY u.created_at DESC LIMIT 21 OFFSET ?1`
     bind = [(page - 1) * PAGE]
   }
   const rows = await c.env.DB.prepare(sql).bind(...bind).all()

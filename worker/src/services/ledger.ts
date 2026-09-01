@@ -140,6 +140,28 @@ export async function creditDeposit(env: Env, p: MoneyOp): Promise<void> {
   }
 }
 
+/** Acredita comision de referido al wallet del referente (5% del deposito). */
+export async function creditReferralCommission(
+  env: Env,
+  p: { userId: number; amountMinor: number; commissionId: number },
+): Promise<void> {
+  const ts = now()
+  try {
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO wallet_ledger (user_id, type, direction, amount_minor, currency, source_type, source_id, created_at)
+         VALUES (?1, 'REFERRAL_COMMISSION', 'CREDIT', ?2, 'USD', 'referral_commission', ?3, ?4)`,
+      ).bind(p.userId, p.amountMinor, p.commissionId, ts),
+      env.DB.prepare(
+        `UPDATE wallets SET available_minor = available_minor + ?2, updated_at = ?3
+         WHERE user_id = ?1 AND currency = 'USD'`,
+      ).bind(p.userId, p.amountMinor, ts),
+    ])
+  } catch (e) {
+    mapSqliteError(e, 'REFERRAL_COMMISSION')
+  }
+}
+
 /**
  * Débito de compra del usuario (animales/combos pagados con saldo USDT).
  * Atómico: el CHECK(available_minor >= 0) impide saldo negativo y el
@@ -169,8 +191,7 @@ export async function debitPurchase(
   }
 }
 
-/**
- * Crédito por ventas del juego (cosecha, productos, producción de animales).
+/** Crédito por ventas del juego (cosecha, productos, producción de animales).
  * Atómico: crea entrada en ledger y actualiza wallet en un solo batch.
  */
 export async function creditSale(

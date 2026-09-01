@@ -69,7 +69,8 @@ export function ReferralsContent() {
 
   const onCopy = (): void => {
     if (code) {
-      void navigator.clipboard.writeText(code);
+      const link = `https://t.me/HarvestValley_bot?start=${code}`;
+      void navigator.clipboard.writeText(link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -95,6 +96,11 @@ export function ReferralsContent() {
                   {copied ? "✓" : t("affiliate.copy_btn")}
                 </button>
               </div>
+            )}
+            {code && (
+              <p className="ap-hint" style={{ wordBreak: "break-all" }}>
+                https://t.me/HarvestValley_bot?start={code}
+              </p>
             )}
           </section>
 

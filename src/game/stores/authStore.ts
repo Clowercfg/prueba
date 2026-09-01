@@ -1,6 +1,45 @@
 import { create } from "zustand";
 import { api, ApiError, getAuthHeaders, type MeResponse } from "../api/client";
 
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        initDataUnsafe?: {
+          start_param?: string;
+          user?: { id: number };
+        };
+      };
+    };
+  }
+}
+
+/**
+ * Lee el parametro ?start=CODE de initDataUnsafe (bot o enlace t.me?start=).
+ * Retorna el codigo de referido si existe, o null.
+ */
+function readStartParam(): string | null {
+  const raw = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+  if (raw) return raw.trim();
+  const m = /[?&]start=([^&]+)/.exec(window.location.search);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+/** Auto-registra el referido UNA vez por sesión si hay codigo start. */
+let referralAttemptDone = false;
+async function autoRegisterReferral(): Promise<void> {
+  if (referralAttemptDone) return;
+  referralAttemptDone = true;
+  const code = readStartParam();
+  if (!code) return;
+  try {
+    await api.registerReferral(code);
+  } catch {
+    // Best effort: no bloquear el arranque del juego si el registro falla
+    // (ya registrado, codigo invalido, red caida, etc).
+  }
+}
+
 /**
  * Estado de autenticación de Telegram (única fuente para toda la UI).
  *
@@ -36,6 +75,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const me = await api.me();
       set({ status: "authenticated", me });
+      if (me) {
+        await autoRegisterReferral();
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401 && !hasCredentials()) {
         // Sin Telegram y sin usuario de desarrollo: estado normal fuera de la Mini App.
